@@ -97,8 +97,8 @@ class MonoidPowerSeriesRing_generic ( MonoidPowerSeriesAmbient_abstract, Algebra
             sage: (1 / 2) * mps.0
             Monoid power series in Ring of monoid power series over NN
         """
-        Algebra.__init__(self, A)        
         MonoidPowerSeriesAmbient_abstract.__init__(self, A, S)
+        Algebra.__init__(self, A)        
 
         self.__monoid_gens = \
           [ self._element_class(self, dict([(s, A.one_element())]),
@@ -108,8 +108,7 @@ class MonoidPowerSeriesRing_generic ( MonoidPowerSeriesAmbient_abstract, Algebra
         from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_functor import MonoidPowerSeriesBaseRingInjection
 
         self._populate_coercion_lists_(
-          coerce_list = [MonoidPowerSeriesBaseRingInjection(self.base_ring(), self)] + \
-                        ([S] if isinstance(S, Parent) else []) )
+          coerce_list = ([S] if isinstance(S, Parent) else []) )
     
     def ngens(self) :
         r"""
@@ -315,8 +314,8 @@ class EquivariantMonoidPowerSeriesRing_generic ( EquivariantMonoidPowerSeriesAmb
             Equivariant monoid power series in Ring of equivariant monoid power series over NN
         """
         
-        Algebra.__init__(self, R.base_ring())
         EquivariantMonoidPowerSeriesAmbient_abstract.__init__(self, O, C, R)
+        Algebra.__init__(self, R.base_ring())
     
         self.__monoid_gens = \
           [self._element_class(self,
@@ -337,7 +336,6 @@ class EquivariantMonoidPowerSeriesRing_generic ( EquivariantMonoidPowerSeriesAmb
         from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_functor import MonoidPowerSeriesBaseRingInjection
 
         self._populate_coercion_lists_(
-          coerce_list = [MonoidPowerSeriesBaseRingInjection(R.codomain(), self)] ,
           convert_list = ([O.monoid()] if isinstance(O.monoid(), Parent) else []) )
 
     def ngens(self) :
