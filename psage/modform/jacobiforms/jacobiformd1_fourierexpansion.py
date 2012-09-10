@@ -81,26 +81,27 @@ class JacobiFormD1Indices ( UniqueRepresentation ) :
                               for s in range(d) ]
         max_norm = max(L(r) for r in preliminary_reps)
         
-        short_vectors = L.short_vector_list_up_to_length(max_norm - 1)
+        short_vectors = L.short_vector_list_up_to_length(max_norm + 1)
         self.__L_span = L.matrix().row_space()
                 
         representatives = list()
         for r in preliminary_reps :
+            representatives.append(list())
             for rrs in short_vectors :
                 for rr in rrs :
                     if r - rr in self.__L_span :
-                        representatives.append(rr)
-                        break
-                else :
-                    continue
-                break
-            else :
-                representatives.append(r) 
+                        representatives[-1].append(rr)
+                    
+                if len(representatives[-1]) != 0 :
+                    break 
         
+        # This is a list of lists.  All elements in the interior lists
+        # have the same norm and the set of first elements of the interior
+        # lists is a set of representatives for ZZ^N / L ZZ^N
         self._r_representatives = representatives
         
         representatives = list()
-        for r in self._r_representatives :
+        for r in map(lambda rs: rs[0], self._r_representatives) :
             for ri in r :
                 if ri > 0 :
                     representatives.append(r)
@@ -165,7 +166,7 @@ class JacobiFormD1Indices ( UniqueRepresentation ) :
     def reduce(self, s) :
         (n, r) = s
         # find a representative that corresponds to s
-        for rred in self._r_representatives :
+        for rred in map(lambda rs: rs[0], self._r_representatives) :
             if r - rred in self.__L_span :
                 break
         else :
@@ -176,14 +177,11 @@ class JacobiFormD1Indices ( UniqueRepresentation ) :
         
         nred = n - self.__L(la) + sum(map(operator.mul, la, r))
         
-        s = 1
-        for ri in rred :
-            if ri > 0 :
-                break
-            if ri < 0 :
-                rred = -rred
-                s = -1
-                break
+        if rred in self._r_reduced_representatives :
+            s = 1
+        else :
+            rred = -rred
+            s = -1
         
         return ((nred, rred), s)
     
@@ -325,8 +323,9 @@ class JacobiFormD1NNFilter ( SageObject ) :
                     if (n, r) in self :
                         yield (n, r)
         else :
+            short_vectors = self.__Ladj.short_vector_list_up_to_length(2 * self.__L.det() * (self.__bound - 1) + 1)
             for n in xrange(1, self.__bound) :
-                for rs in self.__Ladj.short_vector_list_up_to_length(2 * self.__L.det() * n) :
+                for rs in short_vectors[:2 * self.__L.det() * n] :
                     for r in rs :
                         yield (n, r)
                     
@@ -342,7 +341,7 @@ class JacobiFormD1NNFilter ( SageObject ) :
                 if fm.divides(r**2) :
                     yield (r**2 // fm, r)
         else :
-            short_vectors = self.__Ladj(2 * self.__L.det() * (self.__bound - 1) + 1)
+            short_vectors = self.__Ladj.short_vector_list_up_to_length(2 * self.__L.det() * (self.__bound - 1) + 1)
             for n in xrange(0, self.__bound) :
                 for r in short_vectors[n] :
                     yield(n, r)
@@ -377,7 +376,8 @@ class JacobiFormD1NNFilter ( SageObject ) :
 # JacobiD1FourierExpansionModule
 #===============================================================================
 
-def JacobiD1FourierExpansionModule(K, L, weak_forms = False) :
+## FIXME: Implement weight character
+def JacobiD1FourierExpansionModule(K, k, L, weak_forms = False) :
         r"""
         INPUT:
 
