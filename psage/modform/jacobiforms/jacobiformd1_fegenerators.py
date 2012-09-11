@@ -45,11 +45,11 @@ from sage.structure.sage_object import SageObject
 import operator
 
 #===============================================================================
-# DelayedFactory_JacobiFormD1_taylor_expansion
+# DelayedFactory_JacobiFormD1_restriction
 #===============================================================================
 
-class DelayedFactory_JacobiFormD1NN_taylor_expansion :
-    def __init__(self, i, index, weight, precision) :
+class DelayedFactory_JacobiFormD1_restriction :
+    def __init__(self, i, weight, index, precision) :
         self.__i = i
         self.__index = index
         self.__precision = precision
@@ -57,45 +57,11 @@ class DelayedFactory_JacobiFormD1NN_taylor_expansion :
             
     def getcoeff(self, key, **kwds) :
         (_, k) = key
-        return _coefficient_by_restriction( self.__i, self.__weight, self.__index,
-                                            k, self.__precision )
+        return _coefficient_by_restriction( self.__weight, self.__index, self.__precision )[self.__i][k]                                    
 
 #===============================================================================
-# JacobiFormD1Factory
+# _find_complete_set_of_restriction_vectors
 #===============================================================================
-
-_jacobi_form_d1_factory_cache = dict()
-
-def JacobiFormD1Factory(precision, L = None) :
-    if not isinstance(precision, JacobiFormD1Filter) :
-        if L is None :
-            raise ValueError("if precision is not filter the index L must be passed.")
-        precision = JacobiFormD1Filter(precision, L)
-    
-    global _jacobi_form_d1_factory_cache
-        
-    try :
-        return _jacobi_form_d1_factory_cache[precision]
-    except KeyError :
-        tmp = JacobiFormD1Factory_class(precision)
-        _jacobi_form_d1_factory_cache[precision] = tmp
-        
-        return tmp
-
-#===============================================================================
-# JacobiFormD1NNFactory_class
-#===============================================================================
-
-class JacobiFormD1NNFactory_class (SageObject) :
-    
-    def __init__(self, precision) :
-        self.__precision = precision
-
-    def index(self) :
-        return self.__precision.jacobi_index()
-
-    def _qexp_precision(self) :
-        return self.__precision.index()
 
 def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0) :
     r"""
@@ -111,8 +77,7 @@ def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0) :
     
     OUTPUT:
     
-    - A pair the first component of which is a set S of pairs of vectors in L and an integer,
-      the second is a restriction matrix as returned by _local_restriction_matrix(R, S).
+    - A set S of pairs of vectors in L and an integer.
     """
     length_inc = 5
     max_length = 5
@@ -120,10 +85,10 @@ def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0) :
     short_vectors = L.short_vector_list_up_to_length(max_length)
     
     S = list()
-    restriction_matrix = zero_matrix(ZZ, 0, len(R))
+    restriction_space = FreeModule(ZZ, len(R)).span([])
     
     
-    while (len(S) != len(R) + additional_s ) :
+    while (len(S) < len(R) + additional_s ) :
         while len(short_vectors[cur_length]) == 0 :
             cur_length += 1
             if max_length >= cur_length :
@@ -135,16 +100,21 @@ def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0) :
         rcands = [ s.dot_product(r) for rs in R for r in rs ]
         
         for r in rcands :
-            nresmat = restriction_matrix.insert_row(restriction_matrix.nrows(), _eval_restriction_vector(R, s, r))
-            if nresmat.rank() + additional_s > nresmat.nrows() :
+            v = _eval_restriction_vector(R, s, r)
+            if len(S) - restriction_space.rank() < additional_s or \
+               v not in restriction_space :
                 S.append((s, r))
-                restriction_matrix = nres_mat
+                restriction_space = restriction_space + FreeModule(ZZ, len(R)).span([v])
                 
-                if len(S) == len(R) :
+                if len(S) == len(R) + additional_s :
                     break
     
-    return (S, restriction_matrix)
-        
+    return S
+    
+#===============================================================================
+# _eval_restriction_vector
+#===============================================================================
+
 def _eval_restriction_vector(R, s, r) :
     r"""
     For each list rs in R compute the multiplicity of s r' = r, r' in rs.
@@ -165,6 +135,10 @@ def _eval_restriction_vector(R, s, r) :
     return vector( len([ rp for rp in rs if s.dot_product(rp) == r ])
                    for rs in R )
 
+#===============================================================================
+# _local_restriction_matrix
+#===============================================================================
+
 def _local_restriction_matrix(R, S) :
     r"""
     Return a matrix whose rows correspond to the evaluations of the restriction
@@ -182,6 +156,10 @@ def _local_restriction_matrix(R, S) :
     - A matrix with integer entries.
     """
     return matrix([ _restriction_vector(R, s, r) for (s, r) in S ])
+
+#===============================================================================
+# _global_restriction_matrix
+#===============================================================================
 
 def _global_restriction_matrix(S, precision, weight, find_relations = False) :
     r"""
@@ -224,6 +202,10 @@ def _global_restriction_matrix(S, precision, weight, find_relations = False) :
     
     return (mat, row_groups, row_labels, column_labels)
 
+#===============================================================================
+# _global_relation_matrix
+#===============================================================================
+
 def _global_relation_matrix(S, precision, weight) :
     r"""
     Deduce restrictions on the coefficients of a Jacobi form based on
@@ -255,8 +237,32 @@ def _global_relation_matrix(S, precision, weight) :
     
     return (relations, column_labels)
     
+#===============================================================================
+# _coefficient_by_restriction
+#===============================================================================
+
 _coefficient_by_restriction__cache = dict()
 def _coefficient_by_restriction( k, L, precision ) :
+    r"""
+    Compute the Fourier expansions of Jacobi forms of weight `k` and 
+    index `L` (an even symmetric matrix) up to given precision.
+    
+    ALGORITHM:
+    
+    See [GKR12].
+    
+    INPUT:
+    
+    - `k` -- An integer.
+    
+    - `L` -- A even symmetric matrix (over `\ZZ`).
+    
+    - ``precision`` -- A filter for Jacobi forms of arbitrary index.
+    
+    OUTPUT:
+    
+    - A list of elements of the corresponding Fourier expansion module.
+    """
     global _coefficient_by_restriction__cache
     try :
         expansions = _coefficient_by_restriction__cache[(k, L)]
@@ -267,13 +273,14 @@ def _coefficient_by_restriction( k, L, precision ) :
     except KeyError :
         pass
      
+    
     dim = _jacobi_dimension(k, L)
     if dim == 0 :
         return []
 
 
     R = precision._r_representatives
-    (S_extended, _) = _find_complete_set_of_restriction_vectors(L, R)
+    S_extended = _find_complete_set_of_restriction_vectors(L, R)
         
     S = list(Set(s for (s, r) in S_extended)) 
     max_S_length = max([L(s) for s in S])
@@ -313,8 +320,5 @@ def _coefficient_by_restriction( k, L, precision ) :
     for v in jacobi_expansions.basis() :
         expansions.append( fourier_expansion_module(dict( ((ch, l), c) for (l, c) in zip(column_labels, v) )) )
         
-    
-
-    
-    
+    return expansions
     
