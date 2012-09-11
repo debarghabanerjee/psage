@@ -48,53 +48,89 @@ import operator
 # _jacobi_forms_by_taylor_expansion_coords
 #===============================================================================
 
-_jacobi_forms_by_taylor_expansion_coords_cache = dict()
+_jacobi_forms_by_taylor_expansion_coordinates_cache = dict()
 
-def _jacobi_forms_by_taylor_expansion_coords(index, weight, precision) :
-    global _jacobi_forms_by_taylor_expansion_coords_cache
+def _jacobi_forms_by_taylor_expansion_coordinates(precision, weight, index) :
+    r"""
+    The coefficients of Jacobi forms with respect to a basis of weak
+    Jacobi forms that is returned by _all_weak_jacobi_forms_by_taylor_expansion.
+    
+    INPUT:
+    
+    - ``precision`` -- A non-negative integer that corresponds to a precision of
+                       the q-expansion.
+
+    - ``weight`` -- An integer.
+    
+    - ``index`` -- A non-negative integer.    
+    """
+    global _jacobi_forms_by_taylor_expansion_coordinates_cache
     
     key = (index, weight)
     try :
-        return _jacobi_forms_by_taylor_expansion_coords_cache[key]
+        return _jacobi_forms_by_taylor_expansion_coordinates_cache[key]
     except KeyError :
         if precision < (index - 1) // 4 + 1 :
             precision = (index - 1) // 4 + 1
         
-        weak_forms = _all_weak_jacobi_forms_by_taylor_expansion(index, weight, precision)
+        weak_forms = _all_weak_jacobi_forms_by_taylor_expansion(weight, index, precision)
         weak_index_matrix = matrix(ZZ, [ [ f[(n,r)] for n in xrange((index - 1) // 4 + 1)
                                                     for r in xrange(isqrt(4 * n * index) + 1,  index + 1) ]
                                          for f in weak_forms] )
-        _jacobi_forms_by_taylor_expansion_coords_cache[key] = \
+        _jacobi_forms_by_taylor_expansion_coordinates_cache[key] = \
           weak_index_matrix.left_kernel().echelonized_basis()
           
-        return _jacobi_forms_by_taylor_expansion_coords_cache[key]
+        return _jacobi_forms_by_taylor_expansion_coordinates_cache[key]
 
 #===============================================================================
 # jacobi_forms_by_taylor_expansion
 #===============================================================================
 
-def jacobi_form_by_taylor_expansion(i, index, weight, precision) :
+def jacobi_form_by_taylor_expansion(i, precision, weight, index) :
     r"""
-    We first lift an echelon basis of elliptic modular forms to weak Jacobi forms.
-    Then we return an echelon basis with respect enumeration of this first echelon
-    basis of the '\ZZ'-submodule of Jacobi forms.
-    """
-    expansion_ring = JacobiFormD1NNFourierExpansionModule(ZZ, weight, index)
-        
-    coefficients_factory = DelayedFactory_JacobiFormD1NN_taylor_expansion( i, index, weight, precision )
+    Lazy Fourier expansion of the i-th Jacobi form in a certain basis;
+    see _jacobi_forms_by_taylor_expansion_coordinates.
     
-    return EquivariantMonoidPowerSeries_lazy(expansion_ring, precision, coefficients_factory.getcoeff)
+    INPUT:
+    
+    - `i` -- A non-negative integer.
+
+    - ``precision`` -- A filter for the Fourier indices of Jacobi forms.
+    
+    - ``weight`` -- An integer.
+    
+    - ``index`` -- A non-negative integer.
+
+    OUTPUT:
+    
+    - A lazy element of hte Fourier expansion module for Jacobi forms.
+    """
+    return EquivariantMonoidPowerSeries_lazy( JacobiFormD1NNFourierExpansionModule(ZZ, index),
+                                              precision,
+                                              DelayedFactory_JacobiFormD1NN_by_taylor_expansion( i, precision, weight, index ).getcoeff )
 
 #===============================================================================
-# DelayedFactory_JacobiFormD1NN_taylor_expansion
+# DelayedFactory_JacobiFormD1NN_by_taylor_expansion
 #===============================================================================
 
-class DelayedFactory_JacobiFormD1NN_taylor_expansion :
-    def __init__(self, i, index, weight, precision) :
+class DelayedFactory_JacobiFormD1NN_by_taylor_expansion :
+    r"""
+    Delayed computation of the Fourier coefficients of Jacobi forms.
+    
+    ALGORITHM:
+    
+    We first lift an echelon basis of elliptic modular forms to weak Jacobi forms;
+    See _all_weak_jacobi_forms_by_taylor_expansion. We then use
+    _jacobi_forms_by_taylor_expansion_coordinates to find linear combinations that
+    correspond to Jacobi forms. 
+    
+    """
+    def __init__(self, i, precision, weight, index) :
+        ## TODO: Check whether we really pass an integer ``precision``.
         self.__i = i
+        self.__weight = weight
         self.__index = index
         self.__precision = precision
-        self.__weight = weight
         
         self.__series = None
     
@@ -104,8 +140,8 @@ class DelayedFactory_JacobiFormD1NN_taylor_expansion :
         if self.__series is None :
             self.__series = \
               sum( map( operator.mul,
-                       _jacobi_forms_by_taylor_expansion_coords(self.__index, self.__weight, self.__precision)[self.__i],
-                       _all_weak_jacobi_forms_by_taylor_expansion(self.__index, self.__weight, self.__precision) ) )
+                       _jacobi_forms_by_taylor_expansion_coordinates(self.__precision, self.__weight, self.__index)[self.__i],
+                       _all_weak_jacobi_forms_by_taylor_expansion(self.__index, self.__index, self.__precision) ) )
 
         try :
             return self.__series[k]
@@ -117,23 +153,22 @@ class DelayedFactory_JacobiFormD1NN_taylor_expansion :
 #===============================================================================
 
 @cached_function
-def _theta_decomposition_indices(index, weight) :
+def _theta_decomposition_indices(weight, index) :
     r"""
-    A list of possible indices of the echelon bases `M_k, S_{k+2}` etc. or `-1`
-    if a component is zero." 
+    A list of possible indices of the echelon bases `M_k, S_{k+2}` etc." 
     """
     dims = [ ModularForms(1, weight).dimension()] + \
            [ ModularForms(1, weight + 2*i).dimension() - 1
              for i in xrange(1, index + 1) ]
            
-    return [ (i,j) for (i,d) in enumerate(dims) for j in xrange(d)]
+    return [ (i,j) for (i,d) in enumerate(dims) for j in xrange(d) ]
 
 #===============================================================================
 # _all_weak_jacobi_forms_by_taylor_expansion
 #===============================================================================
 
 @cached_function
-def _all_weak_jacobi_forms_by_taylor_expansion(index, weight, precision) :
+def _all_weak_jacobi_forms_by_taylor_expansion(weight, index, precision) :
     """
     TESTS:
     
@@ -176,17 +211,35 @@ def _all_weak_jacobi_forms_by_taylor_expansion(index, weight, precision) :
 
     factory = JacobiFormD1NNFactory(precision, index)
 
-    return [ weak_jacbi_form_by_taylor_expansion(
+    return [ _weak_jacbi_form_by_taylor_expansion( precision,
                 i*[0] + [modular_form_bases[i][j]] + (index - i)*[0],
-                precision, True, weight = weight,
-                factory = factory )
+                factory, True )
              for (i,j) in _theta_decomposition_indices(index, weight) ]
 
 #===============================================================================
-# weak_jacbi_form_by_taylor_expansion
+# _weak_jacbi_form_by_taylor_expansion
 #===============================================================================
 
-def weak_jacbi_form_by_taylor_expansion(fs, precision, is_integral = False, weight = None, factory = None) :
+def _weak_jacbi_form_by_taylor_expansion(precision, fs, factory = None) :
+    r"""
+    The lazy Fourier expansion of a Jacobi form of index ``len(fs) - 1``, whose first
+    corrected Taylor coefficients are the ``fs``.
+    
+    INPUT:
+    
+    - ``precision`` -- A filter for the Fourier expansion of Jacobi forms of scalar index.
+    
+    - ``fs`` - A list of a) 0's, b) Modular forms, or c) functions of one argument `p` 
+               that return a power series of precision `p`.  The coefficients must be
+               integral.
+    
+    - ``factory`` -- Either ``None``, or a factory class for Jacobi forms of degree 1 with
+                     scalar index.
+    
+    OUTPUT:
+    
+    - A lazy Fourier expansion of a Jacobi form.
+    """
     if factory is None :
         factory = JacobiFormD1NNFactory(precision, len(fs) - 1)
             
@@ -211,38 +264,51 @@ def weak_jacbi_form_by_taylor_expansion(fs, precision, is_integral = False, weig
         raise ValueError( "Either one element of fs must be a modular form or " + \
                           "the weight must be passed." )
     
-    if is_integral :
-        expansion_ring = JacobiFormD1NNFourierExpansionModule(ZZ, weight, len(fs) - 1, True)
-    else :
-        expansion_ring = JacobiFormD1NNFourierExpansionModule(QQ, weight, len(fs) - 1, True)
-
+    expansion_ring = JacobiFormD1NNFourierExpansionModule(ZZ, len(fs) - 1, True)
     return EquivariantMonoidPowerSeries_lazy( expansion_ring, expansion_ring.monoid().filter(precision),
-                                              DelayedFactory_JacobiFormD1NN_taylor_expansion_weak( factory, f_exps, weight ).getcoeff )
+                                              DelayedFactory_JacobiFormD1NN_taylor_expansion_weak( weight, f_exps, factory ).getcoeff )
 
 #===============================================================================
-# DelayedFactory_JacobiFormD1NN_taylor_expansion
+# DelayedFactory_JacobiFormD1NN_taylor_expansion_weak
 #===============================================================================
 
 class DelayedFactory_JacobiFormD1NN_taylor_expansion_weak :
-    def __init__(self, factory, fs, weight) :
-        self.__factory = factory
-        self.__fs = fs
+    r"""
+    Delayed computation of the Fourier coefficients of weak Jacobi forms.
+    """
+    
+    def __init__(self, weight, fs, factory) :
+        r"""
+        INPUT:
+        
+        - ``weight`` -- An integer.
+        
+        - ``fs`` -- A list of functions of one argument `p` that return a power series of
+                    precision `p`.  The coefficients must be integral.
+    
+        - ``factory`` -- Either ``None``, or a factory class for Jacobi forms of degree 1 with
+                         scalar index.
+        """
         self.__weight = weight
+        self.__fs = fs
+        self.__factory = factory
         
         self.__series = None
+        self.__ch = JacobiFormD1WeightCharacter(k, len(fs) - 1)
     
     def getcoeff(self, key, **kwds) :
-        (_, k) = key
-        # for speed we ignore the character 
+        (ch, k) = key
+        if ch != self.__ch :
+            return ZZ.zero()
+        
         if self.__series is None :
             self.__series = \
-             self.__factory.by_taylor_expansion( self.__fs, self.__weight,
-                                                    is_integral = True )
+             self.__factory.by_taylor_expansion( self.__weight, self.__fs )
         
         try :
             return self.__series[k]
         except KeyError :
-            return 0
+            return ZZ.zero()
 
 #===============================================================================
 # JacobiFormD1NNFactory
@@ -250,11 +316,25 @@ class DelayedFactory_JacobiFormD1NN_taylor_expansion_weak :
 
 _jacobi_form_d1nn_factory_cache = dict()
 
-def JacobiFormD1NNFactory(precision, m=None) :
+def JacobiFormD1NNFactory(precision, m = None) :
+    r"""
+    A factory for Jacobi form of degree 1 and scalar index `m`.
+    
+    INPUT:
+    
+    - ``precision`` -- A filter for Fourier indices of Jacobi forms or
+                       an integer.  In the latter case, `m` must not be
+                       ``None``.
+    
+    - `m` -- A non-negative integer or ``None``, if ``precision`` is a filter.
+    """
+    
     if not isinstance(precision, JacobiFormD1NNFilter) :
         if m is None :
             raise ValueError("if precision is not filter the index m must be passed.")
         precision = JacobiFormD1NNFilter(precision, m)
+    elif m is not None :
+        assert precision.jacobi_index() == m
     
     global _jacobi_form_d1nn_factory_cache
         
@@ -271,33 +351,68 @@ def JacobiFormD1NNFactory(precision, m=None) :
 #===============================================================================
 
 class JacobiFormD1NNFactory_class (SageObject) :
+    r"""
+    A factory for Jacobi form of degree 1 and scalar index.
+    """
     
     def __init__(self, precision) :
+        r"""
+        INPUT:
+        
+        - ``precision`` -- A filter for Fourier indices of Jacobi forms. 
+        """
         self.__precision = precision
         
         self.__power_series_ring_ZZ = PowerSeriesRing(ZZ, 'q')
         self.__power_series_ring = PowerSeriesRing(QQ, 'q')
 
     def index(self) :
+        r"""
+        The index of the Jacobi forms that are computed by this factory. 
+        """
         return self.__precision.jacobi_index()
 
     def power_series_ring(self) :
+        r"""
+        An auxiliary power series ring that is cached in the factory.
+        """
         return self.__power_series_ring
     
     def integral_power_series_ring(self) :
+        r"""
+        An auxiliary power series ring over `\ZZ` that is cached in the factory.
+        """
         return self.__power_series_ring_ZZ
 
     def _qexp_precision(self) :
+        r"""
+        The precision of Fourier expansions that are computed.
+        """
         return self.__precision.index()
 
     def _set_theta_factors(self, theta_factors) :
+        r"""
+        Set the cache for theta factors. See _theta_factors.
+        
+        INPUT:
+        
+        - ``theta_factors`` -- A list of power series over `\ZZ`. 
+        """
         self.__theta_factors = theta_factors
     
     def _theta_factors(self, p = None) :
         r"""
-        Return the factor `W^\# (\theta_0, .., \theta_{2m - 1})^{\mathrm{T}}` as a list.
-        The `q`-expansion is shifted by `-(m + 1)(2*m + 1) / 24` which will be compensated
+        The vector `W^\# (\theta_0, .., \theta_{2m - 1})^{\mathrm{T}} \pmod{p}` as a list.
+        The `q`-expansion is shifted by `-(m + 1)(2*m + 1) / 24`, which will be compensated
         for by the eta factor.
+        
+        INPUT:
+        
+        - `p` -- A prime or ``None``.
+        
+        NOTE:
+        
+        - The cases `m = 1, 2` are hard coded for high precisions.
         """
         try :
             if p is None :
@@ -409,12 +524,22 @@ class JacobiFormD1NNFactory_class (SageObject) :
             return theta_factors
     
     def _set_eta_factor(self, eta_factor) :
+        r"""
+        Set the cache for theta factors. See _theta_factors.
+        
+        INPUT:
+        
+        - ``eta_factor`` -- A power series over `\ZZ`.
+        """
+        if not eta_factor in self.integral_power_series_ring() :
+            eta_factor = self.integral_power_series_ring()(eta_factor)
+        
         self.__eta_factor = eta_factor
     
     def _eta_factor(self) :
         r"""
-        The inverse determinant of `W`, which in these cases is always a negative
-        power of the eta function. 
+        The inverse determinant of `W`, which in the considered cases is always a negative
+        power of the eta function. See the thetis of Nils Skoruppa.
         """
         try :
             return self.__eta_factor
@@ -431,9 +556,23 @@ class JacobiFormD1NNFactory_class (SageObject) :
  
     def by_taylor_expansion(self, fs, k, is_integral=False) :
         r"""
-        We combine the theta decomposition and the heat operator as in [Sko].
-        This yields a bijections of Jacobi forms of weight `k` and
-        `M_k \times S_{k+2} \times .. \times S_{k+2m}`.
+        We combine the theta decomposition and the heat operator as in the
+        thesis of Nils Skoruppa. This yields a bijections of the space of weak
+        Jacobi forms of weight `k` and index `m` with the product of spaces
+        of elliptic modular forms `M_k \times S_{k+2} \times .. \times S_{k+2m}`.
+        
+        INPUT:
+        
+        - ``fs`` -- A list of functions that given an integer `p` return the
+                    q-expansion of a modular form with rational coefficients
+                    up to precision `p`.  These modular forms correspond to
+                    the components of the above product.
+        
+        - `k` -- An integer. The weight of the weak Jacobi form to be computed.
+        
+        - ``is_integral`` -- A boolean. If ``True``, the ``fs`` have integral
+                             coefficients.
+                    
         """
         ## we introduce an abbreviations
         if is_integral :
@@ -442,10 +581,11 @@ class JacobiFormD1NNFactory_class (SageObject) :
             PS = self.power_series_ring()
             
         if not len(fs) == self.__precision.jacobi_index() + 1 :
-            raise ValueError("fs must be a list of m + 1 elliptic modular forms or their fourier expansion")
+            raise ValueError( "fs (which has length {0}) must be a list of {1} Fourier expansions" \
+                              .format(len(fs), self.__precision.jacobi_index() + 1) )
         
         qexp_prec = self._qexp_precision()
-        if qexp_prec is None : # there are no forms below the precision
+        if qexp_prec is None : # there are no Fourier indices below the precision
             return dict()
         
         f_divs = dict()
@@ -482,7 +622,8 @@ class JacobiFormD1NNFactory_class (SageObject) :
 
     def _by_taylor_expansion_m1(self, f_divs, k, is_integral=False) :
         r"""
-        This provides special, faster code in the Jacobi index `1` case.
+        This provides faster implementation of by_taylor_expansion in the case
+        of Jacobi index `1`.
         """
         if is_integral :
             PS = self.integral_power_series_ring()

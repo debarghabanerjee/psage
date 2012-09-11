@@ -29,7 +29,7 @@ from psage.modform.fourier_expansion_framework.gradedexpansions.gradedexpansion_
 from psage.modform.fourier_expansion_framework.modularforms.modularform_ambient import ModularFormsModule_generic
 from psage.modform.fourier_expansion_framework.modularforms.modularform_types import ModularFormType_abstract
 from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import jacobi_form_by_taylor_expansion,\
-    _jacobi_forms_by_taylor_expansion_coords
+    _jacobi_forms_by_taylor_expansion_coordinates
 from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFourierExpansionModule, \
                                                                       JacobiFormD1NNFilter
 from sage.categories.number_fields import NumberFields
@@ -111,10 +111,12 @@ class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
     
     @cached_method
     def _rank(self, K) :
+        ## TODO: Use the dimension formula that is implemented for general Jacobi forms.
         
         if K is QQ or K in NumberFields() :
-            return len(_jacobi_forms_by_taylor_expansion_coords(self.__index, self.__weight, 0))
+            return len(_jacobi_forms_by_taylor_expansion_coordinates(self.__index, self.__weight, 0))
 
+            ## TODO: Remove this code.
             ## This is the formula used by Poor and Yuen in Paramodular cusp forms
             if self.__weight == 2 :
                 delta = len(self.__index.divisors()) // 2 - 1
@@ -170,9 +172,9 @@ class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
     @cached_method
     def generators(self, K, precision) :
         if K is QQ or K in NumberFields() :
-            return Sequence( [ jacobi_form_by_taylor_expansion(i, self.__index, self.__weight, precision)
+            return Sequence( [ jacobi_form_by_taylor_expansion(i, precision, self.__index, self.__weight)
                                for i in xrange(self._rank(K)) ],
-                             universe = JacobiFormD1NNFourierExpansionModule(QQ, self.__weight, self.__index) )
+                             universe = JacobiFormD1NNFourierExpansionModule(QQ, self.__index) )
         
         raise NotImplementedError
     

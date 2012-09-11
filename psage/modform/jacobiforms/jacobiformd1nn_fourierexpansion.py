@@ -419,7 +419,7 @@ def JacobiFormD1NNWeightCharacter(K, k) :
 # JacobiFormD1NNFourierExpansionModule
 #===============================================================================
 
-def JacobiFormD1NNFourierExpansionModule(K, k, m, weak_forms = False) :
+def JacobiFormD1NNFourierExpansionModule(K, m, weak_forms = False) :
         r"""
         INPUT:
 
@@ -431,7 +431,7 @@ def JacobiFormD1NNFourierExpansionModule(K, k, m, weak_forms = False) :
         """
         R = EquivariantMonoidPowerSeriesModule(
              JacobiFormD1NNIndices(m, weak_forms = weak_forms),
-             JacobiFormD1NNWeightCharacter( ZZ, k),
+             JacobiFormD1NNFourierExpansionCharacterMonoid(),
              TrivialRepresentation("\Gamma^J_{1, M\infty}", K) )
 
 ## Since the action of the Jacobi Levi group does not respect the monoid structure
