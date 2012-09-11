@@ -1,5 +1,7 @@
 r"""
 We provide methods to create Fourier expansions of (weak) Jacobi forms `\mathrm{mod} p`.
+
+TODO: Unify this code with the implementation for expansions of ZZ.
 """
 
 #===============================================================================
@@ -31,49 +33,89 @@ import operator
 # JacobiFormD1NNModularFactory_class
 #===============================================================================
 
-class JacobiFormD1NNModularFactory_class (SageObject) :
+class JacobiFormD1NNModularFactory_class (JacobiFormD1NNFactory_class) :
     
     def __init__(self, precision, p) :
-        self.__precision = precision
-        self.__power_series_ring = PowerSeriesRing(GF(p), 'q')
+        JacobiFormD1NNFactory_class.__init__(self, precision)
+        
+        self.__power_series_ring_modular = PowerSeriesRing(GF(p), 'q')
         self.__p = int(p)
 
-    def index(self) :
-        return self.__precision.jacobi_index()
-
-    def power_series_ring(self) :
-        return self.__power_series_ring
+    def power_series_ring_modular(self) :
+        return self.__power_series_ring_modular
     
-    def _qexp_precision(self) :
-        return self.__precision.index()
-
     def _set_theta_factors(self, theta_factors) :
+        r"""
+        Set the cache for theta factors. See _theta_factors.
+        
+        INPUT:
+        
+        - ``theta_factors`` -- A list of power series over `GF(p)`. 
+        """
+        if theta_factos not in self.power_series_ring_modular() :
+            theta_factors = self.power_series_ring()(theta_factors)
+        
         self.__theta_factors = theta_factors
     
     def _theta_factors(self) :
+        r"""
+        The vector `W^\# (\theta_0, .., \theta_{2m - 1})^{\mathrm{T}} \pmod{p}` as a list.
+        The `q`-expansion is shifted by `-(m + 1)(2*m + 1) / 24`, which will be compensated
+        for by the eta factor.
+        """
         try :
             return self.__theta_factors
         except AttributeError :
-            raise RuntimeError( "Theta factors have to be set first" )
-    
+            self.__theta_factors = self.power_series_ring_modular()(
+                                     JacobiFormD1NNFactory_class._theta_factors(self, self.__p) )
+        
+            return self.__theta_factors
+
     def _set_eta_factor(self, eta_factor) :
+        r"""
+        Set the cache for theta factors. See _theta_factors.
+        
+        INPUT:
+        
+        - ``eta_factor`` -- A power series over `GF(p)`.
+        """
+        if not eta_factor in self.power_series_ring_modular() :
+            eta_factor = self.power_series_ring_modular()(eta_factor)
+        
         self.__eta_factor = eta_factor
     
     def _eta_factor(self) :
+        r"""
+        The inverse determinant of `W`, which in the considered cases is always a negative
+        power of the eta function. See the thetis of Nils Skoruppa.
+        """
         try :
             return self.__eta_factor
         except AttributeError :
-            raise RuntimeError( "Eta factor have to be set first" )
+            self.__eta_factor = self.power_series_ring_modular()( 
+                                  JacobiFormD1NNFactory_class._eta_factors(self) )
+        
+            return self.__eta_factor 
  
     def by_taylor_expansion(self, fs, k) :
-        """
-        We combine the theta decomposition and the heat operator as in [Sko].
-        This yields a bijections of Jacobi forms of weight `k` and
-        `M_k \times S_{k+2} \times .. \times S_{k+2m}`.
+        r"""
+        We combine the theta decomposition and the heat operator as in the
+        thesis of Nils Skoruppa. This yields a bijections of the space of weak
+        Jacobi forms of weight `k` and index `m` with the product of spaces
+        of elliptic modular forms `M_k \times S_{k+2} \times .. \times S_{k+2m}`.
+
+        INPUT:
+        
+        - ``fs`` -- A list of functions that given an integer `p` return the
+                    q-expansion of a modular form with rational coefficients
+                    up to precision `p`.  These modular forms correspond to
+                    the components of the above product.
+        
+        - `k` -- An integer. The weight of the weak Jacobi form to be computed.
         
         NOTE:
 
-            To make ``phi_divs`` integral we introduce an extra factor
+            In order to make ``phi_divs`` integral we introduce an extra factor
             `2^{\mathrm{index}} * \mathrm{factorial}(k + 2 * \mathrm{index} - 1)`.
         """
         ## we introduce an abbreviations
@@ -81,8 +123,9 @@ class JacobiFormD1NNModularFactory_class (SageObject) :
         PS = self.power_series_ring()
             
         if not len(fs) == self.__precision.jacobi_index() + 1 :
-            raise ValueError("fs must be a list of m + 1 elliptic modular forms or their fourier expansion")
-        
+            raise ValueError( "fs (which has length {0}) must be a list of {1} Fourier expansions" \
+                              .format(len(fs), self.__precision.jacobi_index() + 1) )
+
         qexp_prec = self._qexp_precision()
         if qexp_prec is None : # there are no forms below the precision
             return dict()

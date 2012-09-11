@@ -398,6 +398,9 @@ class JacobiFormD1NNFactory_class (SageObject) :
         
         - ``theta_factors`` -- A list of power series over `\ZZ`. 
         """
+        if theta_factos not in self.power_series_ring() :
+            theta_factors = self.power_series_ring()(theta_factors)
+        
         self.__theta_factors = theta_factors
     
     def _theta_factors(self, p = None) :
@@ -591,7 +594,8 @@ class JacobiFormD1NNFactory_class (SageObject) :
         f_divs = dict()
         for (i, f) in enumerate(fs) :
             f_divs[(i, 0)] = PS(f(qexp_prec), qexp_prec)
-        
+
+        ## a special implementation of the case m = 1, which is important when computing Siegel modular forms.        
         if self.__precision.jacobi_index() == 1 :
             return self._by_taylor_expansion_m1(f_divs, k, is_integral)
         
@@ -611,7 +615,7 @@ class JacobiFormD1NNFactory_class (SageObject) :
                                   for j in xrange(i + 1) ) )
             
         phi_coeffs = dict()
-        for r in xrange(self.__precision.jacobi_index() + 1) :
+        for r in xrange(self.index() + 1) :
             series = sum( map(operator.mul, self._theta_factors()[r], phi_divs) )
             series = self._eta_factor() * series
 
