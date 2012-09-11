@@ -367,7 +367,7 @@ class JacobiFormD1NNFactory_class (SageObject) :
         self.__power_series_ring_ZZ = PowerSeriesRing(ZZ, 'q')
         self.__power_series_ring = PowerSeriesRing(QQ, 'q')
 
-    def index(self) :
+    def jacobi_index(self) :
         r"""
         The index of the Jacobi forms that are computed by this factory. 
         """
@@ -391,40 +391,52 @@ class JacobiFormD1NNFactory_class (SageObject) :
         """
         return self.__precision.index()
 
-    def _set_theta_factors(self, theta_factors) :
+    def _set_wronskian_adjoint(self, wronskian_adjoint, weight_parity = 0) :
         r"""
-        Set the cache for theta factors. See _theta_factors.
+        Set the cache for the adjoint of the wronskian. See _wronskian_adjoint.
         
         INPUT:
         
-        - ``theta_factors`` -- A list of power series over `\ZZ`. 
-        """
-        if theta_factos not in self.power_series_ring() :
-            theta_factors = self.power_series_ring()(theta_factors)
+        - ``wronskian_adjoint`` -- A list of lists of power series over `\ZZ`.
         
-        self.__theta_factors = theta_factors
+        - ``weight_parity`` -- An integer (default: `0`).
+        """
+        wronskian_adjoint = [ [ e if e in self.integral_power_series_ring() else self.integral_power_series_ring()(e)
+                                for e in row ]
+                              for row in wronskian_adjoint ]
+        
+        if weight_parity % 2 == 0 :
+            self.__wronskian_adjoint_even = wronskian_adjoint
+        else :
+            self.__wronskian_adjoint_odd = wronskian_adjoint
     
-    def _theta_factors(self, p = None) :
+    def _wronskian_adjoint(self, weight_parity = 0, p = None) :
         r"""
-        The vector `W^\# (\theta_0, .., \theta_{2m - 1})^{\mathrm{T}} \pmod{p}` as a list.
-        The `q`-expansion is shifted by `-(m + 1)(2*m + 1) / 24`, which will be compensated
-        for by the eta factor.
+        The matrix `W^\# \pmod{p}`, mentioned on page 142 of Nils Skoruppa's thesis.
+        This matrix is represented by a list of lists of q-expansions.
+        
+        The q-expansion is shifted by `-(m + 1)(2*m + 1) / 24` in the case of even weights, and it is
+        shifted by `-(m - 1) (2*m + 3) / 24` otherwise. This is compensated by the missing q-powers
+        returned by _wronskian_invdeterminant.
         
         INPUT:
         
         - `p` -- A prime or ``None``.
         
-        NOTE:
-        
-        - The cases `m = 1, 2` are hard coded for high precisions.
+        - ``weight_parity`` -- An integer (default: `0`).
         """
         try :
+            if weight_parity % 2 == 0 :
+                wronskian_adjoint = self.__wronskian_adjoint_even
+            else :
+                wronskian_adjoint = self.__wronskian_adjoint_ood
+
             if p is None :
-                return self.__theta_factors
+                return wronskian_adjoint
             else :
                 P = PowerSeriesRing(GF(p), 'q')
                 
-                return [map(P, facs) for facs in self.__theta_factors] 
+                return [map(P, row) for row in wronskian_adjoint] 
 
         except AttributeError :
             qexp_prec = self._qexp_precision()
@@ -432,43 +444,43 @@ class JacobiFormD1NNFactory_class (SageObject) :
                 PS = self.integral_power_series_ring()
             else :
                 PS = PowerSeriesRing(GF(p), 'q')
-            m = self.__precision.jacobi_index()
+            m = self.jacobi_index()
             
             twom = 2 * m
             frmsq = twom ** 2
             
             thetas = dict( ((i, j), dict())
                            for i in xrange(m + 1) for j in xrange(m + 1) )
-            
-            ## We want to calculate \hat \theta_{j,l} = sum_r (2 m r + j)**2l q**(m r**2 + j r).
 
-            for r in xrange(0, isqrt((qexp_prec - 1 + m)//m) + 2) :
-                for j in [0,m] :
-                    fact = (twom*r + j)**2
-                    coeff = 2
-                    for l in xrange(0, m + 1) :
-                        thetas[(j,l)][m*r**2 + r*j] = coeff
-                        coeff = coeff * fact
-            thetas[(0,0)][0] = 1
-                    
-            for r in xrange(0, isqrt((qexp_prec - 1 + m)//m) + 2) :
-                for j in xrange(1, m) :
+            ## We want to calculate \hat \theta_{j,l} = sum_r (2 m r + j)**2l q**(m r**2 + j r)
+            ## in the case of even weight, and \hat \theta_{j,l} = sum_r (2 m r + j)**(2l + 1) q**(m r**2 + j r),
+            ## otherwise. 
+            for r in xrange(isqrt((qexp_prec - 1 + m)//m) + 2) :
+                for j in (xrange(m + 1) if weight_parity % 2 == 0 else range(1, m)) :
                     fact_p = (twom*r + j)**2
                     fact_m = (twom*r - j)**2
-                    coeff_p = 2
-                    coeff_m = 2
+                    if weight_parity % 2 == 0 :
+                        coeff_p = 2
+                        coeff_m = 2
+                    else :
+                        coeff_p = 2 * (twom*r + j)
+                        coeff_m = 2 * (twom*r - j)
                     
-                    for l in xrange(0, m + 1) :
-                        thetas[(j,l)][m*r**2 + r*j] = coeff_p 
+                    for l in (xrange(m + 1) if weight_parity % 2 == 0 else range(1, m)):
+                        thetas[(j,l)][m*r**2 + r*j] = coeff_p
                         thetas[(j,l)][m*r**2 - r*j] = coeff_m
                         coeff_p = coeff_p * fact_p
                         coeff_m = coeff_m * fact_m 
+            if weight_parity % 2 == 0 :
+                thetas[(0,0)][0] = 1
                                     
             thetas = dict( ( k, PS(th).add_bigoh(qexp_prec) )
                            for (k,th) in thetas.iteritems() )
             
-            W = matrix(PS, m + 1, [ thetas[(j, l)]
-                                    for j in xrange(m + 1) for l in xrange(m + 1) ])
+            W = matrix( PS, m + 1 if weight_parity % 2 == 0 else (m - 1),
+                        [ thetas[(j, l)]
+                          for j in (xrange(m + 1) if weight_parity % 2 == 0 else range(1, m))
+                          for l in (xrange(m + 1) if weight_parity % 2 == 0 else range(1, m)) ] )
             
             
             ## Since the adjoint of matrices with entries in a general ring
@@ -476,7 +488,13 @@ class JacobiFormD1NNFactory_class (SageObject) :
             ## the cases `m = 2` and `m = 3`.  The expressions are obtained by
             ## computing the adjoint of a matrix with entries `w_{i,j}` in a
             ## polynomial algebra.
-            if m == 2 and qexp_prec > 10**5 :
+            if W.nrows() == 1 :
+                Wadj = matrix(PS, [[ W[0,0] ]])
+            elif W.nrows() == 2 :
+                Wadj = matrix(PS, [ [ W[1,1], -W[0,1]],
+                                    [-W[1,0],  W[0,0]] ])
+            
+            elif W.nrows() == 3 and qexp_prec > 10**5 :
                 adj00 =   W[1,1] * W[2,2] - W[2,1] * W[1,2]
                 adj01 = - W[1,0] * W[2,2] + W[2,0] * W[1,2]
                 adj02 =   W[1,0] * W[2,1] - W[2,0] * W[1,1]
@@ -491,7 +509,7 @@ class JacobiFormD1NNFactory_class (SageObject) :
                                     [adj10, adj11, adj12],
                                     [adj20, adj21, adj22] ])
                   
-            elif m == 3 and qexp_prec > 10**5 :
+            elif W.nrows() == 4 and qexp_prec > 10**5 :
                 adj00 = -W[0,2]*W[1,1]*W[2,0] + W[0,1]*W[1,2]*W[2,0] + W[0,2]*W[1,0]*W[2,1] - W[0,0]*W[1,2]*W[2,1] - W[0,1]*W[1,0]*W[2,2] + W[0,0]*W[1,1]*W[2,2]
                 adj01 = -W[0,3]*W[1,1]*W[2,0] + W[0,1]*W[1,3]*W[2,0] + W[0,3]*W[1,0]*W[2,1] - W[0,0]*W[1,3]*W[2,1] - W[0,1]*W[1,0]*W[2,3] + W[0,0]*W[1,1]*W[2,3]
                 adj02 = -W[0,3]*W[1,2]*W[2,0] + W[0,2]*W[1,3]*W[2,0] + W[0,3]*W[1,0]*W[2,2] - W[0,0]*W[1,3]*W[2,2] - W[0,2]*W[1,0]*W[2,3] + W[0,0]*W[1,2]*W[2,3]
@@ -519,44 +537,71 @@ class JacobiFormD1NNFactory_class (SageObject) :
             else :
                 Wadj = W.adjoint()
             
-            theta_factors = [ [ Wadj[i,r] for i in xrange(m + 1) ]
-                              for r in xrange(m + 1) ]
+            if weight_parity % 2 == 0 :
+                wronskian_adjoint = [ [ Wadj[i,r] for i in xrange(m + 1) ]
+                                      for r in xrange(m + 1) ]
+            else :
+                wronskian_adjoint = [ [ Wadj[i,r] for i in xrange(m - 1) ]
+                                      for r in xrange(m - 1) ]
             
             if p is None :
-                self.__theta_factors = theta_factors
+                if weight_parity % 2 == 0 :
+                    self.__wronskian_adjoint_even = wronskian_adjoint
+                else :
+                    self.__wronskian_adjoint_odd = wronskian_adjoint
                 
-            return theta_factors
+            return wronskian_adjoint
     
-    def _set_eta_factor(self, eta_factor) :
+    def _set_wronskian_invdeterminant(self, wronskian_invdeterminant, weight_parity = 0) :
         r"""
-        Set the cache for theta factors. See _theta_factors.
+        Set the cache for the inverse determinant of the Wronskian. See _wronskian_adjoint.
         
         INPUT:
         
-        - ``eta_factor`` -- A power series over `\ZZ`.
-        """
-        if not eta_factor in self.integral_power_series_ring() :
-            eta_factor = self.integral_power_series_ring()(eta_factor)
+        - ``wronskian_invdeterminant`` -- A power series over `\ZZ`.
         
-        self.__eta_factor = eta_factor
+        - ``weight_parity`` -- An integer (default: `0`).
+        """
+        if not wronskian_invdeterminant in self.integral_power_series_ring() :
+            wronskian_invdeterminant = self.integral_power_series_ring()(wronskian_invdeterminant)
+        
+        if weight_parity % 2 == 0 :
+            self.__wronskian_invdeterminant_even = wronskian_invdeterminant
+        else :
+            self.__wronskian_invdeterminant_odd = wronskian_invdeterminant
     
-    def _eta_factor(self) :
+    def _wronskian_invdeterminant(self, weight_parity = 0) :
         r"""
         The inverse determinant of `W`, which in the considered cases is always a negative
-        power of the eta function. See the thetis of Nils Skoruppa.
+        power of the eta function. See the thesis of Nils Skoruppa.
+        
+        INPUT:
+        
+        - ``weight_parity`` -- An integer (default: `0`).
         """
         try :
-            return self.__eta_factor
+            if weight_parity % 2 == 0 :
+                wronskian_invdeterminant = self._wronskian_invdeterminant_even
+            else :
+                wronskian_invdeterminant = self._wronskian_invdeterminant_odd
         except AttributeError :
-            m = self.__precision.jacobi_index()
-            pw = (m + 1) * (2 * m + 1)
+            m = self.jacobi_index()
+            if weight_parity % 2 == 0 :
+                pw = (m + 1) * (2 * m + 1)
+            else :
+                pw = (m - 1) * (2 * m - 1)
             qexp_prec = self._qexp_precision()
             
-            self.__eta_factor = self.integral_power_series_ring() \
+            wronskian_invdeterminant = self.integral_power_series_ring() \
                  ( [ number_of_partitions(n) for n in xrange(qexp_prec) ] ) \
                  .add_bigoh(qexp_prec) ** pw
                  
-            return self.__eta_factor
+            if weight_parity % 2 == 0 :
+                self._wronskian_invdeterminant_even = wronskian_invdeterminant
+            else :
+                self._wronskian_invdeterminant_odd = wronskian_invdeterminant
+
+        return wronskian_invdeterminant
  
     def by_taylor_expansion(self, fs, k, is_integral=False) :
         r"""
@@ -584,9 +629,10 @@ class JacobiFormD1NNFactory_class (SageObject) :
         else :
             PS = self.power_series_ring()
             
-        if not len(fs) == self.__precision.jacobi_index() + 1 :
+        if (k % 2 == 0 and not len(fs) == self.jacobi_index() + 1) \
+          or (k % 2 != 0 and not len(fs) == self.jacobi_index() - 1) :
             raise ValueError( "fs (which has length {0}) must be a list of {1} Fourier expansions" \
-                              .format(len(fs), self.__precision.jacobi_index() + 1) )
+                              .format(len(fs), self.jacobi_index() + 1 if k % 2 == 0 else self.jacobi_index() - 1) )
         
         qexp_prec = self._qexp_precision()
         if qexp_prec is None : # there are no Fourier indices below the precision
@@ -597,29 +643,46 @@ class JacobiFormD1NNFactory_class (SageObject) :
             f_divs[(i, 0)] = PS(f(qexp_prec), qexp_prec)
 
         ## a special implementation of the case m = 1, which is important when computing Siegel modular forms.        
-        if self.__precision.jacobi_index() == 1 :
+        if self.jacobi_index() == 1 and k % 2 == 0 :
             return self._by_taylor_expansion_m1(f_divs, k, is_integral)
         
-        for i in xrange(self.__precision.jacobi_index() + 1) :
-            for j in xrange(1, self.__precision.jacobi_index() - i + 1) :
+        m = self.jacobi_index()
+        
+        for i in (xrange(m + 1) if k % 2 == 0 else xrange(m - 1)) :
+            for j in xrange(1, m - i + 1) :
                 f_divs[(i,j)] = f_divs[(i, j - 1)].derivative().shift(1)
             
         phi_divs = list()
-        for i in xrange(self.__precision.jacobi_index() + 1) :
-            ## This is the formula in Skoruppas thesis. He uses d/ d tau instead of d / dz which yields
-            ## a factor 4 m
-            phi_divs.append( sum( f_divs[(j, i - j)]
-                                  * ( (4 * self.__precision.jacobi_index())**i
-                                      * binomial(i,j) / 2**i # 2**(self.__precision.jacobi_index() - i + 1)
-                                      * prod(2*(i - l) + 1 for l in xrange(1, i))
-                                      / factorial(i + k + j - 1)
-                                      * factorial(2*self.__precision.jacobi_index() + k - 1) ) 
-                                  for j in xrange(i + 1) ) )
-            
+        for i in (xrange(m + 1) if k % 2 == 0 else xrange(m - 1)) :
+            if k % 2 == 0 :
+                ## This is (13) on page 131 of Skoruppa (change of variables n -> i, r -> j).
+                ## The additional factor (2m + k - 1)! is a renormalization to make coefficients integral.
+                ## The additional factor (4m)^i stems from the fact that we have used d / d\tau instead of
+                ## d^2 / dz^2 when treating the theta series.  Since these are annihilated by the heat operator
+                ## the additional factor compensates for this. 
+                phi_divs.append( sum( f_divs[(j, i - j)]
+                                      * ( (4 * self.jacobi_index())**i
+                                          * binomial(i,j) / 2**i # 2**(self.__precision.jacobi_index() - i + 1)
+                                          * prod(2*l + 1 for l in xrange(i))
+                                          / factorial(i + k + j - 1)
+                                          * factorial(2*self.jacobi_index() + k - 1) ) 
+                                      for j in range(i + 1) ) )
+            else :
+                phi_divs.append( sum( f_divs[(j, i - j)]
+                                      * ( (4 * self.jacobi_index())**i
+                                          * binomial(i,j) / 2**(i + 1) # 2**(self.__precision.jacobi_index() - i + 1)
+                                          * prod(2*l + 1 for l in xrange(i + 1))
+                                          / factorial(i + k + j)
+                                          * factorial(2*self.jacobi_index() + k - 1) ) 
+                                      for j in range(i + 1) ) )
+                
         phi_coeffs = dict()
-        for r in xrange(self.index() + 1) :
-            series = sum( map(operator.mul, self._theta_factors()[r], phi_divs) )
-            series = self._eta_factor() * series
+        for r in (xrange(m + 1) if k % 2 == 0 else xrange(1, m)) :
+            if k % 2 == 0 :
+                series = sum( map(operator.mul, self._wronskian_adjoint(k)[r], phi_divs) )
+            else :
+                series = sum( map(operator.mul, self._wronskian_adjoint(k)[r - 1], phi_divs) )
+            series = self._wronskian_invdeterminant(k) * series
 
             for n in xrange(qexp_prec) :
                 phi_coeffs[(n, r)] = series[n]
@@ -629,7 +692,8 @@ class JacobiFormD1NNFactory_class (SageObject) :
     def _by_taylor_expansion_m1(self, f_divs, k, is_integral=False) :
         r"""
         This provides faster implementation of by_taylor_expansion in the case
-        of Jacobi index `1`.
+        of Jacobi index `1` (and even weight). It avoids the computation of the
+        Wronskian by providing an explicit formula.
         """
         if is_integral :
             PS = self.integral_power_series_ring()
