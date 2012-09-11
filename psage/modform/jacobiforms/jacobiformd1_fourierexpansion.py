@@ -376,8 +376,9 @@ class JacobiFormD1NNFilter ( SageObject ) :
 # JacobiD1FourierExpansionModule
 #===============================================================================
 
-## FIXME: Implement weight character
-def JacobiD1FourierExpansionModule(K, k, L, weak_forms = False) :
+## FIXME: Implement weight character JacobiFormD1WeightCharacter(k, L)
+
+def JacobiFormD1FourierExpansionModule(K, k, L, weak_forms = False) :
         r"""
         INPUT:
 
@@ -385,10 +386,7 @@ def JacobiD1FourierExpansionModule(K, k, L, weak_forms = False) :
             - ``weak_forms``     -- If ``False`` the condition `|L| L^{-1} r**2 <= 4 |L| n`
                                     will be imposed.
         """
-        indices = JacobiFormD1Indices(L, weak_forms = weak_forms)
-        R = EquivariantMonoidPowerSeriesModule(
-             indices,
-             TrivialCharacterMonoid(indices.group(), ZZ),
-             TrivialRepresentation(indices.group(), K) )
-            
-        return R
+        return EquivariantMonoidPowerSeriesModule(
+                 JacobiFormD1Indices(L, weak_forms = weak_forms),
+                 JacobiFormD1WeightCharacter(k, L),
+                 TrivialRepresentation(indices.group(), K) )
