@@ -284,7 +284,7 @@ class ModularFormType_abstract ( SageObject ) :
             ...
             NotImplementedError: Subclass has to implement this function.
         """
-        raise NotImplementedError( "Subclass has to implement this function." )
+        return self.grading(K).gens()
 
     def is_vector_valued(self) :
         """
