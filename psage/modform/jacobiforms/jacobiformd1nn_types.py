@@ -30,7 +30,7 @@ from psage.modform.fourier_expansion_framework.modularforms.modularform_ambient 
 from psage.modform.fourier_expansion_framework.modularforms.modularform_types import ModularFormType_abstract
 from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import jacobi_form_by_taylor_expansion,\
     _jacobi_forms_by_taylor_expansion_coords
-from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiD1NNFourierExpansionModule, \
+from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFourierExpansionModule, \
                                                                       JacobiFormD1NNFilter
 from sage.categories.number_fields import NumberFields
 from sage.matrix.constructor import diagonal_matrix, matrix, zero_matrix,\
@@ -172,7 +172,7 @@ class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
         if K is QQ or K in NumberFields() :
             return Sequence( [ jacobi_form_by_taylor_expansion(i, self.__index, self.__weight, precision)
                                for i in xrange(self._rank(K)) ],
-                             universe = JacobiD1NNFourierExpansionModule(QQ, self.__index) )
+                             universe = JacobiFormD1NNFourierExpansionModule(QQ, self.__weight, self.__index) )
         
         raise NotImplementedError
     

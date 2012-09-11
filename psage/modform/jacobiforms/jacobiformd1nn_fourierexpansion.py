@@ -101,15 +101,18 @@ class JacobiFormD1NNIndices ( SageObject ) :
     
     def group(self) :
         r"""
-        These are the invertible, integral lower triogonal matrices
-        with bottom right entry `1`.
+        The Levi group attached to the parabolic subgroup of the full
+        Jacobi group. This corresponds to transformations `r |--> r + a 2m`
+        for `a \in \ZZ` and `r |--> -r`. 
         """
-        return "L^1_2(ZZ)"
+        return "\Gamma^J_{1, M\infty}"
     
     def is_monoid_action(self) :
         r"""
         True if the representation respects the monoid structure.
         """
+        ## This returns False, because compatibility would require correct consideration
+        ## of the index, which behaves additively when multiplying Jacobi forms. 
         return False
     
     def filter(self, bound) :
@@ -360,31 +363,86 @@ class JacobiFormD1NNFilter ( SageObject ) :
         return r"\text{Jacobi precision $%s$}" % (latex(self.__bound),)
 
 #===============================================================================
-# JacobiD1NNFourierExpansionModule
+# JacobiFormD1NNFourierExpansionCharacterMonoid
 #===============================================================================
 
-def JacobiD1NNFourierExpansionModule(K, m, weak_forms = False) :
+_character_eval_function_cache = None
+
+def JacobiFormD1NNFourierExpansionCharacterMonoid() :
+    """
+    Return the monoid of all characters for Jacobi forms of weight `k`
+    for the full Jacobi group.
+    
+    This is a monoid of order~`2` corresponding to reflections of `r -> -r`.   
+    
+    OUTPUT:
+        A monoid of characters.
+    
+    TESTS:
+        sage: from jacobiformsd1_fourierexpansion import JacobiFormD1FourierExpansionCharacterMonoid
+        sage: M = JacobiFormD1FourierExpansionCharacterMonoid()
+        sage: M
+        Character monoid over Multiplicative Abelian Group isomorphic to C2
+        sage: M([1]) * M([1])
+        f0
+    """
+    try :
+        (C, eval) = _character_eval_function_cache
+    except ValueError :
+        C = AbelianGroup([2])
+        eval = lambda (sign), c: 1 if c._monoid_element().list()[0] == 0 or sign == 1 else -1
+        
+        _character_eval_function_cache = (C, eval)
+    
+    return CharacterMonoid_class("\Gamma^J_{1, M\infty}", C, ZZ, eval)
+
+def JacobiFormD1NNWeightCharacter(K, k) :
+    r"""
+    The character of the Jacobi Levi group for the action on Fourier expansions of
+    non-trivial Jacobi forms of weight `k`.
+    
+    INPUT:
+    
+    - `K` -- A ring.
+    
+    - `k` -- An integer.
+    """
+    chmonoid = JacobiFormD1FourierExpansionCharacterMonoid(K)
+    monoid = chmonoid.monoid()
+    
+    if k % 2 == 0 :
+        return chmonoid.one_element()
+    else :
+        return CharacterMonoidElement_class(chmonoid, monoid([1]))
+
+#===============================================================================
+# JacobiFormD1NNFourierExpansionModule
+#===============================================================================
+
+def JacobiFormD1NNFourierExpansionModule(K, k, m, weak_forms = False) :
         r"""
         INPUT:
 
-            - `m`                -- The index of the associated Jacobi forms.
-            - `weak_forms`       -- If True the weak condition
-                                    `r^2 \le 4 m n`n will be imposed on the
-                                    indices.
+        - `m`                -- The index of the associated Jacobi forms.
+            
+        - `weak_forms`       -- If True the weak condition
+                                `r^2 \le 4 m n`n will be imposed on the
+                                indices.
         """
-        
         R = EquivariantMonoidPowerSeriesModule(
              JacobiFormD1NNIndices(m, weak_forms = weak_forms),
-             TrivialCharacterMonoid("L^1_2(ZZ)", ZZ),
-             TrivialRepresentation("L^1_2(ZZ)", K) )
-    
-        if K is ZZ :
-            R._set_multiply_function( lambda k, d1,d2, ch1,ch2, res : mult_coeff_int(k, d1, d2, ch1, ch2, res, m)
-                                      if not weak_forms
-                                      else lambda k, d1,d2, ch1,ch2, res : mult_coeff_int_weak(k, d1, d2, ch1, ch2, res, m) )
-        else :
-            R._set_multiply_function( lambda k, d1,d2, ch1,ch2, res : mult_coeff_generic(k, d1, d2, ch1, ch2, res, m)
-                                      if not weak_forms
-                                      else lambda k, d1,d2, ch1,ch2, res : mult_coeff_generic_weak(k, d1, d2, ch1, ch2, res, m) )
+             JacobiFormD1NNWeightCharacter( ZZ, k),
+             TrivialRepresentation("\Gamma^J_{1, M\infty}", K) )
+
+## Since the action of the Jacobi Levi group does not respect the monoid structure
+## of the indices, multiplication is not well defined.
+#        if K is ZZ :
+#            R._set_multiply_function( lambda k, d1,d2, ch1,ch2, res : mult_coeff_int(k, d1, d2, ch1, ch2, res, m)
+#                                      if not weak_forms
+#                                      else lambda k, d1,d2, ch1,ch2, res : mult_coeff_int_weak(k, d1, d2, ch1, ch2, res, m) )
+#        else :
+#            R._set_multiply_function( lambda k, d1,d2, ch1,ch2, res : mult_coeff_generic(k, d1, d2, ch1, ch2, res, m)
+#                                      if not weak_forms
+#                                      else lambda k, d1,d2, ch1,ch2, res : mult_coeff_generic_weak(k, d1, d2, ch1, ch2, res, m) )
             
         return R

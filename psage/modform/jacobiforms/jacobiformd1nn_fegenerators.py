@@ -23,7 +23,7 @@ We provide methods to create Fourier expansions of (weak) Jacobi forms.
 
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_lazyelement import \
                                         EquivariantMonoidPowerSeries_lazy
-from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiD1NNFourierExpansionModule
+from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFourierExpansionModule
 from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFilter
 from sage.combinat.partition import number_of_partitions
 from sage.libs.flint.fmpz_poly import Fmpz_poly  
@@ -79,7 +79,7 @@ def jacobi_form_by_taylor_expansion(i, index, weight, precision) :
     Then we return an echelon basis with respect enumeration of this first echelon
     basis of the '\ZZ'-submodule of Jacobi forms.
     """
-    expansion_ring = JacobiD1NNFourierExpansionModule(ZZ, index)
+    expansion_ring = JacobiFormD1NNFourierExpansionModule(ZZ, weight, index)
         
     coefficients_factory = DelayedFactory_JacobiFormD1NN_taylor_expansion( i, index, weight, precision )
     
@@ -190,11 +190,6 @@ def weak_jacbi_form_by_taylor_expansion(fs, precision, is_integral = False, weig
     if factory is None :
         factory = JacobiFormD1NNFactory(precision, len(fs) - 1)
             
-    if is_integral :
-        expansion_ring = JacobiD1NNFourierExpansionModule(ZZ, len(fs) - 1, True)
-    else :
-        expansion_ring = JacobiD1NNFourierExpansionModule(QQ, len(fs) - 1, True)
-
     f_exps = list()
     for (i,f) in enumerate(fs) :
         if f == 0 :
@@ -206,18 +201,23 @@ def weak_jacbi_form_by_taylor_expansion(fs, precision, is_integral = False, weig
                 weight = f.weight() - 2 * i
             else :
                 if not weight == f.weight() - 2 * i :
-                    ValueError("Weight of the i-th form must be k + 2*i.")
+                    ValueError( "Weight of the {0}-th form (={1}) must be k + 2*i = {2}.".format(i, f.weight(), weight + 2 * i) )
             if i != 0 and not f.is_cuspidal() :
-                ValueError("All but the first form must be cusp forms.")    
+                ValueError( "All but the first form must be cusp forms." )    
         else :
             f_exps.append(f)
 
     if weight is None :
-        raise ValueError("Either one element of fs must be a modular form or " + \
-                         "the weight must be passed.")
+        raise ValueError( "Either one element of fs must be a modular form or " + \
+                          "the weight must be passed." )
     
-    coefficients_factory = DelayedFactory_JacobiFormD1NN_taylor_expansion_weak( factory, f_exps, weight )
-    return EquivariantMonoidPowerSeries_lazy(expansion_ring, expansion_ring.monoid().filter(precision), coefficients_factory.getcoeff)
+    if is_integral :
+        expansion_ring = JacobiFormD1NNFourierExpansionModule(ZZ, weight, len(fs) - 1, True)
+    else :
+        expansion_ring = JacobiFormD1NNFourierExpansionModule(QQ, weight, len(fs) - 1, True)
+
+    return EquivariantMonoidPowerSeries_lazy( expansion_ring, expansion_ring.monoid().filter(precision),
+                                              DelayedFactory_JacobiFormD1NN_taylor_expansion_weak( factory, f_exps, weight ).getcoeff )
 
 #===============================================================================
 # DelayedFactory_JacobiFormD1NN_taylor_expansion
