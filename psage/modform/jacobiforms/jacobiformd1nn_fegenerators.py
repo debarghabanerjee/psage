@@ -44,43 +44,6 @@ from sage.rings.rational_field import QQ
 from sage.structure.sage_object import SageObject
 import operator
 
-#===============================================================================
-# _jacobi_forms_by_taylor_expansion_coords
-#===============================================================================
-
-_jacobi_forms_by_taylor_expansion_coordinates_cache = dict()
-
-def _jacobi_forms_by_taylor_expansion_coordinates(precision, weight, index) :
-    r"""
-    The coefficients of Jacobi forms with respect to a basis of weak
-    Jacobi forms that is returned by _all_weak_jacobi_forms_by_taylor_expansion.
-    
-    INPUT:
-    
-    - ``precision`` -- A non-negative integer that corresponds to a precision of
-                       the q-expansion.
-
-    - ``weight`` -- An integer.
-    
-    - ``index`` -- A non-negative integer.    
-    """
-    global _jacobi_forms_by_taylor_expansion_coordinates_cache
-    
-    key = (index, weight)
-    try :
-        return _jacobi_forms_by_taylor_expansion_coordinates_cache[key]
-    except KeyError :
-        if precision < (index - 1) // 4 + 1 :
-            precision = (index - 1) // 4 + 1
-        
-        weak_forms = _all_weak_jacobi_forms_by_taylor_expansion(weight, index, precision)
-        weak_index_matrix = matrix(ZZ, [ [ f[(n,r)] for n in xrange((index - 1) // 4 + 1)
-                                                    for r in xrange(isqrt(4 * n * index) + 1,  index + 1) ]
-                                         for f in weak_forms] )
-        _jacobi_forms_by_taylor_expansion_coordinates_cache[key] = \
-          weak_index_matrix.left_kernel().echelonized_basis()
-          
-        return _jacobi_forms_by_taylor_expansion_coordinates_cache[key]
 
 #===============================================================================
 # jacobi_forms_by_taylor_expansion
@@ -149,19 +112,42 @@ class DelayedFactory_JacobiFormD1NN_by_taylor_expansion :
             return 0
 
 #===============================================================================
-# _theta_decomposition_indices
+# _jacobi_forms_by_taylor_expansion_coords
 #===============================================================================
 
-@cached_function
-def _theta_decomposition_indices(weight, index) :
+_jacobi_forms_by_taylor_expansion_coordinates_cache = dict()
+
+def _jacobi_forms_by_taylor_expansion_coordinates(precision, weight, index) :
     r"""
-    A list of possible indices of the echelon bases `M_k, S_{k+2}` etc." 
+    The coefficients of Jacobi forms with respect to a basis of weak
+    Jacobi forms that is returned by _all_weak_jacobi_forms_by_taylor_expansion.
+    
+    INPUT:
+    
+    - ``precision`` -- A non-negative integer that corresponds to a precision of
+                       the q-expansion.
+
+    - ``weight`` -- An integer.
+    
+    - ``index`` -- A non-negative integer.    
     """
-    dims = [ ModularForms(1, weight).dimension()] + \
-           [ ModularForms(1, weight + 2*i).dimension() - 1
-             for i in xrange(1, index + 1) ]
-           
-    return [ (i,j) for (i,d) in enumerate(dims) for j in xrange(d) ]
+    global _jacobi_forms_by_taylor_expansion_coordinates_cache
+    
+    key = (index, weight)
+    try :
+        return _jacobi_forms_by_taylor_expansion_coordinates_cache[key]
+    except KeyError :
+        if precision < (index - 1) // 4 + 1 :
+            precision = (index - 1) // 4 + 1
+        
+        weak_forms = _all_weak_jacobi_forms_by_taylor_expansion(weight, index, precision)
+        weak_index_matrix = matrix(ZZ, [ [ f[(n,r)] for n in xrange((index - 1) // 4 + 1)
+                                                    for r in xrange(isqrt(4 * n * index) + 1,  index + 1) ]
+                                         for f in weak_forms] )
+        _jacobi_forms_by_taylor_expansion_coordinates_cache[key] = \
+          weak_index_matrix.left_kernel().echelonized_basis()
+          
+        return _jacobi_forms_by_taylor_expansion_coordinates_cache[key]
 
 #===============================================================================
 # _all_weak_jacobi_forms_by_taylor_expansion
@@ -215,6 +201,21 @@ def _all_weak_jacobi_forms_by_taylor_expansion(weight, index, precision) :
                 i*[0] + [modular_form_bases[i][j]] + (index - i)*[0],
                 factory, True )
              for (i,j) in _theta_decomposition_indices(index, weight) ]
+
+#===============================================================================
+# _theta_decomposition_indices
+#===============================================================================
+
+@cached_function
+def _theta_decomposition_indices(weight, index) :
+    r"""
+    A list of possible indices of the echelon bases `M_k, S_{k+2}` etc." 
+    """
+    dims = [ ModularForms(1, weight).dimension()] + \
+           [ ModularForms(1, weight + 2*i).dimension() - 1
+             for i in xrange(1, index + 1) ]
+           
+    return [ (i,j) for (i,d) in enumerate(dims) for j in xrange(d) ]
 
 #===============================================================================
 # _weak_jacbi_form_by_taylor_expansion
@@ -607,11 +608,12 @@ class JacobiFormD1NNFactory_class (SageObject) :
         for i in xrange(self.__precision.jacobi_index() + 1) :
             ## This is the formula in Skoruppas thesis. He uses d/ d tau instead of d / dz which yields
             ## a factor 4 m
-            phi_divs.append( sum( f_divs[(j, i - j)] * (4 * self.__precision.jacobi_index())**i
-                                  * binomial(i,j) / 2**i#2**(self.__precision.jacobi_index() - i + 1)
-                                  * prod(2*(i - l) + 1 for l in xrange(1, i))
-                                  / factorial(i + k + j - 1)
-                                  * factorial(2*self.__precision.jacobi_index() + k - 1) 
+            phi_divs.append( sum( f_divs[(j, i - j)]
+                                  * ( (4 * self.__precision.jacobi_index())**i
+                                      * binomial(i,j) / 2**i # 2**(self.__precision.jacobi_index() - i + 1)
+                                      * prod(2*(i - l) + 1 for l in xrange(1, i))
+                                      / factorial(i + k + j - 1)
+                                      * factorial(2*self.__precision.jacobi_index() + k - 1) ) 
                                   for j in xrange(i + 1) ) )
             
         phi_coeffs = dict()
