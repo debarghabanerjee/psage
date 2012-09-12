@@ -1,4 +1,4 @@
-"""
+r"""
 We provide methods to create Fourier expansions of (weak) Jacobi forms.
 """
 
@@ -24,7 +24,7 @@ We provide methods to create Fourier expansions of (weak) Jacobi forms.
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_lazyelement import \
                                         EquivariantMonoidPowerSeries_lazy
 from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFourierExpansionModule
-from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFilter
+from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFilter, JacobiFormD1NNIndices
 from sage.combinat.partition import number_of_partitions
 from sage.libs.flint.fmpz_poly import Fmpz_poly  
 from sage.matrix.constructor import matrix
@@ -43,7 +43,6 @@ from sage.rings.power_series_ring import PowerSeriesRing
 from sage.rings.rational_field import QQ
 from sage.structure.sage_object import SageObject
 import operator
-
 
 #===============================================================================
 # jacobi_forms_by_taylor_expansion
@@ -415,8 +414,8 @@ class JacobiFormD1NNFactory_class (SageObject) :
         The matrix `W^\# \pmod{p}`, mentioned on page 142 of Nils Skoruppa's thesis.
         This matrix is represented by a list of lists of q-expansions.
         
-        The q-expansion is shifted by `-(m + 1)(2*m + 1) / 24` in the case of even weights, and it is
-        shifted by `-(m - 1) (2*m + 3) / 24` otherwise. This is compensated by the missing q-powers
+        The q-expansion is shifted by `-(m + 1) (2*m + 1) / 24` in the case of even weights, and it is
+        shifted by `-(m - 1) (2*m - 3) / 24` otherwise. This is compensated by the missing q-powers
         returned by _wronskian_invdeterminant.
         
         INPUT:
@@ -440,6 +439,7 @@ class JacobiFormD1NNFactory_class (SageObject) :
 
         except AttributeError :
             qexp_prec = self._qexp_precision()
+            
             if p is None :
                 PS = self.integral_power_series_ring()
             else :
@@ -464,13 +464,13 @@ class JacobiFormD1NNFactory_class (SageObject) :
                         coeff_m = 2
                     else :
                         coeff_p = 2 * (twom*r + j)
-                        coeff_m = 2 * (twom*r - j)
+                        coeff_m = - 2 * (twom*r - j)
                     
-                    for l in (xrange(m + 1) if weight_parity % 2 == 0 else range(1, m)):
+                    for l in (xrange(m + 1) if weight_parity % 2 == 0 else range(1, m)) :
                         thetas[(j,l)][m*r**2 + r*j] = coeff_p
                         thetas[(j,l)][m*r**2 - r*j] = coeff_m
                         coeff_p = coeff_p * fact_p
-                        coeff_m = coeff_m * fact_m 
+                        coeff_m = coeff_m * fact_m
             if weight_parity % 2 == 0 :
                 thetas[(0,0)][0] = 1
                                     
@@ -621,9 +621,19 @@ class JacobiFormD1NNFactory_class (SageObject) :
         
         - ``is_integral`` -- A boolean. If ``True``, the ``fs`` have integral
                              coefficients.
-                    
+        
+        TESTS::
+            
+            sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import *                      
+            sage: from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import *
+            sage: prec = JacobiFormD1NNFilter(10, 3)
+            sage: factory = JacobiFormD1NNFactory(prec)
+            sage: R.<q> = ZZ[[]]
+            sage: expansion = factory.by_taylor_expansion([lambda p: 0 + O(q^p), lambda p: CuspForms(1, 12).gen(0).qexp(p)], 9, True)
+            sage: exp_gcd = gcd(e.values())
+            sage: sorted([ (12 * n - r**2, c/exp_gcd) for ((n, r), c) in expansion.iteritems()])
+            [(-4, 0), (-1, 0), (8, 1), (11, -2), (20, -14), (23, 32), (32, 72), (35, -210), (44, -112), (47, 672), (56, -378), (59, -728), (68, 1736), (71, -1856), (80, -1008), (83, 6902), (92, -6400), (95, -5792), (104, 10738), (107, -6564)]
         """
-        ## we introduce an abbreviations
         if is_integral :
             PS = self.integral_power_series_ring()
         else :
@@ -640,7 +650,7 @@ class JacobiFormD1NNFactory_class (SageObject) :
         
         f_divs = dict()
         for (i, f) in enumerate(fs) :
-            f_divs[(i, 0)] = PS(f(qexp_prec), qexp_prec)
+            f_divs[(i, 0)] = PS(f(qexp_prec), qexp_prec + 10)
 
         ## a special implementation of the case m = 1, which is important when computing Siegel modular forms.        
         if self.jacobi_index() == 1 and k % 2 == 0 :
@@ -725,14 +735,14 @@ class JacobiFormD1NNFactory_class (SageObject) :
         a1 = PS(a1dict); b1 = PS(b1dict)
         a0 = PS(a0dict); b0 = PS(b0dict)
 
-        Ifg0 = (self._eta_factor() * (f*a0 + gfderiv*b0)).list()
-        Ifg1 = (self._eta_factor() * (f*a1 + gfderiv*b1)).list()
+        Ifg0 = (self._wronskian_invdeterminant() * (f*a0 + gfderiv*b0)).list()
+        Ifg1 = (self._wronskian_invdeterminant() * (f*a1 + gfderiv*b1)).list()
 
         if len(Ifg0) < qexp_prec :
             Ifg0 += [0]*(qexp_prec - len(Ifg0))
         if len(Ifg1) < qexp_prec :
             Ifg1 += [0]*(qexp_prec - len(Ifg1))
-                    
+
         Cphi = dict([(0,0)])
         for i in xrange(qexp_prec) :
             Cphi[-4*i] = Ifg0[i]
@@ -741,11 +751,77 @@ class JacobiFormD1NNFactory_class (SageObject) :
         del Ifg0[:], Ifg1[:]
 
         phi_coeffs = dict()
-        m = self.__precision.jacobi_index()
-        for r in xrange(2 * self.__precision.jacobi_index()) :
+        for r in xrange(2) :
             for n in xrange(qexp_prec) :
-                k = 4 * m * n - r**2
+                k = 4 * n - r**2
                 if k >= 0 :
                     phi_coeffs[(n, r)] = Cphi[-k]
                                
         return phi_coeffs
+
+    @staticmethod
+    def _test__by_taylor_expansion(self, jacobi_index, weight, q_precision) :
+        r"""
+        Run tests that validate by_taylor_expansions for various indices and weights.
+        
+        TESTS::
+            
+            sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import *
+            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(None, 2, 10, 200)
+            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(None, 3, 9, 200) 
+            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(None, 10, 10, 200)     # long test
+            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(None, 15, 7, 70)      # long test   
+        """
+        from sage.rings import big_oh
+        from sage.rings.arith import gcd
+        
+        prec = JacobiFormD1NNFilter(q_precision, jacobi_index)
+        factory = JacobiFormD1NNFactory(prec)
+        R = PowerSeriesRing(ZZ, 'q'); q = R.gen(0)
+                
+        if weight % 2 == 0 :
+            nmb_modular_forms = jacobi_index + 1
+            start_weight = weight
+        else :
+            nmb_modular_forms = jacobi_index - 1
+            start_weight = weight + 1
+            
+        modular_forms = list()
+        for (i,k) in enumerate(range(start_weight, start_weight + 2 * nmb_modular_forms, 2)) :
+            modular_forms += [ [lambda p: big_oh.O(q**p) for _ in range(i)] + [b.qexp] + [lambda p: big_oh.O(q**p) for _ in range(nmb_modular_forms - 1 - i)]
+                               for b in ModularForms(1, k).echelon_basis() ] 
+
+        for (fs_index, fs) in enumerate(modular_forms) :
+            expansion = factory.by_taylor_expansion(fs, weight, True)
+
+            weak_prec = JacobiFormD1NNFilter(prec, reduced = False, weak_forms = True)
+            indices = JacobiFormD1NNIndices(jacobi_index)
+
+            projs = list()
+            for pw in (range(0, 2 * jacobi_index + 1, 2) if weight % 2 == 0 else range(1, 2 * jacobi_index - 1, 2)) :
+                proj = dict( (n, 0) for n in range(q_precision) )
+                for (n, r) in weak_prec :
+                    ((nred, rred), sign) = indices.reduce((n,r))
+                    try :
+                        proj[n] +=  (sign * r)**pw * expansion[(nred, rred)]
+                    except KeyError :
+                        pass
+
+                projs.append(proj)
+
+            gcd_projs = [gcd(proj.values()) for proj in projs]
+            gcd_projs = [g if g != 0 else 1 for g in gcd_projs]
+            projs = [sorted(proj.iteritems()) for proj in projs]
+            projs = [R([c for (_, c) in proj]) / gcd_proj for (proj, gcd_proj) in zip(projs, gcd_projs)]
+
+            
+            diff = lambda f: f.derivative().shift(1)
+            normalize = lambda f: f / gcd(f.list()) if f != 0 else f
+            diffnorm = lambda f,l: normalize(reduce(lambda a, g: g(a), l*[diff], f))
+
+            allf = R(0)
+            for (f_index, (f, proj)) in enumerate(zip(fs, projs)) :
+                allf = f(q_precision) + diffnorm(allf, 1)
+                
+                if allf != proj :
+                    raise AssertionError( "{0}-th Taylor coefficient of the {1}-th Jacobi form is not correct".format(f_index, fs_index) )

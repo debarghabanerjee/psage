@@ -210,13 +210,14 @@ class JacobiFormD1NNFilter ( SageObject ) :
     notation `\sum c(n,r) z^n \zeta^r`.
     """
     
-    def __init__(self, bound, m, reduced = True, weak_forms = False) :
+    def __init__(self, bound, m = None, reduced = True, weak_forms = False) :
         r"""
         INPUT:
 
             - ``bound``          -- A natural number or exceptionally
                                     infinity reflection the bound for n.
-            - `m`                -- The index of the associated Jacobi forms.
+            - `m`                -- The index of the associated Jacobi forms or possibly ``None``,
+                                    if ``bound`` is a filter.
             - ``reduced``        -- If True the reduction of Fourier indices
                                     with respect to the full Jacobi group
                                     will be considered. Otherwise, only the
@@ -230,10 +231,18 @@ class JacobiFormD1NNFilter ( SageObject ) :
             The Fourier expansion of a form is assumed to be indexed
             `\sum c(n,r) z^n \zeta^r` . The indices are pairs `(n, r)`.
         """
-        self.__m = m
         if isinstance(bound, JacobiFormD1NNFilter) :
+            if m is not None :
+                assert m == bound.jacobi_index()
+            else :
+                m = bound.jacobi_index()
             bound = bound.index()
+        else :
+            if m is None :
+                raise ValueError( "If bound is not a filter, then m must not be None" )
+        
         self.__bound = bound
+        self.__m = m
         self.__reduced = reduced
         self.__weak_forms = weak_forms
         
@@ -284,58 +293,80 @@ class JacobiFormD1NNFilter ( SageObject ) :
                                self.iter_positive_forms())
     
     def iter_positive_forms(self) :
+        r"""
+        TESTS::
+        
+            sage: from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import *
+            sage: list(JacobiFormD1NNFilter(3, 2, reduced = True).iter_positive_forms())
+            [(1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2)]
+            sage: list(JacobiFormD1NNFilter(3, 2, reduced = False).iter_positive_forms())
+            [(1, 0), (1, 1), (1, -1), (1, 2), (1, -2), (2, 0), (2, 1), (2, -1), (2, 2), (2, -2), (2, 3), (2, -3)]
+        """
         fm = 4 * self.__m
         if self.__reduced :
-            if self.__weak_forms :
-                msq = self.__m**2
-                for n in xrange(1, self.__bound) :
-                    for r in xrange(min(self.__m + 1, isqrt(fm * n + msq - 1) + 1)) :
-                        yield (n, r)
-            else :
-                for n in xrange(1, self.__bound) :
-                    for r in xrange(min(self.__m + 1, isqrt(fm * n - 1) + 1)) :
-                        yield (n, r)
+            for n in xrange(1, self.__bound) :
+                for r in xrange(min(self.__m + 1, isqrt(fm * n - 1) + 1)) :
+                    yield (n, r)
         else :
-            if self.__weak_forms :
-                msq = self.__m**2
-                for n in xrange(1, self.__bound) :
-                    for r in xrange(isqrt(fm * n + msq - 1) + 1) :
-                        yield (n, r)
-            else :
-                for n in xrange(1, self.__bound) :
-                    for r in xrange(isqrt(fm * n - 1) + 1) :
-                        yield (n, r)
+            for n in xrange(1, self.__bound) :
+                yield(n, 0)
+                for r in xrange(1, isqrt(fm * n - 1) + 1) :
+                    yield (n, r)
+                    yield (n, -r)
                         
         raise StopIteration
     
     def iter_indefinite_forms(self) :
+        r"""
+        Iterate over indices with non-positive discriminant.
+        
+        TESTS::
+        
+            sage: from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import *
+            sage: list(JacobiFormD1NNFilter(2, 2, reduced = False, weak_forms = True).iter_indefinite_forms())
+            [(0, -1), (1, 3), (0, 0), (1, -3), (0, 1), (0, -2), (0, 2)]
+            sage: list(JacobiFormD1NNFilter(3, 2, reduced = False, weak_forms = True).iter_indefinite_forms())
+            [(0, -1), (1, 3), (2, -4), (0, 0), (2, 4), (1, -3), (0, 1), (0, -2), (0, 2)]
+        """
+        B = self.__bound
+        m = self.__m
         fm = Integer(4 * self.__m)
         
         if self.__reduced :
             if self.__weak_forms :
-                msq = self.__m**2
-                for n in xrange(0, min(self.__m // 4 + 1, self.__bound)) :
-                    for r in xrange( isqrt(fm * n - 1) + 1 if n != 0 else 0,
-                                     isqrt(fm * n + msq + 1) ) :
+                for n in xrange(1, min(self.__m // 4 + 1, self.__bound)) :
+                    for r in xrange( isqrt(fm * n - 1) + 1 if n != 0 else 0, self.__m + 1 ) :
                         yield (n, r)
             else :
-
                 for r in xrange(0, min(self.__m + 1,
                                        isqrt((self.__bound - 1) * fm) + 1) ) :
                     if fm.divides(r**2) :
                         yield (r**2 // fm, r)
         else :
             if self.__weak_forms :
-                msq = self.__m**2
-                for n in xrange(0, self.__bound) :
-                    for r in xrange( isqrt(fm * n - 1) + 1 if n != 0 else 0,
-                                     isqrt(fm * n + msq + 1) ) :
-                        yield (n, r)
+                ## We first determine the reduced indices.
+                for n in xrange(0, min(m // 4 + 1, B)) :
+                    if n == 0 :
+                        r_iteration = range(-m + 1, m + 1)
+                    else :
+                        r_iteration =   range( -m + 1, -isqrt(fm * n - 1) ) \
+                                       + range( isqrt(fm * n - 1) + 1, m + 1 )
+                    for r in  r_iteration :
+                        for l in range( (- r - isqrt(r**2 - 4 * m * (n - (B - 1))) - 1) // (2 * m) + 1,
+                                        (- r + isqrt(r**2 - 4 * m * (n - (B - 1)))) // (2 * m) + 1 ) :
+                            if n + l * r + m * l**2 >= B :
+                                print l, n, r
+                            yield (n + l * r + m * l**2, r + 2 * m * l)
             else :
-                for n in xrange(0, self.__bound) :
-                    if (fm * n).is_square() :
-                        yield(n, isqrt(fm * n))
+                if self.__bound > 0 :
+                    yield (0,0)
 
+                for n in xrange(1, self.__bound) :
+                    if (fm * n).is_square() :
+                        rt_fmm = isqrt(fm * n)
+                        yield(n, rt_fmm)
+                        yield(n, -rt_fmm)
+        
         raise StopIteration
     
     def __cmp__(self, other) :
