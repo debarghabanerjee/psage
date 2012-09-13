@@ -224,17 +224,15 @@ class EquivariantMonoidPowerSeries_abstract_lazy (EquivariantMonoidPowerSeries_a
             coefficient_function = self.__coefficient_function
             
             for ch in self.non_zero_components() :
-                if not ch in self.__coefficients :
+                try :
+                    coeffs = self.__coefficients[ch]
+                except KeyError :
                     coeffs = dict()
                     self.__coefficients[ch] = coeffs
-                    for k in self._bounding_precision() :
-                        coeffs[k] = coefficient_function((ch, k))
-                else :
-                    coeffs = self.__coefficients[ch]
-                    for k in self._bounding_precision() :
-                        if not k in coeffs :
-                            coeffs[k] = coefficient_function((ch, k))
 
+                for k in self._bounding_precision() :
+                    coeffs[k] = coefficient_function((ch, k))
+        
         if len(self.__coefficients) == 0 and not force_characters :
             return dict()
         elif len(self.__coefficients) == 1 and not force_characters :
