@@ -319,12 +319,12 @@ class EquivariantMonoidPowerSeries_abstract_lazy (EquivariantMonoidPowerSeries_a
             elif len(ns) == 1 :
                 ch = ns[0]
             else :
-                raise ValueError, "you must specify a character"
+                raise ValueError( "A character must be specified" )
             
             s = k
             
         if not s in self.precision() :
-            raise ValueError, "%s out of bound" % s
+            raise ValueError( "{0} out of bound".format(s) )
 
         try :
             return self.__coefficients[ch][s]
