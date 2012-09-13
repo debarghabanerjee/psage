@@ -114,7 +114,7 @@ class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
         ## TODO: Use the dimension formula that is implemented for general Jacobi forms.
         
         if K is QQ or K in NumberFields() :
-            return len(_jacobi_forms_by_taylor_expansion_coordinates(self.__index, self.__weight, 0))
+            return len(_jacobi_forms_by_taylor_expansion_coordinates(self.__index, self.__weight, self.__index))
 
             ## TODO: Remove this code.
             ## This is the formula used by Poor and Yuen in Paramodular cusp forms

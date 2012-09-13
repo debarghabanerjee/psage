@@ -73,9 +73,9 @@ cdef jac_index_sgn _creduce(int n, int r, int m) :
     
     n_red = n - (r**2 - r_red**2)/(4 * m)
     
-    while n_red < 0 :
-        r_red = r_red + 2 * m
-        n_red = n + (4*m*r_red - 4*m**2)
+#    while n_red < 0 :
+#        r_red = r_red + 2 * m
+#        n_red = n + (4*m*r_red - 4*m**2)
 
     res.n = n_red
     res.r = r_red

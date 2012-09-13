@@ -31,11 +31,12 @@ AUTHOR :
 
 from operator import xor
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_basicmonoids import TrivialCharacterMonoid,\
-    TrivialRepresentation
+                            TrivialRepresentation, CharacterMonoid_class, CharacterMonoidElement_class
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_module import EquivariantMonoidPowerSeriesModule
 from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion_cython import creduce, \
-                          mult_coeff_int, mult_coeff_int_weak, \
-                          mult_coeff_generic, mult_coeff_generic_weak
+                            mult_coeff_int, mult_coeff_int_weak, \
+                            mult_coeff_generic, mult_coeff_generic_weak
+from sage.groups.all import AbelianGroup
 from sage.matrix.constructor import matrix
 from sage.misc.cachefunc import cached_method, cached_function
 from sage.misc.functional import isqrt
@@ -276,17 +277,23 @@ class JacobiFormD1NNFilter ( SageObject ) :
     def __contains__(self, k) :
         m = self.__m
         
-        if ( k[1]**2 > 4 * m * k[0] + m**2
-             if self.__weak_forms
-             else k[1]**2 > 4 * m * k[0] ) :
+        if k[0] < 0 :
+            return False
+
+        if not self.__weak_forms and k[1]**2 > 4 * m * k[0] :
             return False
         
-        if k[0] < self.__bound :
-            return True
-        elif self.__reduced :
-            return creduce(k, m)[0][0] < self.__bound
+        if not self.__reduced and k[0] >= self.__bound :
+            return False
         
-        return False
+        kred = creduce(k, m)[0]
+        if k[0] >= self.__bound :
+            return False
+        
+        if self.__weak_forms and k[0] < 0 :
+            return False
+                
+        return True
         
     def __iter__(self) :
         return itertools.chain(self.iter_indefinite_forms(),
@@ -327,6 +334,12 @@ class JacobiFormD1NNFilter ( SageObject ) :
             [(0, -1), (1, 3), (0, 0), (1, -3), (0, 1), (0, -2), (0, 2)]
             sage: list(JacobiFormD1NNFilter(3, 2, reduced = False, weak_forms = True).iter_indefinite_forms())
             [(0, -1), (1, 3), (2, -4), (0, 0), (2, 4), (1, -3), (0, 1), (0, -2), (0, 2)]
+            sage: list(JacobiFormD1NNFilter(10, 2, reduced = True, weak_forms = True).iter_indefinite_forms())
+            [(0, 0), (0, 1), (0, 2)]
+            sage: list(JacobiFormD1NNFilter(10, 3, reduced = True, weak_forms = True).iter_indefinite_forms())
+            [(0, 0), (0, 1), (0, 2), (0, 3)]
+            sage: list(JacobiFormD1NNFilter(10, 10, reduced = True, weak_forms = True).iter_indefinite_forms())                                                  
+            [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 7), (1, 8), (1, 9), (1, 10), (2, 9), (2, 10)]
         """
         B = self.__bound
         m = self.__m
@@ -334,7 +347,7 @@ class JacobiFormD1NNFilter ( SageObject ) :
         
         if self.__reduced :
             if self.__weak_forms :
-                for n in xrange(1, min(self.__m // 4 + 1, self.__bound)) :
+                for n in xrange(0, min(self.__m // 4 + 1, self.__bound)) :
                     for r in xrange( isqrt(fm * n - 1) + 1 if n != 0 else 0, self.__m + 1 ) :
                         yield (n, r)
             else :
@@ -410,16 +423,18 @@ def JacobiFormD1NNFourierExpansionCharacterMonoid() :
         A monoid of characters.
     
     TESTS:
-        sage: from jacobiformsd1_fourierexpansion import JacobiFormD1FourierExpansionCharacterMonoid
+        sage: from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import JacobiFormD1FourierExpansionCharacterMonoid
         sage: M = JacobiFormD1FourierExpansionCharacterMonoid()
         sage: M
         Character monoid over Multiplicative Abelian Group isomorphic to C2
         sage: M([1]) * M([1])
         f0
     """
+    global _character_eval_function_cache
+    
     try :
         (C, eval) = _character_eval_function_cache
-    except ValueError :
+    except TypeError :
         C = AbelianGroup([2])
         eval = lambda (sign), c: 1 if c._monoid_element().list()[0] == 0 or sign == 1 else -1
         
@@ -427,18 +442,16 @@ def JacobiFormD1NNFourierExpansionCharacterMonoid() :
     
     return CharacterMonoid_class("\Gamma^J_{1, M\infty}", C, ZZ, eval)
 
-def JacobiFormD1NNWeightCharacter(K, k) :
+def JacobiFormD1NNWeightCharacter(k) :
     r"""
     The character of the Jacobi Levi group for the action on Fourier expansions of
     non-trivial Jacobi forms of weight `k`.
     
     INPUT:
     
-    - `K` -- A ring.
-    
     - `k` -- An integer.
     """
-    chmonoid = JacobiFormD1FourierExpansionCharacterMonoid(K)
+    chmonoid = JacobiFormD1NNFourierExpansionCharacterMonoid()
     monoid = chmonoid.monoid()
     
     if k % 2 == 0 :

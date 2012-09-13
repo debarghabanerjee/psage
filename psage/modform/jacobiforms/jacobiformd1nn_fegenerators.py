@@ -23,8 +23,8 @@ We provide methods to create Fourier expansions of (weak) Jacobi forms.
 
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_lazyelement import \
                                         EquivariantMonoidPowerSeries_lazy
-from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFourierExpansionModule
-from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFilter, JacobiFormD1NNIndices
+from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFourierExpansionModule,  \
+                                        JacobiFormD1NNFilter, JacobiFormD1NNIndices, JacobiFormD1NNWeightCharacter
 from sage.combinat.partition import number_of_partitions
 from sage.libs.flint.fmpz_poly import Fmpz_poly  
 from sage.matrix.constructor import matrix
@@ -34,6 +34,7 @@ from sage.misc.misc import prod
 from sage.modular.modform.constructor import ModularForms
 from sage.modular.modform.element import ModularFormElement
 from sage.modules.free_module_element import vector
+from sage.rings import big_oh
 from sage.rings.all import GF
 from sage.rings.arith import binomial, factorial
 from sage.rings.integer import Integer
@@ -48,7 +49,7 @@ import operator
 # jacobi_forms_by_taylor_expansion
 #===============================================================================
 
-def jacobi_form_by_taylor_expansion(i, precision, weight, index) :
+def jacobi_form_by_taylor_expansion(i, precision, weight) :
     r"""
     Lazy Fourier expansion of the i-th Jacobi form in a certain basis;
     see _jacobi_forms_by_taylor_expansion_coordinates.
@@ -61,15 +62,26 @@ def jacobi_form_by_taylor_expansion(i, precision, weight, index) :
     
     - ``weight`` -- An integer.
     
-    - ``index`` -- A non-negative integer.
-
     OUTPUT:
     
     - A lazy element of hte Fourier expansion module for Jacobi forms.
+    
+    TESTS::
+    
+        sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import *
+        sage: JacobiFormD1NNFactory_class._test__jacobi_taylor_coefficients( jacobi_form_by_taylor_expansion(1, JacobiFormD1NNFilter(20, 1), 10), 10 )
+        [O(q^20), q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 - 6048*q^6 - 16744*q^7 + 84480*q^8 - 113643*q^9 - 115920*q^10 + 534612*q^11 - 370944*q^12 - 577738*q^13 + 401856*q^14 + 1217160*q^15 + 987136*q^16 - 6905934*q^17 + 2727432*q^18 + 10661420*q^19 + O(q^20)]
+        sage: JacobiFormD1NNFactory_class._test__jacobi_taylor_coefficients( jacobi_form_by_taylor_expansion(1, JacobiFormD1NNFilter(20, 2), 10), 10 )
+        [O(q^20), q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 - 6048*q^6 - 16744*q^7 + 84480*q^8 - 113643*q^9 - 115920*q^10 + 534612*q^11 - 370944*q^12 - 577738*q^13 + 401856*q^14 + 1217160*q^15 + 987136*q^16 - 6905934*q^17 + 2727432*q^18 + 10661420*q^19 + O(q^20), q - 48*q^2 + 756*q^3 - 5888*q^4 + 24150*q^5 - 36288*q^6 - 117208*q^7 + 675840*q^8 - 1022787*q^9 - 1159200*q^10 + 5880732*q^11 - 4451328*q^12 - 7510594*q^13 + 5625984*q^14 + 18257400*q^15 + 15794176*q^16 - 117400878*q^17 + 49093776*q^18 + 202566980*q^19 + O(q^20)]
+        sage: JacobiFormD1NNFactory_class._test__jacobi_taylor_coefficients( jacobi_form_by_taylor_expansion(0, JacobiFormD1NNFilter(20, 3), 9), 9 )
+        [O(q^20), q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 - 6048*q^6 - 16744*q^7 + 84480*q^8 - 113643*q^9 - 115920*q^10 + 534612*q^11 - 370944*q^12 - 577738*q^13 + 401856*q^14 + 1217160*q^15 + 987136*q^16 - 6905934*q^17 + 2727432*q^18 + 10661420*q^19 + O(q^20)]
     """
-    return EquivariantMonoidPowerSeries_lazy( JacobiFormD1NNFourierExpansionModule(ZZ, index),
+    jacobi_index = precision.jacobi_index()
+    
+    return EquivariantMonoidPowerSeries_lazy( JacobiFormD1NNFourierExpansionModule(ZZ, jacobi_index),
                                               precision,
-                                              DelayedFactory_JacobiFormD1NN_by_taylor_expansion( i, precision, weight, index ).getcoeff )
+                                              DelayedFactory_JacobiFormD1NN_by_taylor_expansion( i, precision.index(), weight, jacobi_index ).getcoeff,
+                                              [JacobiFormD1NNWeightCharacter(weight)] )
 
 #===============================================================================
 # DelayedFactory_JacobiFormD1NN_by_taylor_expansion
@@ -85,28 +97,39 @@ class DelayedFactory_JacobiFormD1NN_by_taylor_expansion :
     See _all_weak_jacobi_forms_by_taylor_expansion. We then use
     _jacobi_forms_by_taylor_expansion_coordinates to find linear combinations that
     correspond to Jacobi forms. 
-    
     """
     def __init__(self, i, precision, weight, index) :
-        ## TODO: Check whether we really pass an integer ``precision``.
+        r"""
+        INPUT:
+        
+        - ``precision`` -- A non-negative integer that corresponds to a precision of
+                           the q-expansion.
+
+        - ``weight`` -- An integer.
+    
+        - ``index`` -- A non-negative integer.    
+        """
         self.__i = i
+        self.__precision = precision
         self.__weight = weight
         self.__index = index
-        self.__precision = precision
         
         self.__series = None
+        self.__ch = JacobiFormD1NNWeightCharacter(weight)
     
     def getcoeff(self, key, **kwds) :
-        (_, k) = key
-        # for speed we ignore the character 
+        (ch, k) = key
+        if ch != self.__ch :
+            return ZZ.zero()
+    
         if self.__series is None :
             self.__series = \
               sum( map( operator.mul,
                        _jacobi_forms_by_taylor_expansion_coordinates(self.__precision, self.__weight, self.__index)[self.__i],
-                       _all_weak_jacobi_forms_by_taylor_expansion(self.__index, self.__index, self.__precision) ) )
+                       _all_weak_jacobi_forms_by_taylor_expansion(self.__precision, self.__weight, self.__index) ) )
 
         try :
-            return self.__series[k]
+            return self.__series[key]
         except KeyError :
             return 0
 
@@ -128,7 +151,21 @@ def _jacobi_forms_by_taylor_expansion_coordinates(precision, weight, index) :
 
     - ``weight`` -- An integer.
     
-    - ``index`` -- A non-negative integer.    
+    - ``index`` -- A non-negative integer.
+    
+    TESTS::
+    
+        sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import _jacobi_forms_by_taylor_expansion_coordinates
+        sage: _jacobi_forms_by_taylor_expansion_coordinates(10, 10, 1)
+        [
+        (1, 0, 0),
+        (0, 0, 1)
+        ]
+        sage: _jacobi_forms_by_taylor_expansion_coordinates(10, 12, 1)
+        [
+        (1, 0, 0),
+        (0, 1, 0)
+        ]
     """
     global _jacobi_forms_by_taylor_expansion_coordinates_cache
     
@@ -139,10 +176,12 @@ def _jacobi_forms_by_taylor_expansion_coordinates(precision, weight, index) :
         if precision < (index - 1) // 4 + 1 :
             precision = (index - 1) // 4 + 1
         
-        weak_forms = _all_weak_jacobi_forms_by_taylor_expansion(weight, index, precision)
-        weak_index_matrix = matrix(ZZ, [ [ f[(n,r)] for n in xrange((index - 1) // 4 + 1)
-                                                    for r in xrange(isqrt(4 * n * index) + 1,  index + 1) ]
+        
+        weak_forms = _all_weak_jacobi_forms_by_taylor_expansion(precision, weight, index)
+        weak_index_matrix = matrix(ZZ, [ [ f[(n,r)] for (n, r) in JacobiFormD1NNFilter(index + 1, index, weak_forms = True).iter_indefinite_forms()
+                                                    if 4 * index * n - r**2 != 0 ]
                                          for f in weak_forms] )
+        
         _jacobi_forms_by_taylor_expansion_coordinates_cache[key] = \
           weak_index_matrix.left_kernel().echelonized_basis()
           
@@ -153,8 +192,17 @@ def _jacobi_forms_by_taylor_expansion_coordinates(precision, weight, index) :
 #===============================================================================
 
 @cached_function
-def _all_weak_jacobi_forms_by_taylor_expansion(weight, index, precision) :
+def _all_weak_jacobi_forms_by_taylor_expansion(precision, weight, index) :
     """
+    INPUT:
+    
+    - ``precision`` -- A non-negative integer that corresponds to a precision of
+                       the q-expansion.
+
+    - ``weight`` -- An integer.
+    
+    - ``index`` -- A non-negative integer.    
+
     TESTS:
     
     We compute the Fourier expansion of a Jacobi form of weight `4` and index `2`.  This
@@ -168,59 +216,103 @@ def _all_weak_jacobi_forms_by_taylor_expansion(weight, index, precision) :
         sage: from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import *
         sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import _all_weak_jacobi_forms_by_taylor_expansion
         sage: from psage.modform.fourier_expansion_framework import *
-        sage: prec = 20
-        sage: d = JacobiFormD1NNFilter(prec, 2)
-        sage: f = _all_weak_jacobi_forms_by_taylor_expansion(2, 4, prec)[0]
-        sage: (g1,g2) = tuple(_all_weak_jacobi_forms_by_taylor_expansion(2, 8, prec))
-        sage: em = ExpansionModule([g1, g2])
-        sage: P.<q, zeta> = PolynomialRing(QQ, 2)
-        sage: fp = sum(f[k] * q**k[0] * zeta**k[1] for k in JacobiFormD1NNFilter(prec, 2, reduced = False))
-        sage: mf4 = ModularForms(1, 4).0.qexp(prec).polynomial()
-        sage: h = mf4 * fp
-        sage: eh = EquivariantMonoidPowerSeries(g1.parent(), {g1.parent().characters().gen(0) : dict((k, h[k[0],k[1]]) for k in d)}, d)
-        sage: em.coordinates(eh.truncate(5), in_base_ring = False)
-        [7/66, 4480]
-        
-    According to this we express ``eh`` in terms of the basis of the weight `8` space.
+        sage: q_precision = 20
+        sage: index_filter = JacobiFormD1NNFilter(q_precision, 2)
+        sage: jacobi_indices = JacobiFormD1NNIndices(2)
+        sage: P.<q> = PolynomialRing(LaurentPolynomialRing(QQ, 'zeta')); zeta = P.base_ring().gen(0)
+        sage: f = _all_weak_jacobi_forms_by_taylor_expansion(q_precision, 4, 2)[0]
+        sage: f_poly = sum(f[k] * q**k[0] * zeta**k[1] for k in JacobiFormD1NNFilter(q_precision, 2, reduced = False))
+        sage: jacobi_wt8 = ExpansionModule(_all_weak_jacobi_forms_by_taylor_expansion(q_precision, 8, 2))
+        sage: E4_poly = ModularForms(1, 4).gen(0).qexp(q_precision).polynomial()
+        sage: h_poly = E4_poly * f_poly
+        sage: h = EquivariantMonoidPowerSeries( f.parent(), {JacobiFormD1NNWeightCharacter(8) : dict( ((n, r), c) for (n,lpoly) in h_poly.dict().iteritems() for ((r,), c) in lpoly.dict().iteritems() if (n, r) == jacobi_indices.reduce((n,r))[0] and n < q_precision )}, index_filter )
+        sage: jacobi_wt8.coordinates(h, in_base_ring = False)
+        [7/66, 0, 0, 4480]
+        sage: hh = h - jacobi_wt8.0.fourier_expansion() * 7 / 66 - jacobi_wt8.3.fourier_expansion() * 4480
+        sage: all( c == 0 for c in hh.coefficients().values() )
+        True
+    
+    We test the Taylor coefficients of the weak Jacobi coefficients.
+    See JacobiFormD1NNFactory_class._test__by_taylor_expansion for a similar test.
     
     ::
-    
-        sage: neh = eh - em.0.fourier_expansion() * 7 / 66 - em.1.fourier_expansion() * 4480
-        sage: neh.coefficients()
-        {(18, 0): 0, (12, 1): 0, (9, 1): 0, (3, 0): 0, (11, 2): 0, (8, 0): 0, (16, 2): 0, (2, 1): 0, (15, 1): 0, (6, 2): 0, (14, 0): 0, (19, 0): 0, (5, 1): 0, (7, 2): 0, (4, 0): 0, (1, 2): 0, (12, 2): 0, (9, 0): 0, (8, 1): 0, (18, 2): 0, (15, 0): 0, (17, 2): 0, (14, 1): 0, (11, 1): 0, (18, 1): 0, (5, 0): 0, (2, 2): 0, (10, 0): 0, (4, 1): 0, (1, 1): 0, (3, 2): 0, (0, 0): 0, (13, 2): 0, (8, 2): 0, (7, 1): 0, (6, 0): 0, (17, 1): 0, (11, 0): 0, (19, 2): 0, (16, 0): 0, (10, 1): 0, (4, 2): 0, (1, 0): 0, (14, 2): 0, (0, 1): 0, (13, 1): 0, (7, 0): 0, (15, 2): 0, (12, 0): 0, (9, 2): 0, (6, 1): 0, (3, 1): 0, (16, 1): 0, (2, 0): 0, (19, 1): 0, (5, 2): 0, (17, 0): 0, (13, 0): 0, (10, 2): 0}
+        
+        sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import _test__all_weak_jacobi_forms_by_taylor_expansion
+        sage: [ _test__all_weak_jacobi_forms_by_taylor_expansion(80, weight, jacobi_index) for (weight, jacobi_index) in [(10, 1), (12, 2), (9, 3)] ]
+        [None, None, None]
+        sage: [ _test__all_weak_jacobi_forms_by_taylor_expansion(80, weight, jacobi_index) for (weight, jacobi_index) in [(7, 5), (10, 10) ]          # long time
+        [None, None]
     """
-    modular_form_bases = \
-      [ ModularForms(1, weight + 2*i) \
-          .echelon_basis()[(0 if i == 0 else 1):]
-        for i in xrange(index + 1) ]
-
     factory = JacobiFormD1NNFactory(precision, index)
+    
+    return [ _weak_jacbi_form_by_taylor_expansion( precision, fs, weight, factory )
+             for fs in _all_weak_taylor_coefficients(weight, index) ]
 
-    return [ _weak_jacbi_form_by_taylor_expansion( precision,
-                i*[0] + [modular_form_bases[i][j]] + (index - i)*[0],
-                factory, True )
-             for (i,j) in _theta_decomposition_indices(index, weight) ]
-
+def _test__all_weak_jacobi_forms_by_taylor_expansion(q_precision, weight, jacobi_index) :
+    r"""
+    INPUT:
+    
+    - ``q_precision`` -- A non-negative integer that corresponds to a precision of
+                         the q-expansion.
+    
+    - ``weight`` -- An integer.
+    
+    - ``index`` -- A non-negative integer.
+    """
+    jacobi_forms = _all_weak_jacobi_forms_by_taylor_expansion(q_precision, weight, jacobi_index)
+    preimages = _all_weak_taylor_coefficients(weight, jacobi_index)
+    assert all( proj == f
+                for (phi, fs) in zip(jacobi_forms, preimages)
+                for (proj, f) in zip(
+                     JacobiFormD1NNFactory_class._test__jacobi_taylor_coefficients(phi, weight),
+                     JacobiFormD1NNFactory_class._test__jacobi_predicted_taylor_coefficients(fs, q_precision) ) )
+    
 #===============================================================================
 # _theta_decomposition_indices
 #===============================================================================
 
 @cached_function
-def _theta_decomposition_indices(weight, index) :
+def _all_weak_taylor_coefficients(weight, index) :
     r"""
-    A list of possible indices of the echelon bases `M_k, S_{k+2}` etc." 
+    A product basis of the echelon bases of 
+    
+    - `M_k, M_{k + 2}, ..., M_{k + 2 m}` etc. if ``weight`` is even,
+    
+    - `M_{k + 1}, ..., M_{k + 2 m - 3}` if ``weight`` is odd.
+    
+    INPUT:
+    
+    - ``weight`` -- An integer.
+    
+    - ``index`` -- A non-negative integer.
+    
+    TESTS::
+    
+        sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import _all_weak_taylor_coefficients
+        sage: _all_weak_taylor_coefficients(12, 1)
+        [[<bound method ModularFormElement.qexp of 1 + 196560*q^2 + 16773120*q^3 + 398034000*q^4 + 4629381120*q^5 + O(q^6)>, <function <lambda> at ...>], [<bound method ModularFormElement.qexp of q - 24*q^2 + 252*q^3 - 1472*q^4 + 4830*q^5 + O(q^6)>, <function <lambda> at ...>], [<function <lambda> at ...>, <bound method ModularFormElement.qexp of 1 - 24*q - 196632*q^2 - 38263776*q^3 - 1610809368*q^4 - 29296875024*q^5 + O(q^6)>]]
     """
-    dims = [ ModularForms(1, weight).dimension()] + \
-           [ ModularForms(1, weight + 2*i).dimension() - 1
-             for i in xrange(1, index + 1) ]
-           
-    return [ (i,j) for (i,d) in enumerate(dims) for j in xrange(d) ]
+    R = PowerSeriesRing(ZZ, 'q'); q = R.gen()
+    
+    if weight % 2 == 0 :
+        nmb_modular_forms = index + 1
+        start_weight = weight
+    else :
+        nmb_modular_forms = index - 1
+        start_weight = weight + 1
+        
+    modular_forms = list()
+    for (i,k) in enumerate(range(start_weight, start_weight + 2 * nmb_modular_forms, 2)) :
+        modular_forms += [ [lambda p: big_oh.O(q**p) for _ in range(i)] + [b.qexp] + [lambda p: big_oh.O(q**p) for _ in range(nmb_modular_forms - 1 - i)]
+                           for b in ModularForms(1, k).echelon_basis() ]
+        
+    return modular_forms 
 
 #===============================================================================
 # _weak_jacbi_form_by_taylor_expansion
 #===============================================================================
 
-def _weak_jacbi_form_by_taylor_expansion(precision, fs, factory = None) :
+def _weak_jacbi_form_by_taylor_expansion(precision, fs, weight, factory = None) :
     r"""
     The lazy Fourier expansion of a Jacobi form of index ``len(fs) - 1``, whose first
     corrected Taylor coefficients are the ``fs``.
@@ -229,9 +321,10 @@ def _weak_jacbi_form_by_taylor_expansion(precision, fs, factory = None) :
     
     - ``precision`` -- A filter for the Fourier expansion of Jacobi forms of scalar index.
     
-    - ``fs`` - A list of a) 0's, b) Modular forms, or c) functions of one argument `p` 
-               that return a power series of precision `p`.  The coefficients must be
-               integral.
+    - ``fs`` - A list of functions of one argument `p` that return a power series of
+               precision `p`.  The coefficients must be integral.
+    
+    - ``weight`` -- An integer.
     
     - ``factory`` -- Either ``None``, or a factory class for Jacobi forms of degree 1 with
                      scalar index.
@@ -239,34 +332,28 @@ def _weak_jacbi_form_by_taylor_expansion(precision, fs, factory = None) :
     OUTPUT:
     
     - A lazy Fourier expansion of a Jacobi form.
+    
+    TESTS::
+    
+        sage: from sage.rings import big_oh
+        sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import _weak_jacbi_form_by_taylor_expansion
+        sage: R = PowerSeriesRing(ZZ, 'q'); q = R.gen(0)
+        sage: _weak_jacbi_form_by_taylor_expansion(10, 3 * [lambda p: big_oh.O(q**p)], 10).precision().jacobi_index()
+        2
+        sage: _weak_jacbi_form_by_taylor_expansion(10, 2 * [lambda p: big_oh.O(q**p)], 9).precision().jacobi_index()
+        3
     """
     if factory is None :
         factory = JacobiFormD1NNFactory(precision, len(fs) - 1)
-            
-    f_exps = list()
-    for (i,f) in enumerate(fs) :
-        if f == 0 :
-            f_exps.append(lambda p : 0)
-        elif isinstance(f, ModularFormElement) :
-            f_exps.append(f.qexp)
-            
-            if weight is None :
-                weight = f.weight() - 2 * i
-            else :
-                if not weight == f.weight() - 2 * i :
-                    ValueError( "Weight of the {0}-th form (={1}) must be k + 2*i = {2}.".format(i, f.weight(), weight + 2 * i) )
-            if i != 0 and not f.is_cuspidal() :
-                ValueError( "All but the first form must be cusp forms." )    
-        else :
-            f_exps.append(f)
-
+    
     if weight is None :
         raise ValueError( "Either one element of fs must be a modular form or " + \
                           "the weight must be passed." )
     
-    expansion_ring = JacobiFormD1NNFourierExpansionModule(ZZ, len(fs) - 1, True)
+    expansion_ring = JacobiFormD1NNFourierExpansionModule(ZZ, len(fs) - 1 if weight % 2 == 0 else len(fs) + 1, True)
     return EquivariantMonoidPowerSeries_lazy( expansion_ring, expansion_ring.monoid().filter(precision),
-                                              DelayedFactory_JacobiFormD1NN_taylor_expansion_weak( weight, f_exps, factory ).getcoeff )
+                                              DelayedFactory_JacobiFormD1NN_taylor_expansion_weak( weight, fs, factory ).getcoeff,
+                                              [JacobiFormD1NNWeightCharacter(weight)] )
 
 #===============================================================================
 # DelayedFactory_JacobiFormD1NN_taylor_expansion_weak
@@ -294,7 +381,7 @@ class DelayedFactory_JacobiFormD1NN_taylor_expansion_weak :
         self.__factory = factory
         
         self.__series = None
-        self.__ch = JacobiFormD1WeightCharacter(k, len(fs) - 1)
+        self.__ch = JacobiFormD1NNWeightCharacter(weight)
     
     def getcoeff(self, key, **kwds) :
         (ch, k) = key
@@ -303,7 +390,7 @@ class DelayedFactory_JacobiFormD1NN_taylor_expansion_weak :
         
         if self.__series is None :
             self.__series = \
-             self.__factory.by_taylor_expansion( self.__weight, self.__fs )
+             self.__factory.by_taylor_expansion( self.__fs, self.__weight )
         
         try :
             return self.__series[k]
@@ -630,7 +717,7 @@ class JacobiFormD1NNFactory_class (SageObject) :
             sage: factory = JacobiFormD1NNFactory(prec)
             sage: R.<q> = ZZ[[]]
             sage: expansion = factory.by_taylor_expansion([lambda p: 0 + O(q^p), lambda p: CuspForms(1, 12).gen(0).qexp(p)], 9, True)
-            sage: exp_gcd = gcd(e.values())
+            sage: exp_gcd = gcd(expansion.values())
             sage: sorted([ (12 * n - r**2, c/exp_gcd) for ((n, r), c) in expansion.iteritems()])
             [(-4, 0), (-1, 0), (8, 1), (11, -2), (20, -14), (23, 32), (32, 72), (35, -210), (44, -112), (47, 672), (56, -378), (59, -728), (68, 1736), (71, -1856), (80, -1008), (83, 6902), (92, -6400), (95, -5792), (104, 10738), (107, -6564)]
         """
@@ -652,8 +739,9 @@ class JacobiFormD1NNFactory_class (SageObject) :
         for (i, f) in enumerate(fs) :
             f_divs[(i, 0)] = PS(f(qexp_prec), qexp_prec + 10)
 
-        ## a special implementation of the case m = 1, which is important when computing Siegel modular forms.        
-        if self.jacobi_index() == 1 and k % 2 == 0 :
+        ## a special implementation of the case m = 1, which is important when computing Siegel modular forms.
+        ## TODO: Fix _by_taylor_expansion_m1
+        if False and self.jacobi_index() == 1 and k % 2 == 0 :
             return self._by_taylor_expansion_m1(f_divs, k, is_integral)
         
         m = self.jacobi_index()
@@ -705,6 +793,8 @@ class JacobiFormD1NNFactory_class (SageObject) :
         of Jacobi index `1` (and even weight). It avoids the computation of the
         Wronskian by providing an explicit formula.
         """
+        raise RuntimeError( "This code is known to have a bug. Use, for example,JacobiFormD1NNFactory_class._test__by_taylor_expansion(200, 10, 1) to check.")
+        
         if is_integral :
             PS = self.integral_power_series_ring()
         else :
@@ -760,20 +850,19 @@ class JacobiFormD1NNFactory_class (SageObject) :
         return phi_coeffs
 
     @staticmethod
-    def _test__by_taylor_expansion(self, jacobi_index, weight, q_precision) :
+    def _test__by_taylor_expansion(q_precision, weight, jacobi_index) :
         r"""
         Run tests that validate by_taylor_expansions for various indices and weights.
         
         TESTS::
             
             sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import *
-            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(None, 2, 10, 200)
-            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(None, 3, 9, 200) 
-            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(None, 10, 10, 200)     # long test
-            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(None, 15, 7, 70)      # long test   
+            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(200, 10, 2)
+            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(200, 9, 3)      # long time 
+            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(200, 10, 10)    # long time
+            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(70, 7, 15)      # long time  
         """
         from sage.rings import big_oh
-        from sage.rings.arith import gcd
         
         prec = JacobiFormD1NNFilter(q_precision, jacobi_index)
         factory = JacobiFormD1NNFactory(prec)
@@ -793,35 +882,96 @@ class JacobiFormD1NNFactory_class (SageObject) :
 
         for (fs_index, fs) in enumerate(modular_forms) :
             expansion = factory.by_taylor_expansion(fs, weight, True)
-
-            weak_prec = JacobiFormD1NNFilter(prec, reduced = False, weak_forms = True)
-            indices = JacobiFormD1NNIndices(jacobi_index)
-
-            projs = list()
-            for pw in (range(0, 2 * jacobi_index + 1, 2) if weight % 2 == 0 else range(1, 2 * jacobi_index - 1, 2)) :
-                proj = dict( (n, 0) for n in range(q_precision) )
-                for (n, r) in weak_prec :
-                    ((nred, rred), sign) = indices.reduce((n,r))
-                    try :
-                        proj[n] +=  (sign * r)**pw * expansion[(nred, rred)]
-                    except KeyError :
-                        pass
-
-                projs.append(proj)
-
-            gcd_projs = [gcd(proj.values()) for proj in projs]
-            gcd_projs = [g if g != 0 else 1 for g in gcd_projs]
-            projs = [sorted(proj.iteritems()) for proj in projs]
-            projs = [R([c for (_, c) in proj]) / gcd_proj for (proj, gcd_proj) in zip(projs, gcd_projs)]
-
+            taylor_coefficients = JacobiFormD1NNFactory_class._test__jacobi_taylor_coefficients(expansion, weight, prec)
+            predicted_taylor_coefficients = JacobiFormD1NNFactory_class._test__jacobi_predicted_taylor_coefficients(fs, q_precision)
             
-            diff = lambda f: f.derivative().shift(1)
-            normalize = lambda f: f / gcd(f.list()) if f != 0 else f
-            diffnorm = lambda f,l: normalize(reduce(lambda a, g: g(a), l*[diff], f))
-
-            allf = R(0)
-            for (f_index, (f, proj)) in enumerate(zip(fs, projs)) :
-                allf = f(q_precision) + diffnorm(allf, 1)
+            for (i, (proj, f)) in enumerate(zip(taylor_coefficients, predicted_taylor_coefficients)) :
+                if f != proj :
+                    raise AssertionError( "{0}-th Taylor coefficient of the {1}-th Jacobi form is not correct. Expansions are\n  {2}\nand\n {3}".format(i, fs_index, proj, f) )
+    
+    @staticmethod
+    def _test__jacobi_taylor_coefficients(expansion, weight, prec = None) :
+        r"""
+        Compute the renormalized Taylor coefficients of
+        a Jacobi form.
+        
+        INPUT:
+        
+        - ``expansion`` -- A Fourier expansion or a dictionary with corresponding keys.
+        
+        - ``weight`` -- An integer.
+        
+        - ``prec`` -- A filter for Fourier expansions, of if ``expansion`` is a Fourier expansion
+                      possibly ``None``.
+        
+        OUTPUT:
+        
+        - A list of power series in `q`.
+        """
+        from sage.rings.arith import gcd
+        
+        if prec is None :
+            prec = expansion.precision()
+        jacobi_index = prec.jacobi_index()
+        q_precision = prec.index()
+        R = PowerSeriesRing(ZZ, 'q'); q = R.gen(0)
                 
-                if allf != proj :
-                    raise AssertionError( "{0}-th Taylor coefficient of the {1}-th Jacobi form is not correct".format(f_index, fs_index) )
+        weak_prec = JacobiFormD1NNFilter(prec, reduced = False, weak_forms = True)
+        indices = JacobiFormD1NNIndices(jacobi_index)
+
+        projs = list()
+        for pw in (range(0, 2 * jacobi_index + 1, 2) if weight % 2 == 0 else range(1, 2 * jacobi_index - 1, 2)) :
+            proj = dict( (n, 0) for n in range(q_precision) )
+            for (n, r) in weak_prec :
+                ((nred, rred), sign) = indices.reduce((n,r))
+                try :
+                    proj[n] +=  (sign * r)**pw * expansion[(nred, rred)]
+                except (KeyError, ValueError) :
+                    pass
+            
+            projs.append(proj)
+
+        gcd_projs = [gcd(proj.values()) for proj in projs]
+        gcd_projs = [g if g != 0 else 1 for g in gcd_projs]
+        projs = [sorted(proj.iteritems()) for proj in projs]
+        projs = [ R([c for (_, c) in proj]).add_bigoh(q_precision) / gcd_proj
+                  for (proj, gcd_proj) in zip(projs, gcd_projs) ]
+        
+        return projs
+
+    @staticmethod
+    def _test__jacobi_predicted_taylor_coefficients(fs, q_precision) :
+        r"""
+        Given a list of power series, which are the corrected Taylor coefficients
+        of a Jacobi form, return the renormalized uncorrected ones, assuming that
+        all but one `f` vanish.
+        
+        INPUT:
+        
+        - ``fs`` -- A list of power series.
+        
+        - ``q_precision`` -- An integer.
+        
+        OUPUT:
+        
+        - A list of power series.
+        
+        TESTS:
+        
+        See jacobi_form_by_taylor_expansion.
+        """
+        from sage.rings.arith import gcd
+        
+        R = PowerSeriesRing(ZZ, 'q'); q = R.gen(0)
+        
+        diff = lambda f: f.derivative().shift(1)
+        normalize = lambda f: f / gcd(f.list()) if f != 0 else f
+        diffnorm = lambda f,l: normalize(reduce(lambda a, g: g(a), l*[diff], f))
+
+        taylor_coefficients = list()
+        allf = R(0)
+        for f in fs :
+            allf = f(q_precision) + diffnorm(allf, 1)            
+            taylor_coefficients.append(allf)
+
+        return taylor_coefficients
