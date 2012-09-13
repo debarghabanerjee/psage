@@ -83,7 +83,7 @@ class JacobiFormD1_Gamma ( ModularFormType_abstract ) :
     TESTS::
     
         sage: from psage.modform.jacobiforms import *
-        sage: from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1Filter
+        sage: from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import JacobiFormD1Filter
         sage: L = QuadraticForm(matrix(2, [2,1,1,2])) 
         sage: JR = JacobiFormsD1(QQ, JacobiFormD1_Gamma(6, L), JacobiFormD1Filter(10, L))
         sage: JR.gens()
