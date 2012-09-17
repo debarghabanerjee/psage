@@ -39,7 +39,7 @@ import operator
 def dimension__vector_valued(k, L) :
     r"""
     Compute the dimension of the space of weight `k` vector valued modular forms
-    for the Weil representation attached to the lattice `L`.
+    for the Weil representation attached to the lattice `-L`.
     
     See [Borcherds, Lorenzian ???] for a proof of the formula that we use here.
     
@@ -102,7 +102,7 @@ def dimension__vector_valued(k, L) :
     ## by increasing the precision by 4 for each additional dimension, we
     ## compensate, by far, the errors introduced by the QR decomposition,
     ## which are of the size of (absolute error) * dimension
-    CC = ComplexField(20 + subspace_dimension * 4)
+    CC = ComplexField(2000 + subspace_dimension * 4)
 
     zeta_order = ZZ(lcm([8] + elementary_divisors_inv))
 
@@ -110,24 +110,8 @@ def dimension__vector_valued(k, L) :
     sqrt2  = CC(sqrt(2))
     drt  = CC(sqrt(L.det()))
 
-    print [disc_bilinear(gamma, delta) for gamma in pairs for delta in pairs]
-
-    Tmat  = diagonal_matrix(CC, [zeta**(zeta_order*disc_quadratic(a)) for a in (singls + pairs if k % 2 == 0 else pairs)])
-    if k % 2 == 0 :
-#        Smat = zeta**(zeta_order / 8 * L_dimension) / drt  \
-#               * matrix( CC, [  [zeta**(-zeta_order * disc_bilinear(gamma,delta)) for delta in singls]
-#                              + [zeta**(-zeta_order * disc_bilinear(gamma,delta)) for delta in pairs]
-#                              + [zeta**(-zeta_order * disc_bilinear(gamma,-delta)) for delta in pairs]
-#                              for gamma in singls] \
-#                           + [  [zeta**(-zeta_order * disc_bilinear(gamma,delta)) for delta in singls]
-#                              + [zeta**(-zeta_order * disc_bilinear(gamma,delta)) for delta in pairs]
-#                              + [zeta**(-zeta_order * disc_bilinear(gamma,-delta)) for delta in pairs]
-#                              for gamma in pairs] \
-#                           + [  [zeta**(-zeta_order * disc_bilinear(-gamma,delta)) for delta in singls]
-#                              + [zeta**(-zeta_order * disc_bilinear(-gamma,delta)) for delta in pairs]
-#                              + [zeta**(-zeta_order * disc_bilinear(-gamma,-delta)) for delta in pairs]
-#                              for gamma in pairs] )
-        
+    Tmat  = diagonal_matrix(CC, [zeta**(-zeta_order*disc_quadratic(a)) for a in (singls + pairs if k % 2 == 0 else pairs)])
+    if k % 2 == 0 :        
         Smat = zeta**(zeta_order / 8 * L_dimension) / drt  \
                * matrix( CC, [  [zeta**(-zeta_order * disc_bilinear(gamma,delta)) for delta in singls]
                               + [sqrt2 * zeta**(-zeta_order * disc_bilinear(gamma,delta)) for delta in pairs]
@@ -141,27 +125,14 @@ def dimension__vector_valued(k, L) :
                                for gamma in pairs ] )
     STmat = Smat * Tmat
     
-    return Smat
-    
-#    print Smat**8
-#    print
-#    print
-    
     def eigenvalue_multiplicity(mat, ev) :
         #TODO: Adjust
-        eps = 10**-10
-#        print mat.minpoly().factor()
-#        print
-#        print
+        eps = 10**-50
         mat = matrix(CC, mat - ev * identity_matrix(subspace_dimension))
-        print mat.minpoly()
-        print _qr(mat)
-        print
-        return len(filter( lambda row: all( abs(e) < eps for e in row), _qr(mat) ))
+        return len(filter( lambda row: all( abs(e) < eps for e in row), _qr(mat, eps) ))
     
     i = CC(exp(2 * pi * I / 8))
     S_ev_multiplicity = [eigenvalue_multiplicity(Smat, i**n) for n in range(8)]
-    print S_ev_multiplicity, subspace_dimension
     assert sum(S_ev_multiplicity) == subspace_dimension
 
     rho = CC(exp(2 * pi * I / 12))
@@ -169,11 +140,11 @@ def dimension__vector_valued(k, L) :
     assert sum(ST_ev_multiplicity) == subspace_dimension
 
     T_evs = [ ZZ((-zeta_order * disc_quadratic(a)) % zeta_order) / zeta_order
-              for a in singls + pairs ]
-
+              for a in (singls + pairs if k % 2 == 0 else pairs) ]
+    
     return subspace_dimension * (1 + k / 12) \
-           - ZZ(sum( (S_ev_multiplicity * ((k - n) % 8)) for n in range(8) )) / 8 \
-           - ZZ(sum( (ST_ev_multiplicity * ((-2*k + n) % 12)) for n in range(12) )) / 12 \
+           - ZZ(sum( (ST_ev_multiplicity[n] * ((-2 * k - n) % 12)) for n in range(12) )) / 12 \
+           - ZZ(sum( (S_ev_multiplicity[n] * ((2 * k + n) % 8)) for n in range(8) )) / 8 \
            - sum(T_evs)
 
 def _qr(mat, eps = 10**-10) :
