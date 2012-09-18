@@ -24,7 +24,7 @@ We provide methods to create Fourier expansions of (weak) Jacobi forms.
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_lazyelement import \
                                         EquivariantMonoidPowerSeries_lazy
 from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFourierExpansionModule,  \
-                                        JacobiFormD1NNFilter, JacobiFormD1NNIndices, JacobiFormD1NNWeightCharacter
+                                        JacobiFormD1NNFilter, JacobiFormD1NNIndices, JacobiFormD1WeightCharacter
 from sage.combinat.partition import number_of_partitions
 from sage.libs.flint.fmpz_poly import Fmpz_poly  
 from sage.matrix.constructor import matrix
@@ -81,7 +81,7 @@ def jacobi_form_by_taylor_expansion(i, precision, weight) :
     return EquivariantMonoidPowerSeries_lazy( JacobiFormD1NNFourierExpansionModule(ZZ, jacobi_index),
                                               precision,
                                               DelayedFactory_JacobiFormD1NN_by_taylor_expansion( i, precision.index(), weight, jacobi_index ).getcoeff,
-                                              [JacobiFormD1NNWeightCharacter(weight)] )
+                                              [JacobiFormD1WeightCharacter(weight)] )
 
 #===============================================================================
 # DelayedFactory_JacobiFormD1NN_by_taylor_expansion
@@ -115,7 +115,7 @@ class DelayedFactory_JacobiFormD1NN_by_taylor_expansion :
         self.__index = index
         
         self.__series = None
-        self.__ch = JacobiFormD1NNWeightCharacter(weight)
+        self.__ch = JacobiFormD1WeightCharacter(weight)
     
     def getcoeff(self, key, **kwds) :
         (ch, k) = key
@@ -225,7 +225,7 @@ def _all_weak_jacobi_forms_by_taylor_expansion(precision, weight, index) :
         sage: jacobi_wt8 = ExpansionModule(_all_weak_jacobi_forms_by_taylor_expansion(q_precision, 8, 2))
         sage: E4_poly = ModularForms(1, 4).gen(0).qexp(q_precision).polynomial()
         sage: h_poly = E4_poly * f_poly
-        sage: h = EquivariantMonoidPowerSeries( f.parent(), {JacobiFormD1NNWeightCharacter(8) : dict( ((n, r), c) for (n,lpoly) in h_poly.dict().iteritems() for ((r,), c) in lpoly.dict().iteritems() if (n, r) == jacobi_indices.reduce((n,r))[0] and n < q_precision )}, index_filter )
+        sage: h = EquivariantMonoidPowerSeries( f.parent(), {JacobiFormD1WeightCharacter(8) : dict( ((n, r), c) for (n,lpoly) in h_poly.dict().iteritems() for ((r,), c) in lpoly.dict().iteritems() if (n, r) == jacobi_indices.reduce((n,r))[0] and n < q_precision )}, index_filter )
         sage: jacobi_wt8.coordinates(h, in_base_ring = False)
         [7/66, 0, 0, 4480]
         sage: hh = h - jacobi_wt8.0.fourier_expansion() * 7 / 66 - jacobi_wt8.3.fourier_expansion() * 4480
@@ -353,7 +353,7 @@ def _weak_jacbi_form_by_taylor_expansion(precision, fs, weight, factory = None) 
     expansion_ring = JacobiFormD1NNFourierExpansionModule(ZZ, len(fs) - 1 if weight % 2 == 0 else len(fs) + 1, True)
     return EquivariantMonoidPowerSeries_lazy( expansion_ring, expansion_ring.monoid().filter(precision),
                                               DelayedFactory_JacobiFormD1NN_taylor_expansion_weak( weight, fs, factory ).getcoeff,
-                                              [JacobiFormD1NNWeightCharacter(weight)] )
+                                              [JacobiFormD1WeightCharacter(weight)] )
 
 #===============================================================================
 # DelayedFactory_JacobiFormD1NN_taylor_expansion_weak
@@ -381,7 +381,7 @@ class DelayedFactory_JacobiFormD1NN_taylor_expansion_weak :
         self.__factory = factory
         
         self.__series = None
-        self.__ch = JacobiFormD1NNWeightCharacter(weight)
+        self.__ch = JacobiFormD1WeightCharacter(weight)
     
     def getcoeff(self, key, **kwds) :
         (ch, k) = key

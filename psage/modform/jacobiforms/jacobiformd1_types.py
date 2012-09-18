@@ -29,7 +29,7 @@ from operator import xor
 from psage.modform.fourier_expansion_framework.gradedexpansions.gradedexpansion_grading import TrivialGrading
 from psage.modform.fourier_expansion_framework.modularforms.modularform_ambient import ModularFormsModule_generic
 from psage.modform.fourier_expansion_framework.modularforms.modularform_types import ModularFormType_abstract
-from psage.modform.jacobiforms.jacobiformd1_dimensionformula import dimension__vector_values
+from psage.modform.jacobiforms.jacobiformd1_dimensionformula import dimension__vector_valued
 from psage.modform.jacobiforms.jacobiformd1_fegenerators import jacobi_form_d1_by_restriction
 from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import JacobiFormD1FourierExpansionModule, \
                                                                     JacobiFormD1Filter
@@ -117,14 +117,16 @@ class JacobiFormD1_Gamma ( ModularFormType_abstract ) :
         if K is QQ or K in NumberFields() :
             return Sequence( [ jacobi_form_d1_by_restriction(precision, self.__weight, self.__index, i)
                                for i in xrange(self._rank(K)) ],
-                             universe = JacobiD1FourierExpansionModule(QQ, self.__weight, self.__index) )
+                             universe = JacobiFormD1FourierExpansionModule(QQ, self.__weight, self.__index) )
         
         raise NotImplementedError
     
     def grading(self, K) :
         if K is QQ or K in NumberFields() :
-            return TrivialGrading( self._rank(K),
-                                   (self.__weight, self.__index) )
+            mat = self.__index.matrix()
+            mat.set_immutable()
+            
+            return TrivialGrading( self._rank(K), (self.__weight, mat) )
         
         raise NotImplementedError
 
@@ -170,4 +172,6 @@ class JacobiFormD1_Gamma ( ModularFormType_abstract ) :
         return c
 
     def __hash__(self) :
-        return reduce(xor, map(hash, [type(self), self.__weight, self.__index]))
+        mat = self.__index.matrix()
+        mat.set_immutable()
+        return reduce(xor, map(hash, [type(self), self.__weight, mat]))

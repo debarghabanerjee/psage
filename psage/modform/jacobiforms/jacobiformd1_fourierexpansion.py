@@ -31,28 +31,56 @@ from operator import xor
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_basicmonoids import TrivialCharacterMonoid,\
     TrivialRepresentation
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_module import EquivariantMonoidPowerSeriesModule
-from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion_cython import creduce, \
-                          mult_coeff_int, mult_coeff_int_weak, \
-                          mult_coeff_generic, mult_coeff_generic_weak
+from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1FourierExpansionCharacterMonoid
 from sage.matrix.constructor import matrix
 from sage.misc.cachefunc import cached_method, cached_function
 from sage.misc.functional import isqrt
 from sage.misc.latex import latex
+from sage.modules.all import FreeModule, vector
+from sage.quadratic_forms.all import QuadraticForm
 from sage.rings.infinity import infinity
 from sage.rings.integer import Integer
 from sage.rings.integer_ring import ZZ
 from sage.rings.rational_field import QQ
 from sage.structure.sage_object import SageObject
+from sage.structure.unique_representation import UniqueRepresentation
 import itertools
 import operator
-
-## TODO: Convert this to a function that calls a class
 
 #===============================================================================
 # JacobiFormD1Indices
 #===============================================================================
 
-class JacobiFormD1Indices ( UniqueRepresentation ) :
+_JacobiFormD1Indices__cache = dict()
+
+def JacobiFormD1Indices(L, reduced = True, weak_forms = False) :
+    r"""
+    INPUT:
+
+        - `L`                -- An even quadratic form, the index of the associated
+                                Jacobi forms.   
+        - ``reduced``        -- If ``True`` the reduction of Fourier indices
+                                with respect to the full Jacobi group
+                                will be considered.
+        - ``weak_forms``     -- If ``False`` the condition `|L| L^{-1} r**2 <= 4 |L| n`
+                                will be imposed.
+    """
+    global _JacobiFormD1Indices__cache
+    
+    Lmat = L.matrix()
+    Lmat.set_immutable()
+    
+    key = (Lmat, reduced, weak_forms)
+    
+    try :
+        return _JacobiFormD1Indices__cache[key]
+    except :
+        indices = JacobiFormD1Indices_class(L, reduced, weak_forms)
+        _JacobiFormD1Indices__cache[key] = indices
+        
+        return indices
+
+class JacobiFormD1Indices_class ( SageObject ) :
     def __init__(self, L, reduced = True, weak_forms = False) :
         r"""
         INPUT:
@@ -71,17 +99,17 @@ class JacobiFormD1Indices ( UniqueRepresentation ) :
             `\sum c(n,r) q^n \zeta^r` . The indices are pairs `(n, r)`.
         """
         self.__L = L
+        self.__L_size = L.matrix().nrows()
         self.__reduced = reduced
         self.__weak_forms = weak_forms
-        self.__r_module = FreeModule(ZZ, L.matrix().ncols())
         
         # We fix representatives for ZZ^N / L ZZ^N with minimal norm.
-        preliminiary_reps = [ s * b
-                              for (b, d) in zip(self.__r_module.basis(), L.matrix().echelon_form().diagonal())
+        preliminary_reps = [ s * b
+                              for (b, d) in zip(FreeModule(ZZ, self.__L_size).basis(), L.matrix().echelon_form().diagonal())
                               for s in range(d) ]
         max_norm = max(L(r) for r in preliminary_reps)
         
-        short_vectors = L.short_vector_list_up_to_length(max_norm + 1)
+        short_vectors = [map(vector, rrs) for rrs in L.short_vector_list_up_to_length(max_norm + 1)]
         self.__L_span = L.matrix().row_space()
                 
         representatives = list()
@@ -90,7 +118,7 @@ class JacobiFormD1Indices ( UniqueRepresentation ) :
             for rrs in short_vectors :
                 for rr in rrs :
                     if r - rr in self.__L_span :
-                        representatives[-1].append(rr)
+                        representatives[-1].append(tuple(rr))
                     
                 if len(representatives[-1]) != 0 :
                     break 
@@ -125,7 +153,7 @@ class JacobiFormD1Indices ( UniqueRepresentation ) :
     @cached_method
     def gens(self) :
         # FIXME: This is incorrect for almost all indices m 
-        return [(1,self.__r_module.zero())] + [(1,r) for r in self.__r_module.basis()]
+        return [(1,tuple(self.__L_size * [0]))] + [(1,tuple(r)) for r in FreeModule(ZZ, self.__L_size).basis()]
     
     def jacobi_index(self) :
         return self.__L
@@ -141,7 +169,7 @@ class JacobiFormD1Indices ( UniqueRepresentation ) :
         These are the invertible, integral lower block  triogonal matrices of
         shape (1, N) with bottom right block the identiy matrix `I_N`.
         """
-        return "L^1_{0}(ZZ)".format(1 + self.__r_module.rank())
+        return "\Gamma^J_{{{0}, M\infty}}".format(self.__L_size)
     
     def is_monoid_action(self) :
         r"""
@@ -167,20 +195,18 @@ class JacobiFormD1Indices ( UniqueRepresentation ) :
         (n, r) = s
         # find a representative that corresponds to s
         for rred in map(lambda rs: rs[0], self._r_representatives) :
-            if r - rred in self.__L_span :
+            r_rred = vector(r) - vector(rred)
+            if r_rred in self.__L_span :
                 break
         else :
             raise RuntimeError( "Could not find reduced r" )
         
-        ## TODO: Do the computations again and check whether this is right
-        la = self.__L_span.coordinates(r - rred)
-        
-        nred = n - self.__L(la) + sum(map(operator.mul, la, r))
+        nred = n - (self.__Ladj(r) - self.__Ladj(rred)) // (2 * self.__L.det())
         
         if rred in self._r_reduced_representatives :
             s = 1
         else :
-            rred = -rred
+            rred = tuple(map(operator.neg, rred))
             s = -1
         
         return ((nred, rred), s)
@@ -189,7 +215,7 @@ class JacobiFormD1Indices ( UniqueRepresentation ) :
         raise NotImplementedError()
             
     def zero_element(self) :
-        return (0,self.__r_module.zero())
+        return (0,tuple(self.__L_size * [0]))
     
     def __contains__(self, k) :
         try :
@@ -197,7 +223,9 @@ class JacobiFormD1Indices ( UniqueRepresentation ) :
         except TypeError:
             return False
         
-        return isinstance(n, (int, Integer)) and r in self.__r_module
+        return isinstance(n, (int, Integer)) \
+            and isinstance(r, tuple) \
+            and all(isinstance(e, (int, Integer)) for e in r)
     
     def __cmp__(self, other) :
         c = cmp(type(self), type(other))
@@ -212,8 +240,11 @@ class JacobiFormD1Indices ( UniqueRepresentation ) :
         return c
 
     def __hash__(self) :
-        return reduce(xor, [hash(self.__L), hash(self.__reduced),
-                            hash(self.__weak_forms)])
+        Lmat = self.__L.matrix()
+        Lmat.set_immutable()
+        
+        return reduce(xor, map(hash, [Lmat, self.__reduced,
+                                      self.__weak_forms]))
     
     def _repr_(self) :
         return "Jacobi Fourier indices for index {0} forms".format(self.__L)
@@ -225,7 +256,7 @@ class JacobiFormD1Indices ( UniqueRepresentation ) :
 # JacobiFormD1Filter
 #===============================================================================
 
-class JacobiFormD1NNFilter ( SageObject ) :
+class JacobiFormD1Filter ( SageObject ) :
     r"""
     The filter which will consider the index `n` in the normal
     notation `\sum c(n,r) q^n \zeta^r`.
@@ -296,9 +327,7 @@ class JacobiFormD1NNFilter ( SageObject ) :
         
         (n, r) = k
         
-        if ( self.__Ladj(r) > 4 * L.det() * n ## TODO + m**2
-             if self.__weak_forms
-             else self.__Ladj(r) > 4 * self.__L.det() * n ) :
+        if self.__Ladj(r) > 2 * self.__L.det() * n :
             return False
         
         if n < self.__bound :
@@ -316,11 +345,10 @@ class JacobiFormD1NNFilter ( SageObject ) :
         if self.__weak_forms :
             raise NotImplementedError()
         
-        fm = 4 * self.__m
         if self.__reduced :
             for n in xrange(1, self.__bound) :
                 for r in self.__monoid._r_reduced_representatives :
-                    if (n, r) in self :
+                    if (n, r) in self and self.__Ladj(r) < 2 * self.__L.det() * n:
                         yield (n, r)
         else :
             short_vectors = self.__Ladj.short_vector_list_up_to_length(2 * self.__L.det() * (self.__bound - 1) + 1)
@@ -336,16 +364,18 @@ class JacobiFormD1NNFilter ( SageObject ) :
             raise NotImplementedError()
         
         if self.__reduced :
-            for r in xrange(0, min(self.__m + 1,
-                                   isqrt((self.__bound - 1) * fm) + 1) ) :
-                if fm.divides(r**2) :
-                    yield (r**2 // fm, r)
+            for r in self.__monoid._r_reduced_representatives :
+                rsq = self.__Ladj(r)
+                if rsq % (2 * self.__L.det()) == 0 :
+                    yield (rsq / (2 * self.__L.det()), r) 
         else :
             short_vectors = self.__Ladj.short_vector_list_up_to_length(2 * self.__L.det() * (self.__bound - 1) + 1)
-            for n in xrange(0, self.__bound) :
-                for r in short_vectors[n] :
-                    yield(n, r)
-
+            
+            for (rsq, rs) in enumerate(short_vectors) :
+                for r in rs :
+                    if rsq % (2 * self.__L.det()) == 0 :
+                        yield (rsq / (2 * self.__L.det()), r) 
+        
         raise StopIteration
     
     def __cmp__(self, other) :
@@ -363,8 +393,11 @@ class JacobiFormD1NNFilter ( SageObject ) :
         return c
     
     def __hash__(self) :
+        Lmat = self.__L.matrix()
+        Lmat.set_immutable()
+
         return reduce( xor, map(hash, [ self.__reduced, self.__weak_forms,
-                                        self.__L, self.__bound ]) )
+                                        Lmat, self.__bound ]) )
 
     def _repr_(self) :
         return "Jacobi precision {0}".format(self.__bound)
@@ -373,10 +406,8 @@ class JacobiFormD1NNFilter ( SageObject ) :
         return r"\text{{Jacobi precision ${0}$}}".format(latex(self.__bound))
 
 #===============================================================================
-# JacobiD1FourierExpansionModule
+# JacobiFormD1FourierExpansionModule
 #===============================================================================
-
-## FIXME: Implement weight character JacobiFormD1WeightCharacter(k, L)
 
 def JacobiFormD1FourierExpansionModule(K, k, L, weak_forms = False) :
         r"""
@@ -386,7 +417,8 @@ def JacobiFormD1FourierExpansionModule(K, k, L, weak_forms = False) :
             - ``weak_forms``     -- If ``False`` the condition `|L| L^{-1} r**2 <= 4 |L| n`
                                     will be imposed.
         """
+        indices = JacobiFormD1Indices(L, weak_forms = weak_forms)
         return EquivariantMonoidPowerSeriesModule(
-                 JacobiFormD1Indices(L, weak_forms = weak_forms),
-                 JacobiFormD1WeightCharacter(k, L),
+                 indices,
+                 JacobiFormD1FourierExpansionCharacterMonoid(L.matrix().nrows()),
                  TrivialRepresentation(indices.group(), K) )

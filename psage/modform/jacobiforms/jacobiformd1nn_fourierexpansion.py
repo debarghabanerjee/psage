@@ -407,12 +407,12 @@ class JacobiFormD1NNFilter ( SageObject ) :
         return r"\text{Jacobi precision $%s$}" % (latex(self.__bound),)
 
 #===============================================================================
-# JacobiFormD1NNFourierExpansionCharacterMonoid
+# JacobiFormD1FourierExpansionCharacterMonoid
 #===============================================================================
 
 _character_eval_function_cache = None
 
-def JacobiFormD1NNFourierExpansionCharacterMonoid() :
+def JacobiFormD1FourierExpansionCharacterMonoid(index_size = 1) :
     """
     Return the monoid of all characters for Jacobi forms of weight `k`
     for the full Jacobi group.
@@ -440,9 +440,9 @@ def JacobiFormD1NNFourierExpansionCharacterMonoid() :
         
         _character_eval_function_cache = (C, eval)
     
-    return CharacterMonoid_class("\Gamma^J_{1, M\infty}", C, ZZ, eval)
+    return CharacterMonoid_class("\Gamma^J_{{{0}, M\infty}}".format(index_size), C, ZZ, eval)
 
-def JacobiFormD1NNWeightCharacter(k) :
+def JacobiFormD1WeightCharacter(k, index_size = 1) :
     r"""
     The character of the Jacobi Levi group for the action on Fourier expansions of
     non-trivial Jacobi forms of weight `k`.
@@ -451,7 +451,7 @@ def JacobiFormD1NNWeightCharacter(k) :
     
     - `k` -- An integer.
     """
-    chmonoid = JacobiFormD1NNFourierExpansionCharacterMonoid()
+    chmonoid = JacobiFormD1FourierExpansionCharacterMonoid(index_size)
     monoid = chmonoid.monoid()
     
     if k % 2 == 0 :
@@ -475,18 +475,7 @@ def JacobiFormD1NNFourierExpansionModule(K, m, weak_forms = False) :
         """
         R = EquivariantMonoidPowerSeriesModule(
              JacobiFormD1NNIndices(m, weak_forms = weak_forms),
-             JacobiFormD1NNFourierExpansionCharacterMonoid(),
+             JacobiFormD1FourierExpansionCharacterMonoid(),
              TrivialRepresentation("\Gamma^J_{1, M\infty}", K) )
-
-## Since the action of the Jacobi Levi group does not respect the monoid structure
-## of the indices, multiplication is not well defined.
-#        if K is ZZ :
-#            R._set_multiply_function( lambda k, d1,d2, ch1,ch2, res : mult_coeff_int(k, d1, d2, ch1, ch2, res, m)
-#                                      if not weak_forms
-#                                      else lambda k, d1,d2, ch1,ch2, res : mult_coeff_int_weak(k, d1, d2, ch1, ch2, res, m) )
-#        else :
-#            R._set_multiply_function( lambda k, d1,d2, ch1,ch2, res : mult_coeff_generic(k, d1, d2, ch1, ch2, res, m)
-#                                      if not weak_forms
-#                                      else lambda k, d1,d2, ch1,ch2, res : mult_coeff_generic_weak(k, d1, d2, ch1, ch2, res, m) )
             
         return R

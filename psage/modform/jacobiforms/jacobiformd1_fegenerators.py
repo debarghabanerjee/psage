@@ -23,9 +23,9 @@ Using restriction to scalar indices, we compute Jacobi forms of arbitrary index.
 
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_lazyelement import \
                                         EquivariantMonoidPowerSeries_lazy
-from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiD1FourierExpansionModule, \
-                                                                      JacobiFormD1Filter, \
-                                                                      JacobiFormD1WeightCharacter
+from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import JacobiFormD1FourierExpansionModule, \
+                                                                    JacobiFormD1Filter
+from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1WeightCharacter
 from sage.combinat.partition import number_of_partitions
 from sage.libs.flint.fmpz_poly import Fmpz_poly  
 from sage.matrix.constructor import matrix
@@ -69,7 +69,7 @@ def jacobi_form_d1_by_restriction(precision, k, L, i) :
     
     - A lazy element of the corresponding module of Fourier expansions (over `\QQ`).
     """
-    expansion_ring = JacobiD1FourierExpansionModule(QQ, k, L)
+    expansion_ring = JacobiFormD1FourierExpansionModule(QQ, k, L)
     coefficients_factory = JacobiFormD1DelayedFactory__restriction( precision, k, L, i )
     
     return EquivariantMonoidPowerSeries_lazy(expansion_ring, precision, coefficients_factory.getcoeff)
@@ -350,7 +350,7 @@ def _coefficient_by_restriction( precision, k, L ) :
         raise ValueError( "Could not construct enough restrictions to determine Fourier expansion uniquely" )
     
     
-    fourier_expansion_module = JacobiD1FourierExpansionModule(QQ, k, L)
+    fourier_expansion_module = JacobiFormD1FourierExpansionModule(QQ, k, L)
     characters = fourier_expansion_module.characters()
     ch = characters[0] if characters[0](-1) == (1 if weight % 2 == 0 else -1) \
          else characters[1]
