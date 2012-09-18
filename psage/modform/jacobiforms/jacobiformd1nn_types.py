@@ -28,6 +28,7 @@ from operator import xor
 from psage.modform.fourier_expansion_framework.gradedexpansions.gradedexpansion_grading import TrivialGrading
 from psage.modform.fourier_expansion_framework.modularforms.modularform_ambient import ModularFormsModule_generic
 from psage.modform.fourier_expansion_framework.modularforms.modularform_types import ModularFormType_abstract
+from psage.modform.jacobiforms.jacobiformd1_dimensionformula import dimension__vector_values
 from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import jacobi_form_by_taylor_expansion,\
     _jacobi_forms_by_taylor_expansion_coordinates
 from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFourierExpansionModule, \
@@ -107,66 +108,13 @@ class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
         return JacobiFormsD1NN
     
     def group(self) :
-        return "Sp(2, ZZ)_\infty"
+        return "\Gamma^J_1"
     
     @cached_method
     def _rank(self, K) :
-        ## TODO: Use the dimension formula that is implemented for general Jacobi forms.
-        
         if K is QQ or K in NumberFields() :
-            return len(_jacobi_forms_by_taylor_expansion_coordinates(self.__index, self.__weight, self.__index))
-
-            ## TODO: Remove this code.
-            ## This is the formula used by Poor and Yuen in Paramodular cusp forms
-            if self.__weight == 2 :
-                delta = len(self.__index.divisors()) // 2 - 1
-            else :
-                delta = 0
-                
-            return sum( ModularForms(1, self.__weight + 2 * j).dimension() + j**2 // (4 * self.__index)
-                        for j in xrange(self.__index + 1) ) \
-                   + delta
-            
-
-            ## This is the formula given by Skoruppa in 
-            ## Jacobi forms of critical weight and Weil representations
-            ##FIXME: There is some mistake here
-            if self.__weight % 2 != 0 :
-                ## Otherwise the space X(i**(n - 2 k)) is different
-                ## See: Skoruppa, Jacobi forms of critical weight and Weil representations
-                raise NotImplementedError
-            
-            m = self.__index
-            K = CyclotomicField(24 * m, 'zeta')
-            zeta = K.gen(0)
-            
-            quadform = lambda x : 6 * x**2
-            bilinform = lambda x,y : quadform(x + y) - quadform(x) - quadform(y)
-            
-            T = diagonal_matrix([zeta**quadform(i) for i in xrange(2*m)])
-            S =   sum(zeta**(-quadform(x)) for x in xrange(2 * m)) / (2 * m) \
-                * matrix([[zeta**(-bilinform(j,i)) for j in xrange(2*m)] for i in xrange(2*m)])
-            subspace_matrix_1 = matrix( [ [1 if j == i or j == 2*m - i else 0 for j in xrange(m + 1) ]
-                                        for i in xrange(2*m)] )
-            subspace_matrix_2 = zero_matrix(ZZ, m + 1, 2*m)
-            subspace_matrix_2.set_block(0,0,identity_matrix(m+1))
-            
-            T = subspace_matrix_2 * T * subspace_matrix_1
-            S = subspace_matrix_2 * S * subspace_matrix_1
-            
-            sqrt3 = (zeta**(4*m) - zeta**(-4*m)) * zeta**(-6*m) 
-            rank =   (self.__weight - 1/2 - 1) / 2 * (m + 1) \
-                   + 1/8 * (   zeta**(3*m * (2*self.__weight - 1)) * S.trace()
-                             + zeta**(3*m * (1 - 2*self.__weight)) * S.trace().conjugate() ) \
-                   + 2/(3*sqrt3) * (   zeta**(4 * m * self.__weight) * (S*T).trace()
-                                     + zeta**(-4 * m * self.__weight) * (S*T).trace().conjugate() ) \
-                   - sum((j**2 % (m+1))/(m+1) -1/2 for j in range(0,m+1))
-            
-            if self.__weight > 5 / 2 :
-                return rank
-            else :
-                raise NotImplementedError
-            
+            return dimension__vector_valued( self.__weight - QQ((1,2)), QuadraticForm(matrix(1, [2 * self.__index])) )
+                    
         raise NotImplementedError
     
     @cached_method

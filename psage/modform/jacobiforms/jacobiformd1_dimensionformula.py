@@ -26,7 +26,7 @@ from sage.functions.all import exp, sqrt, sign
 from sage.matrix.all import diagonal_matrix, identity_matrix, matrix
 from sage.misc.all import sum, mrange
 from sage.modules.all import vector 
-from sage.rings.all import ComplexField, ZZ, lcm
+from sage.rings.all import ComplexField, ZZ, QQ, lcm
 from sage.symbolic.all import I, pi
 from copy import copy
 import mpmath
@@ -41,7 +41,8 @@ def dimension__vector_valued(k, L) :
     Compute the dimension of the space of weight `k` vector valued modular forms
     for the Weil representation attached to the lattice `-L`.
     
-    See [Borcherds, Lorenzian ???] for a proof of the formula that we use here.
+    See [Borcherds, Borcherds - Reflection groups of Lorentzian lattices] for a proof
+    of the formula that we use here.
     
     INPUT:
     
@@ -56,11 +57,18 @@ def dimension__vector_valued(k, L) :
     
         sage: ???
     """
+    if 2 * k not in ZZ :
+        raise ValueError( "Weight must be half-integral" ) 
     if k <= 0 :
         return 0
-    if k == 1 :
-        raise NotImplementedError( "Weight 1 is not implemented." )
-    k = ZZ(k)
+    if k < 2 :
+        raise NotImplementedError( "Weight <2 is not implemented." )
+
+    L_dimension = L.matrix().ncols()
+    if L_dimension % 2 != ZZ(2 * k) % 2 :
+        return 0
+    
+    plus_basis = ZZ(L_dimension + 2 * k) % 4 == 0 
 
     ## The bilinear and the quadratic form attached to L
     quadratic = lambda x: L(x) // 2
@@ -72,7 +80,6 @@ def dimension__vector_valued(k, L) :
     dual_basis = map(operator.div, list(dual_basis_pre), elementary_divisors)
     
     L_level = ZZ(lcm([ b.denominator() for b in dual_basis ]))
-    L_dimension = L.matrix().ncols()
     
     (elementary_divisors, _, discriminant_basis_pre) = (L_level * matrix(dual_basis)).change_ring(ZZ).smith_form()
     elementary_divisors = filter( lambda d: d not in ZZ, (elementary_divisors / L_level).diagonal() )
@@ -93,7 +100,7 @@ def dimension__vector_valued(k, L) :
     singls = filter(lambda x: red(-x) - x == 0, mrange(elementary_divisors_inv, vector))
     pairs = filter(lambda x: red(-x) - x != 0 and x < red(-x), mrange(elementary_divisors_inv, vector))
 
-    if k % 2 == 0 :
+    if plus_basis :
         subspace_dimension = len(singls + pairs)
     else :
         subspace_dimension = len(pairs)
@@ -110,8 +117,8 @@ def dimension__vector_valued(k, L) :
     sqrt2  = CC(sqrt(2))
     drt  = CC(sqrt(L.det()))
 
-    Tmat  = diagonal_matrix(CC, [zeta**(-zeta_order*disc_quadratic(a)) for a in (singls + pairs if k % 2 == 0 else pairs)])
-    if k % 2 == 0 :        
+    Tmat  = diagonal_matrix(CC, [zeta**(-zeta_order*disc_quadratic(a)) for a in (singls + pairs if plus_basis else pairs)])
+    if plus_basis :        
         Smat = zeta**(zeta_order / 8 * L_dimension) / drt  \
                * matrix( CC, [  [zeta**(-zeta_order * disc_bilinear(gamma,delta)) for delta in singls]
                               + [sqrt2 * zeta**(-zeta_order * disc_bilinear(gamma,delta)) for delta in pairs]
@@ -140,9 +147,9 @@ def dimension__vector_valued(k, L) :
     assert sum(ST_ev_multiplicity) == subspace_dimension
 
     T_evs = [ ZZ((-zeta_order * disc_quadratic(a)) % zeta_order) / zeta_order
-              for a in (singls + pairs if k % 2 == 0 else pairs) ]
-    
-    return subspace_dimension * (1 + k / 12) \
+              for a in (singls + pairs if plus_basis else pairs) ]
+
+    return subspace_dimension * (1 + QQ(k) / 12) \
            - ZZ(sum( (ST_ev_multiplicity[n] * ((-2 * k - n) % 12)) for n in range(12) )) / 12 \
            - ZZ(sum( (S_ev_multiplicity[n] * ((2 * k + n) % 8)) for n in range(8) )) / 8 \
            - sum(T_evs)
