@@ -129,8 +129,7 @@ class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
     
     def grading(self, K) :
         if K is QQ or K in NumberFields() :
-            return TrivialGrading( self._rank(K),
-                                   (self.__weight, self.__index) )
+            return TrivialGrading( self._rank(K), None )
         
         raise NotImplementedError
 
