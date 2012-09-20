@@ -38,7 +38,7 @@ class DiscrimiantPrecisionSubmodule_abstract :
     def _minimal_discriminant_precision(self, minimal_precision = 0, lazy_rank_check = False) :
         last_precision = None
         for p in xrange(minimal_precision, self.graded_ambient().precision().discriminant() + 1) :
-            precision = self.graded_ambient().fourier_ring().filter(p)
+            precision = self.graded_ambient().fourier_expansion_ambient().filter(p)
             if not precision < last_precision : continue
              
             if self._check_precision(self, precision, lazy_rank_check) :

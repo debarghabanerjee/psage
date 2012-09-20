@@ -157,14 +157,14 @@ class GradedExpansionSubmodule_abstract ( ExpansionModule_abstract ) :
         self.__basis_in_graded_ambient = basis
         
         if not "no_expansion_init" in kwds or not kwds["no_expansion_init"] :
-            if graded_ambient.fourier_expansion_precision().is_infinite() or isinstance(self.__graded_ambient.fourier_ring(), MonoidPowerSeriesAmbient_abstract) :
+            if graded_ambient.fourier_expansion_precision().is_infinite() or isinstance(self.__graded_ambient.fourier_expansion_ambient(), MonoidPowerSeriesAmbient_abstract) :
                 ExpansionModule_abstract.__init__(self, Sequence( map( lambda b: b.fourier_expansion(), basis ),
-                                                                  universe = graded_ambient.fourier_ring() ))
+                                                                  universe = graded_ambient.fourier_expansion_ambient() ))
             else :
-                ExpansionModule_abstract.__init__(self, Sequence( map( lambda b: LazyFourierExpansionEvaluation( graded_ambient.fourier_ring(), b,
+                ExpansionModule_abstract.__init__(self, Sequence( map( lambda b: LazyFourierExpansionEvaluation( graded_ambient.fourier_expansion_ambient(), b,
                                                                                                        graded_ambient.fourier_expansion_precision() ),
                                                                        basis ),
-                                                                  universe = graded_ambient.fourier_ring(), check = False ))
+                                                                  universe = graded_ambient.fourier_expansion_ambient(), check = False ))
         
     def graded_ambient(self) :
         r"""
