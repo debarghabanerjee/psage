@@ -75,8 +75,8 @@ def dimension__vector_valued(k, L) :
         An integer.
 
     TESTS::
-    
-        sage: ???
+
+        sage: TODO: Make precisions rigid
     """
     if 2 * k not in ZZ :
         raise ValueError( "Weight must be half-integral" ) 
@@ -132,7 +132,7 @@ def dimension__vector_valued(k, L) :
     ## which are of the size of (absolute error) * dimension
     CC = ComplexField(2000 + subspace_dimension * 4)
 
-    zeta_order = ZZ(lcm([8] + elementary_divisors_inv))
+    zeta_order = ZZ(lcm([8, 12] + map(lambda ed: 2 * ed, elementary_divisors_inv)))
 
     zeta = CC(exp(2 * pi * I / zeta_order))
     sqrt2  = CC(sqrt(2))

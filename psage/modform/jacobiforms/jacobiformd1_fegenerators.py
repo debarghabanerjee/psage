@@ -343,7 +343,7 @@ def _global_relation_matrix(precision, S, weight_parity) :
 _coefficient_by_restriction__cache = dict()
 def _coefficient_by_restriction( precision, k, L ) :
     r"""
-    Compute the Fourier expansions of Jacobi forms of weight `k` and 
+    Compute the Fourier expansions of Jacobi forms (over `\QQ`) of weight `k` and 
     index `L` (an even symmetric matrix) up to given precision.
     
     ALGORITHM:
@@ -361,6 +361,22 @@ def _coefficient_by_restriction( precision, k, L ) :
     OUTPUT:
     
     - A list of elements of the corresponding Fourier expansion module.
+    
+    TESTS::
+    
+        sage: from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import *
+        sage: from psage.modform.jacobiforms.jacobiformd1_fegenerators import _find_complete_set_of_restriction_vectors
+        sage: from psage.modform.jacobiforms.jacobiformd1_fegenerators import _test__coefficient_by_restriction
+        sage: indices = JacobiFormD1Indices(QuadraticForm(matrix(2, [2,1,1,2])))
+        sage: precision = JacobiFormD1Filter(2, indices.jacobi_index())
+        sage: _test__coefficient_by_restriction(precision, 10, indices.jacobi_index(), 4)
+
+        sage: from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import *
+        sage: from psage.modform.jacobiforms.jacobiformd1_fegenerators import _find_complete_set_of_restriction_vectors
+        sage: from psage.modform.jacobiforms.jacobiformd1_fegenerators import _test__coefficient_by_restriction
+        sage: indices = JacobiFormD1Indices(QuadraticForm(matrix(2, [4,1,1,2])))
+        sage: precision = JacobiFormD1Filter(10, indices.jacobi_index())
+        sage: _test__coefficient_by_restriction(precision, 40, indices.jacobi_index(), 4)
     """
     try :
         Lmat = L.matrix()
@@ -384,12 +400,8 @@ def _coefficient_by_restriction( precision, k, L ) :
     if dim == 0 :
         return []
 
-
     R = precision.monoid()._r_representatives
-    print R
     S_extended = _find_complete_set_of_restriction_vectors(L, R)
-    print S_extended
-        
     S = list()
     for (s, _) in S_extended :
         if s not in S :
@@ -398,10 +410,12 @@ def _coefficient_by_restriction( precision, k, L ) :
 
     (global_restriction_matrix, row_groups, row_labels, column_labels) = _global_restriction_matrix(precision, S, k)
     (global_relation_matrix, column_labels_restriction) = _global_relation_matrix(precision, flatten(L.short_vector_list_up_to_length(max_S_length + 1, True)[1:]), k)
+    global_restriction_matrix.change_ring(QQ)
+    global_relation_matrix.change_ring(QQ)
     
     assert column_labels == column_labels_restriction
     
-    jacobi_indices = Set( L(s) for (m, _, _) in row_groups )
+    jacobi_indices = Set( L(s) for (s, _, _) in row_groups )
     index_filters = dict( (m, JacobiFormD1NNFilter(precision.index(), m)) for m in jacobi_indices )
     jacobi_forms = dict( (m, JacobiFormsD1NN(QQ, JacobiFormD1NN_Gamma(k, m), prec) )
                          for (m, prec) in index_filters.iteritems() )
@@ -409,7 +423,7 @@ def _coefficient_by_restriction( precision, k, L ) :
     forms = list()
     ch = JacobiFormD1WeightCharacter(k)
     for (m, (s, start, length), row_labels_dict) in zip(jacobi_indices, row_groups, row_labels) :
-        for f in jacobi_forms[m].graded_submodule((k,m)).basis() :
+        for f in jacobi_forms[m].graded_submodule(None).basis() :
             f = f.fourier_expansion()
             v = vector(ZZ, len(row_labels_dict))
             for (l, i) in row_labels_dict.iteritems() :
@@ -418,7 +432,10 @@ def _coefficient_by_restriction( precision, k, L ) :
             forms.append(vector(   start*[0] + v.list()
                                  + (row_groups[-1][1] + row_groups[-1][2] - start - length)*[0] ))
 
-    jacobi_expansions = global_restriction_matrix.row_module().intersection(span(forms)).intersection(global_relation_matrix.right_kernel())
+    restriction_expansions = global_restriction_matrix.column_module().intersection(span(forms))
+    restriction_pullback =   global_restriction_matrix.solve_right(restriction_expansions.basis_matrix().transpose()).column_space() \
+                           + global_restriction_matrix.right_kernel().change_ring(QQ)
+    jacobi_expansions = restriction_pullback.intersection(global_relation_matrix.right_kernel())
     
 
     if jacobi_expansions.dimension() < dim :
@@ -429,11 +446,59 @@ def _coefficient_by_restriction( precision, k, L ) :
     
     fourier_expansion_module = JacobiFormD1FourierExpansionModule(QQ, k, L)
     characters = list(fourier_expansion_module.characters())
-    ch = characters[0] if characters[0](-1) == (1 if k % 2 == 0 else -1) \
-         else characters[1]
+    ch = JacobiFormD1WeightCharacter(k)
         
     expansions = list()
     for v in jacobi_expansions.basis() :
         expansions.append( fourier_expansion_module(dict( ((ch, l), c) for (l, c) in zip(column_labels, v) )) )
         
     return expansions
+
+def _test__coefficient_by_restriction( precision, k, L, additional_lengths = 1 ) :
+    from sage.misc.misc import verbose
+
+    expansions = _coefficient_by_restriction( precision, k, L)
+    verbose( "Start testing restrictions of {2} Jacobi forms of weight {0} and index {1}".format(k, L, len(expansions)) )
+    
+    ch = JacobiFormD1WeightCharacter(k)
+    
+    R = precision.monoid()._r_representatives
+    S_extended = _find_complete_set_of_restriction_vectors(L, R)
+
+    S = list()
+    for (s, _) in S_extended :
+        if s not in S :
+            S.append(s) 
+    max_S_length = max([L(s) for s in S])
+
+    S = L.short_vector_list_up_to_length(max_S_length + 1 + additional_lengths, True)[max_S_length + 1:]
+    verbose( "Will use the following restriction vectors: {0}".format(S) )
+    
+    jacobi_forms_dict = dict()
+    
+    for s in flatten(S, max_level = 1) :
+        m = L(s)
+        verbose( "Restriction to index {0} via {1}".format(m, s) )
+        
+        try :
+            jacobi_forms = jacobi_forms_dict[m]
+        except KeyError : 
+            jacobi_forms = JacobiFormsD1NN(QQ, JacobiFormD1NN_Gamma(k, m), JacobiFormD1NNFilter(precision.index(), m))
+            jacobi_forms_dict[m] = jacobi_forms
+        jacobi_forms_module = span([ vector( b[(ch, k)] for k in jacobi_forms.fourier_expansion_precision() )
+                                     for b in map(lambda b: b.fourier_expansion(), jacobi_forms.graded_submodule(None).basis()) ])
+        
+        fourier_expansion_module = jacobi_forms.fourier_expansion_ambient()
+        
+        for (i, expansion) in enumerate(expansions) :
+            verbose( "Testing restriction of {0}-th form".format(i) )
+            restricted_expansion_dict = dict()
+            for (n,r) in precision.monoid_filter() :
+                rres = s.dot_product(vector(r))
+                try :
+                    restricted_expansion_dict[(n,rres)] += expansion[(ch,(n,r))]
+                except KeyError :
+                    restricted_expansion_dict[(n,rres)] = expansion[(ch,(n,r))]
+            
+            restricted_expansion = vector( restricted_expansion_dict.get(k, 0) for k in jacobi_forms.fourier_expansion_precision() )
+            assert restricted_expansion in jacobi_forms_module
