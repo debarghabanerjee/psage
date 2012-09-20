@@ -437,7 +437,7 @@ class GradedExpansionAmbient_abstract :
         return min([ g.precision() for g in self.__gen_expansions + self.__base_gen_expansions])
     
     @cached_method
-    def fourier_ring(self) :
+    def fourier_expansion_ambient(self) :
         r"""
         The ring that Fourier expansions of all elements of this
         ring will be contained in.
@@ -453,10 +453,10 @@ class GradedExpansionAmbient_abstract :
             sage: from psage.modform.fourier_expansion_framework.gradedexpansions.gradedexpansion_ring import *
             sage: mps = MonoidPowerSeriesRing(ZZ, NNMonoid(False))
             sage: ger = GradedExpansionRing_class(None, Sequence([mps(1)]), PolynomialRing(QQ, 'a').ideal(0), DegreeGrading((1,)))
-            sage: ger.fourier_ring()
+            sage: ger.fourier_expansion_ambient()
             Ring of monoid power series over NN
             sage: ger = GradedExpansionRing_class(Sequence([MonoidPowerSeries(mps, {1 : 1}, mps.monoid().filter(2))]), Sequence([MonoidPowerSeries(mps, {1 : 1, 2 : 3}, mps.monoid().filter(4))]), PolynomialRing(ZZ, ['a', 'b']).ideal(0), DegreeGrading((1,2)))
-            sage: ger.fourier_ring()
+            sage: ger.fourier_expansion_ambient()
             Ring of monoid power series over NN
         """
         if self.__gen_expansions.universe().base_ring() == self.base_ring() :
