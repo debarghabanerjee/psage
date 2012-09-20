@@ -29,7 +29,7 @@ from operator import xor
 from psage.modform.fourier_expansion_framework.gradedexpansions.gradedexpansion_grading import TrivialGrading
 from psage.modform.fourier_expansion_framework.modularforms.modularform_ambient import ModularFormsModule_generic
 from psage.modform.fourier_expansion_framework.modularforms.modularform_types import ModularFormType_abstract
-from psage.modform.jacobiforms.jacobiformd1_dimensionformula import dimension__vector_valued
+from psage.modform.jacobiforms.jacobiformd1_dimensionformula import dimension__jacobi
 from psage.modform.jacobiforms.jacobiformd1_fegenerators import jacobi_form_d1_by_restriction
 from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import JacobiFormD1FourierExpansionModule, \
                                                                     JacobiFormD1Filter
@@ -110,7 +110,7 @@ class JacobiFormD1_Gamma ( ModularFormType_abstract ) :
     
     @cached_method
     def _rank(self, K) :
-        return dimension__vector_valued(self.__weight - ZZ(self.__index.matrix().ncols()) / 2, self.__index)
+        return dimension__jacobi(self.__weight, self.__index)
     
     @cached_method
     def generators(self, K, precision) :

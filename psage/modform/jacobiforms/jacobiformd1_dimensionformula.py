@@ -27,10 +27,31 @@ from sage.matrix.all import diagonal_matrix, identity_matrix, matrix
 from sage.misc.all import sum, mrange
 from sage.modules.all import vector 
 from sage.rings.all import ComplexField, ZZ, QQ, lcm
+from sage.quadratic_forms.all import QuadraticForm 
 from sage.symbolic.all import I, pi
 from copy import copy
 import mpmath
 import operator
+
+#===============================================================================
+# dimension__jacobi
+#===============================================================================
+
+def dimension__jacobi(k, L) :
+    r"""
+    INPUT:
+    
+    - `k` -- An integer.
+    
+    - `L` -- A quadratic form or an even symmetric matrix (over `\ZZ`).
+    """
+    try :
+        Lmat = L.matrix()
+    except AttributeError :
+        Lmat = L
+        L = QuadraticForm(Lmat)
+
+    return dimension__vector_valued(k - ZZ(Lmat.ncols()) / 2, L)
 
 #===============================================================================
 # dimension__vector_valued

@@ -8,6 +8,8 @@ AUTHOR :
         Jacobi forms of scalar index.
 """
 
+## TODO: Implement monoid, monoid_filter function for all filters.
+
 #===============================================================================
 # 
 # Copyright (C) 2012 Martin Raum
@@ -69,7 +71,7 @@ def JacobiFormD1Indices(L, reduced = True, weak_forms = False) :
     
     Lmat = L.matrix()
     Lmat.set_immutable()
-    
+        
     key = (Lmat, reduced, weak_forms)
     
     try :
@@ -97,16 +99,29 @@ class JacobiFormD1Indices_class ( SageObject ) :
 
             The Fourier expansion of a form is assumed to be indexed
             `\sum c(n,r) q^n \zeta^r` . The indices are pairs `(n, r)`.
+            
+        TESTS:
+        
+            sage: from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import JacobiFormD1Indices
+            sage: JacobiFormD1Indices(QuadraticForm(matrix(2, [2,1,1,2])))._r_representatives
+            [(0, 0), (0, 1), (0, -1)]
+            sage: JacobiFormD1Indices(QuadraticForm(matrix(2, [2,1,1,2])))._r_reduced_representatives
+            [(0, 0), (0, 1)]
         """
         self.__L = L
+        ## TODO: This does not include the case of scalar indices.
+        self.__Ladj = QuadraticForm( L.matrix().adjoint() )
+
         self.__L_size = L.matrix().nrows()
         self.__reduced = reduced
         self.__weak_forms = weak_forms
         
         # We fix representatives for ZZ^N / L ZZ^N with minimal norm.
-        preliminary_reps = [ s * b
-                              for (b, d) in zip(FreeModule(ZZ, self.__L_size).basis(), L.matrix().echelon_form().diagonal())
-                              for s in range(d) ]
+        preliminary_reps =   [ vector(self.__L_size * [0])] \
+                           + [ s * b
+                                for (b, d) in zip( FreeModule(ZZ, self.__L_size).basis(),
+                                                   L.matrix().echelon_form().diagonal() )
+                                for s in range(1, d) ]
         max_norm = max(L(r) for r in preliminary_reps)
         
         short_vectors = [map(vector, rrs) for rrs in L.short_vector_list_up_to_length(max_norm + 1)]
@@ -158,6 +173,9 @@ class JacobiFormD1Indices_class ( SageObject ) :
     def jacobi_index(self) :
         return self.__L
     
+    def _Ladjoint(self) :
+        return self.__Ladj
+    
     def is_commutative(self) :
         return True
     
@@ -201,7 +219,7 @@ class JacobiFormD1Indices_class ( SageObject ) :
         else :
             raise RuntimeError( "Could not find reduced r" )
         
-        nred = n - (self.__Ladj(r) - self.__Ladj(rred)) // (2 * self.__L.det())
+        nred = n - (self.__Ladj(r) - self.__Ladj(rred)) // self.__L.det()
         
         if rred in self._r_reduced_representatives :
             s = 1
@@ -274,7 +292,7 @@ class JacobiFormD1Filter ( SageObject ) :
             - ``reduced``        -- If ``True`` the reduction of Fourier indices
                                     with respect to the full Jacobi group
                                     will be considered.
-            - ``weak_forms``     -- If ``False`` the condition `|L| L^{-1} r**2 <= 4 |L| n`
+            - ``weak_forms``     -- If ``False`` the condition `|L| L^{-1} [r] <= 4 |L| n`
                                     will be imposed.
 
         NOTE:
@@ -283,7 +301,6 @@ class JacobiFormD1Filter ( SageObject ) :
             `\sum c(n,r) q^n \zeta^r` . The indices are pairs `(n, r)`.
         """
         self.__L = L
-        self.__Ladj = QuadraticForm( L.matrix().adjoint() )
         if isinstance(bound, JacobiFormD1Filter) :
             bound = bound.index()
         self.__bound = bound
@@ -291,6 +308,7 @@ class JacobiFormD1Filter ( SageObject ) :
         self.__weak_forms = weak_forms
         
         self.__monoid = JacobiFormD1Indices(L, reduced, weak_forms)
+        self.__Ladj = self.__monoid._Ladjoint()
         
     def jacobi_index(self) :
         return self.__L
@@ -303,6 +321,12 @@ class JacobiFormD1Filter ( SageObject ) :
         Return whether this is a filter for weak Jacobi forms or not.
         """
         return self.__weak_forms
+    
+    def monoid(self) :
+        return self.__monoid
+    
+    def monoid_filter(self) :
+        return JacobiFormD1Filter(self.__bound, self.__L, False, self.__weak_forms)
     
     def filter_all(self) :
         return JacobiFormD1Filter(infinity, self.__L, self.__reduced, self.__weak_forms)
@@ -327,7 +351,7 @@ class JacobiFormD1Filter ( SageObject ) :
         
         (n, r) = k
         
-        if self.__Ladj(r) > 2 * self.__L.det() * n :
+        if self.__Ladj(r) > self.__L.det() * n :
             return False
         
         if n < self.__bound :
@@ -348,12 +372,12 @@ class JacobiFormD1Filter ( SageObject ) :
         if self.__reduced :
             for n in xrange(1, self.__bound) :
                 for r in self.__monoid._r_reduced_representatives :
-                    if (n, r) in self and self.__Ladj(r) < 2 * self.__L.det() * n:
+                    if (n, r) in self and self.__Ladj(r) < self.__L.det() * n:
                         yield (n, r)
         else :
-            short_vectors = self.__Ladj.short_vector_list_up_to_length(2 * self.__L.det() * (self.__bound - 1) + 1)
+            short_vectors = [map(tuple, rs) for rs in self.__Ladj.short_vector_list_up_to_length(self.__L.det() * (self.__bound - 1) + 1)]
             for n in xrange(1, self.__bound) :
-                for rs in short_vectors[:2 * self.__L.det() * n] :
+                for rs in short_vectors[:self.__L.det() * n] :
                     for r in rs :
                         yield (n, r)
                     
@@ -366,15 +390,15 @@ class JacobiFormD1Filter ( SageObject ) :
         if self.__reduced :
             for r in self.__monoid._r_reduced_representatives :
                 rsq = self.__Ladj(r)
-                if rsq % (2 * self.__L.det()) == 0 :
-                    yield (rsq / (2 * self.__L.det()), r) 
+                if rsq % self.__L.det() == 0 :
+                    yield (rsq // self.__L.det(), r) 
         else :
-            short_vectors = self.__Ladj.short_vector_list_up_to_length(2 * self.__L.det() * (self.__bound - 1) + 1)
+            short_vectors = [map(tuple, rs) for rs in self.__Ladj.short_vector_list_up_to_length(self.__L.det() * (self.__bound - 1) + 1)]
             
             for (rsq, rs) in enumerate(short_vectors) :
                 for r in rs :
-                    if rsq % (2 * self.__L.det()) == 0 :
-                        yield (rsq / (2 * self.__L.det()), r) 
+                    if rsq % self.__L.det() == 0 :
+                        yield (rsq // self.__L.det(), r) 
         
         raise StopIteration
     
