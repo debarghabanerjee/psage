@@ -44,6 +44,7 @@ from sage.rings.integer_ring import ZZ
 from sage.rings.number_field.number_field import CyclotomicField
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.rational_field import QQ
+from sage.quadratic_forms.all import QuadraticForm
 from sage.structure.sequence import Sequence
 
 
@@ -85,13 +86,13 @@ class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
     
         sage: from psage.modform.jacobiforms import *
         sage: from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFilter 
-        sage: JR = JacobiFormsD1NN(QQ, JacobiFormD1NN_Gamma(3, 6), JacobiFormD1NNFilter(10, 3))
+        sage: JR = JacobiFormsD1NN(QQ, JacobiFormD1NN_Gamma(6, 3), JacobiFormD1NNFilter(10, 3))
         sage: JR.gens()
         (Graded expansion TDE_0, Graded expansion TDE_1)
         sage: JR.0 + 2 * JR.1
         Graded expansion TDE_0 + 2*TDE_1
     """
-    def __init__(self, index, weight) :
+    def __init__(self, weight, index) :
         if weight % 2 != 0 :
             raise NotImplementedError, "Only even weight forms are implemented."
   
@@ -120,7 +121,7 @@ class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
     @cached_method
     def generators(self, K, precision) :
         if K is QQ or K in NumberFields() :
-            return Sequence( [ jacobi_form_by_taylor_expansion(i, precision, self.__index, self.__weight)
+            return Sequence( [ jacobi_form_by_taylor_expansion(i, precision, self.__weight)
                                for i in xrange(self._rank(K)) ],
                              universe = JacobiFormD1NNFourierExpansionModule(QQ, self.__index) )
         
@@ -129,7 +130,7 @@ class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
     def grading(self, K) :
         if K is QQ or K in NumberFields() :
             return TrivialGrading( self._rank(K),
-                                   (self.__index, self.__weight) )
+                                   (self.__weight, self.__index) )
         
         raise NotImplementedError
 
@@ -161,16 +162,6 @@ class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
             
         raise NotImplementedError
 
-    def weights(self, K) :
-        r"""
-        A list of integers corresponding to the weights.
-        """
-        if K is QQ or K in NumberFields() :
-            return len(self._theta_decomposition_indices()) \
-                    * [(self.__index, self.__weight)]
-            
-        raise NotImplementedError
-    
     def graded_submodules_are_free(self) :
         return True
 
