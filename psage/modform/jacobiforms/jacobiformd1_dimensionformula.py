@@ -147,7 +147,7 @@ def dimension__vector_valued(k, L, conjugate = False) :
     sqrt2  = CC(sqrt(2))
     drt  = CC(sqrt(L.det()))
 
-    Tmat  = diagonal_matrix(CC, [zeta**(-zeta_order*disc_quadratic(a)) for a in (singls + pairs if plus_basis else pairs)])
+    Tmat  = diagonal_matrix(CC, [zeta**(zeta_order*disc_quadratic(a)) for a in (singls + pairs if plus_basis else pairs)])
     if plus_basis :        
         Smat = zeta**(zeta_order / 8 * L_dimension) / drt  \
                * matrix( CC, [  [zeta**(-zeta_order * disc_bilinear(gamma,delta)) for delta in singls]
@@ -176,7 +176,7 @@ def dimension__vector_valued(k, L, conjugate = False) :
     ST_ev_multiplicity = [eigenvalue_multiplicity(STmat, rho**n) for n in range(12)]
     assert sum(ST_ev_multiplicity) == subspace_dimension
 
-    T_evs = [ ZZ((-zeta_order * disc_quadratic(a)) % zeta_order) / zeta_order
+    T_evs = [ ZZ((zeta_order * disc_quadratic(a)) % zeta_order) / zeta_order
               for a in (singls + pairs if plus_basis else pairs) ]
 
     return subspace_dimension * (1 + QQ(k) / 12) \
