@@ -674,6 +674,9 @@ class EquivariantMonoidPowerSeriesAmbient_abstract :
                     if x.keys()[0].parent() is self.__characters :
                         return self._element_class( self,
                                 x, self.action().filter_all() )
+                    elif x.keys()[0].parent() == self.__characters :
+                        return self._element_class( self,
+                                dict( (self.__characters(ch), cs) for (ch, cs) in x.iteritems() ), self.action().filter_all() )
                 except AttributeError :
                     pass
             

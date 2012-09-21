@@ -295,11 +295,20 @@ class CharacterMonoid_class ( SageObject ) :
             An element of ``self``.
         
         TESTS::
-           sage: from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_basicmonoids import CharacterMonoid_class, TrivialMonoid
-            sage: cm = CharacterMonoid_class("ZZ", TrivialMonoid(), QQ, lambda g, c: 1)
+            sage: from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_basicmonoids import CharacterMonoid_class, TrivialMonoid
+            sage: eval = lambda g, c: 1
+            sage: cm = CharacterMonoid_class("ZZ", TrivialMonoid(), QQ, eval)
             sage: cm(1)
-            1 
+            1
+            sage: cm2 = CharacterMonoid_class("ZZ", TrivialMonoid(), QQ, eval)
+            sage: cm is cm2
+            False
+            sage: cm2(cm(1))
+            1
         """
+        if x.parent() == self :
+            x = x._monoid_element()
+        
         return CharacterMonoidElement_class(self, self.__C(x))
     
     def __hash__(self) :
