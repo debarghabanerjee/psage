@@ -85,7 +85,10 @@ def dimension__vector_valued(k, L) :
     if k < 2 :
         raise NotImplementedError( "Weight <2 is not implemented." )
 
-    L_dimension = L.matrix().ncols()
+    if L.matrix().rank() != L.matrix().nrows() :
+        raise ValueError( "The lattice (={0}) must be non-degenerate.".format(L) )
+
+    L_dimension = L.matrix().nrows()
     if L_dimension % 2 != ZZ(2 * k) % 2 :
         return 0
     
@@ -97,7 +100,7 @@ def dimension__vector_valued(k, L) :
 
     ## A dual basis for L
     (elementary_divisors, dual_basis_pre, _) = L.matrix().smith_form()
-    elementary_divisors = elementary_divisors.diagonal() 
+    elementary_divisors = elementary_divisors.diagonal()
     dual_basis = map(operator.div, list(dual_basis_pre), elementary_divisors)
     
     L_level = ZZ(lcm([ b.denominator() for b in dual_basis ]))
