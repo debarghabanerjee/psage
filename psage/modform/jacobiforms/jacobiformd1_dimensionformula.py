@@ -51,16 +51,16 @@ def dimension__jacobi(k, L) :
         Lmat = L
         L = QuadraticForm(Lmat)
 
-    return dimension__vector_valued(k - ZZ(Lmat.ncols()) / 2, L)
+    return dimension__vector_valued(k - ZZ(Lmat.ncols()) / 2, L, conjugate = True)
 
 #===============================================================================
 # dimension__vector_valued
 #===============================================================================
 
-def dimension__vector_valued(k, L) :
+def dimension__vector_valued(k, L, conjugate = False) :
     r"""
     Compute the dimension of the space of weight `k` vector valued modular forms
-    for the Weil representation attached to the lattice `-L`.
+    for the Weil representation (or its conjugate) attached to the lattice `L`.
     
     See [Borcherds, Borcherds - Reflection groups of Lorentzian lattices] for a proof
     of the formula that we use here.
@@ -70,6 +70,9 @@ def dimension__vector_valued(k, L) :
     - `k` -- A half-integer.
     
     - ``L`` -- An quadratic form.
+    
+    - ``conjugate`` -- A boolean; If ``True``, then compute the dimension for
+                       the conjugated Weil representation.
     
     OUTPUT:
         An integer.
@@ -114,7 +117,10 @@ def dimension__vector_valued(k, L) :
     ## This is a form over QQ, so that we cannot use an instance of QuadraticForm
     discriminant_form = discriminant_basis.transpose() * L.matrix() * discriminant_basis
 
-    disc_quadratic = lambda x : -x * discriminant_form * x / 2
+    if conjugate :
+        disc_quadratic = lambda x : -x * discriminant_form * x / 2
+    else :
+        disc_quadratic = lambda x : x * discriminant_form * x / 2
     disc_bilinear = lambda x,y : disc_quadratic(x + y) - disc_quadratic(x) - disc_quadratic(y)
 
     ## red gives a normal form for elements in the discriminant group
