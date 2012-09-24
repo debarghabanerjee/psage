@@ -26,7 +26,7 @@ from sage.functions.all import exp, sqrt, sign
 from sage.matrix.all import diagonal_matrix, identity_matrix, matrix
 from sage.misc.all import sum, mrange
 from sage.modules.all import vector 
-from sage.rings.all import ComplexField, ZZ, QQ, lcm
+from sage.rings.all import ComplexIntervalField, ZZ, QQ, lcm
 from sage.quadratic_forms.all import QuadraticForm 
 from sage.symbolic.all import I, pi
 from copy import copy
@@ -79,7 +79,7 @@ def dimension__vector_valued(k, L, conjugate = False) :
 
     TESTS::
 
-        sage: TODO: Make precisions rigid
+        sage: ??
     """
     if 2 * k not in ZZ :
         raise ValueError( "Weight must be half-integral" ) 
@@ -135,11 +135,11 @@ def dimension__vector_valued(k, L, conjugate = False) :
     else :
         subspace_dimension = len(pairs)
 
-    ## 20 bits are, by far, sufficient to distinguish 12-th roots of unity
+    ## 200 bits are, by far, sufficient to distinguish 12-th roots of unity
     ## by increasing the precision by 4 for each additional dimension, we
     ## compensate, by far, the errors introduced by the QR decomposition,
     ## which are of the size of (absolute error) * dimension
-    CC = ComplexField(2000 + subspace_dimension * 4)
+    CC = ComplexIntervalField(200 + subspace_dimension * 4)
 
     zeta_order = ZZ(lcm([8, 12] + map(lambda ed: 2 * ed, elementary_divisors_inv)))
 
@@ -162,18 +162,21 @@ def dimension__vector_valued(k, L, conjugate = False) :
                                for gamma in pairs ] )
     STmat = Smat * Tmat
     
+    ## This function overestimates the number of eigenvalues, if it is not correct
     def eigenvalue_multiplicity(mat, ev) :
-        #TODO: Adjust
-        eps = 10**-50
         mat = matrix(CC, mat - ev * identity_matrix(subspace_dimension))
-        return len(filter( lambda row: all( abs(e) < eps for e in row), _qr(mat, eps) ))
+        return len(filter( lambda row: all( e.contains_zero() for e in row), _qr(mat).rows() ))
     
-    i = CC(exp(2 * pi * I / 8))
-    S_ev_multiplicity = [eigenvalue_multiplicity(Smat, i**n) for n in range(8)]
+    rti = CC(exp(2 * pi * I / 8))
+    S_ev_multiplicity = [eigenvalue_multiplicity(Smat, rti**n) for n in range(8)]
+    ## Together with the fact that eigenvalue_multiplicity overestimates the multiplicities
+    ## this asserts that the computed multiplicities are correct
     assert sum(S_ev_multiplicity) == subspace_dimension
 
     rho = CC(exp(2 * pi * I / 12))
     ST_ev_multiplicity = [eigenvalue_multiplicity(STmat, rho**n) for n in range(12)]
+    ## Together with the fact that eigenvalue_multiplicity overestimates the multiplicities
+    ## this asserts that the computed multiplicities are correct
     assert sum(ST_ev_multiplicity) == subspace_dimension
 
     T_evs = [ ZZ((zeta_order * disc_quadratic(a)) % zeta_order) / zeta_order
@@ -184,7 +187,7 @@ def dimension__vector_valued(k, L, conjugate = False) :
            - ZZ(sum( (S_ev_multiplicity[n] * ((2 * k + n) % 8)) for n in range(8) )) / 8 \
            - sum(T_evs)
 
-def _qr(mat, eps = 10**-10) :
+def _qr(mat) :
     r"""
     Compute the R matrix in QR decomposition using Housholder reflections.
     
@@ -195,16 +198,20 @@ def _qr(mat, eps = 10**-10) :
     m = mat.nrows()
     n = mat.ncols()
 
-    p = []
     cur_row = 0
     for j in range(0, n) :
-        s = sum( (abs(mat[i,j]))**2 for i in xrange(cur_row, m) )
-        if abs(s) <= eps :
-            for i in range(cur_row, m) :
-                mat[i,j] = CC(0)
+        if all( mat[i,j].contains_zero() for i in xrange(cur_row + 1, m) ) :
+            if not mat[cur_row,j].contains_zero() :
+                cur_row += 1
             continue
-            
+
+        s = sum( (abs(mat[i,j]))**2 for i in xrange(cur_row, m) )
+        if s.contains_zero() :
+            raise RuntimeError( "Cannot handle imprecise sums of elements that are too precise" )
+        
         p = sqrt(s)
+        if (s - p * mat[cur_row,j]).contains_zero() :
+            raise RuntimeError( "Cannot handle imprecise sums of elements that are too precise" )
         kappa = 1 / (s - p * mat[cur_row,j])
 
         mat[cur_row,j] -= p
