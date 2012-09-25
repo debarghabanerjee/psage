@@ -99,7 +99,7 @@ class JacobiFormD1DelayedFactory__restriction :
         if ch != self.__ch :
             return 0
         else :
-            return _coefficient_by_restriction( self.__precision, self.__weight, self.__index )[self.__i][k]                                    
+            return _coefficient_by_restriction( self.__precision, self.__weight, self.__index )[self.__i][(ch,k)]                                    
 
 #===============================================================================
 # _find_complete_set_of_restriction_vectors
