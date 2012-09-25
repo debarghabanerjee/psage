@@ -28,6 +28,7 @@ AUTHOR:
 from sage.groups.additive_abelian.additive_abelian_group import AdditiveAbelianGroup_class, \
                                                     cover_and_relations_from_invariants
 from sage.matrix.all import identity_matrix, matrix
+from sage.misc.all import cached_method
 from sage.modules.all import FreeModule, vector
 from sage.rings.all import QQ, ZZ
 from copy import copy
@@ -84,15 +85,31 @@ class DiscriminantGroup( AdditiveAbelianGroup_class ) :
         
         return (n_disc, coercion_hom)
 
-    def _to_jacobi_indices(self) :
+    @cached_method
+    def _jacobi_indices_matrix(self) :
         r"""
-        Return indices `r` that correspond to the generators of this discriminant group.
+        A basis change matrix mapping indices `r` of Jacobi forms to elements of ``self``.  
         
         OUTPUT:
         
-        - A list of tuples.
+        - A matrix over `\ZZ`.
         """
-        return map(tuple, (self._L * self._dual_basis).columns())
+        return (self._L * self._dual_basis).inverse()
+    
+    def _from_jacobi_index(self, r) :
+        r"""
+        Return an element of ``self`` that corresponds to a given index of a Jacobi Fourier expansion.
+        
+        TESTS:
+        
+            sage: from psage.modform.vector_valued.discriminant_group import *
+            sage: A = DiscriminantGroup(matrix(2, [2, 1, 1, 2]))
+            sage: A._from_jacobi_index((0,0))
+            (0, 0)
+            sage: A._from_jacobi_index((0,1))
+            (0, 1)
+        """
+        return self(self._jacobi_indices_matrix() * vector(ZZ, r))
 
     def add_unimodular_lattice(self, L = None) :
         r"""
