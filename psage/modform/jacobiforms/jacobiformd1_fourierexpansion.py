@@ -49,6 +49,8 @@ from sage.structure.unique_representation import UniqueRepresentation
 import itertools
 import operator
 
+from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1WeightCharacter
+
 #===============================================================================
 # JacobiFormD1Indices
 #===============================================================================
