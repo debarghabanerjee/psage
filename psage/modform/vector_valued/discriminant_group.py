@@ -27,10 +27,11 @@ AUTHOR:
 
 from sage.groups.additive_abelian.additive_abelian_group import AdditiveAbelianGroup_class, \
                                                     cover_and_relations_from_invariants
-from sage.matrix.all import identity_matrix, matrix
-from sage.misc.all import cached_method
+from sage.matrix.all import identity_matrix, matrix, diagonal_matrix
+from sage.misc.all import cached_method, prod
 from sage.modules.all import FreeModule, vector
-from sage.rings.all import QQ, ZZ
+from sage.rings.all import lcm
+from sage.rings.all import QQ, ZZ, CyclotomicField, PolynomialRing
 from copy import copy
 import operator
 
@@ -196,6 +197,38 @@ class DiscriminantGroup( AdditiveAbelianGroup_class ) :
                                   for b in basis_images ])
         
         return (n_disc, coercion_hom)
+
+    def weil_representation(self) :
+        r"""
+        OUTPUT:
+        
+        - A pair of matrices corresponding to T and S.
+        """
+        disc_bilinear = lambda a, b: (self._dual_basis * vector(QQ, a.lift())) * self._L * (self._dual_basis * vector(QQ, b.lift()))
+        disc_quadratic = lambda a: disc_bilinear(a, a) / ZZ(2)
+        
+        zeta_order = ZZ(lcm([8, 12, prod(self.invariants())] + map(lambda ed: 2 * ed, self.invariants())))
+        K = CyclotomicField(zeta_order); zeta = K.gen()
+
+        R = PolynomialRing(K, 'x'); x = R.gen()
+#        sqrt2s = (x**2 - 2).factor()
+#        if sqrt2s[0][0][0].complex_embedding().real() > 0 :        
+#            sqrt2  = sqrt2s[0][0][0]
+#        else : 
+#            sqrt2  = sqrt2s[0][1]
+        Ldet_rts = (x**2 - prod(self.invariants())).factor()
+        if Ldet_rts[0][0][0].complex_embedding().real() > 0 :
+            Ldet_rt  = Ldet_rts[0][0][0] 
+        else :
+            Ldet_rt  = Ldet_rts[0][0][0]
+                
+        Tmat  = diagonal_matrix( K, [zeta**(zeta_order*disc_quadratic(a)) for a in self] )
+        Smat = zeta**(zeta_order / 8 * self._L.nrows()) / Ldet_rt  \
+               * matrix( K,  [ [ zeta**ZZ(-zeta_order * disc_bilinear(gamma,delta))
+                                 for delta in self ]
+                               for gamma in self ])
+        
+        return (Tmat, Smat)
 
     def _repr_(self) :
         return "Discrimiant group of lattice of size {0} ( isomorphic to {1} )".format(self._L.nrows(), self.short_name())
