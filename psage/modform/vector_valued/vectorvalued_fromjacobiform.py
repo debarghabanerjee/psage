@@ -75,7 +75,7 @@ def to_vector_valued_modular_form(phi, phi_weight, mor = None) :
     
     for (n, r) in phi.precision() :
         b = disc_group._from_jacobi_index(r)
-        disc = n - Ladj(r) / ZZ(2 * Ldet)
+        disc = n - Ladj(r) / ZZ(4 * Ldet)
         f[b][disc] = phi[(ch,(n,r))]
         if b != -b :
             f[-b][disc] = phi[(ch,(n,tuple(map(operator.neg, r))))]

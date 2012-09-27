@@ -111,8 +111,8 @@ class JacobiFormD1Indices_class ( SageObject ) :
             [(0, 0), (0, 1)]
         """
         self.__L = L
-        ## TODO: This does not include the case of scalar indices.
-        self.__Ladj = QuadraticForm( L.matrix().adjoint() )
+        ## This is two times the adjoint of L, which in all cases will be even
+        self.__Ladj = QuadraticForm( 2 * L.matrix().adjoint() )
 
         self.__L_size = L.matrix().nrows()
         self.__reduced = reduced
@@ -127,9 +127,7 @@ class JacobiFormD1Indices_class ( SageObject ) :
                                for s in range(1, d) ]
         max_norm = max(Ladj(r) for r in preliminary_reps)
         
-        ## DEBUG:
-#        short_vectors = [map(vector, rrs) for rrs in Ladj.short_vector_list_up_to_length(max_norm + 1)]
-        short_vectors = [map(vector, rrs) for rrs in L.short_vector_list_up_to_length(max_norm + 1)]
+        short_vectors = [map(vector, rrs) for rrs in Ladj.short_vector_list_up_to_length(max_norm + 1)]
         self.__L_span = L.matrix().row_space()
                 
         representatives = list()
@@ -179,6 +177,9 @@ class JacobiFormD1Indices_class ( SageObject ) :
         return self.__L
     
     def _Ladjoint(self) :
+        r"""
+        Twice the adjoint of `L`.
+        """
         return self.__Ladj
     
     def is_commutative(self) :
@@ -224,7 +225,7 @@ class JacobiFormD1Indices_class ( SageObject ) :
         else :
             raise RuntimeError( "Could not find reduced r" )
         
-        nred = n - (self.__Ladj(r) - self.__Ladj(rred)) // self.__L.det()
+        nred = n - (self.__Ladj(r) - self.__Ladj(rred)) // (2 * self.__L.det())
         
         if rred in self._r_reduced_representatives :
             s = 1
@@ -356,7 +357,7 @@ class JacobiFormD1Filter ( SageObject ) :
         
         (n, r) = k
         
-        if self.__Ladj(r) > self.__L.det() * n :
+        if self.__Ladj(r) > 2 * self.__L.det() * n :
             return False
         
         if n < self.__bound :
@@ -377,12 +378,12 @@ class JacobiFormD1Filter ( SageObject ) :
         if self.__reduced :
             for n in xrange(1, self.__bound) :
                 for r in self.__monoid._r_reduced_representatives :
-                    if (n, r) in self and self.__Ladj(r) < self.__L.det() * n:
+                    if (n, r) in self and self.__Ladj(r) < 2 * self.__L.det() * n:
                         yield (n, r)
         else :
-            short_vectors = [map(tuple, rs) for rs in self.__Ladj.short_vector_list_up_to_length(self.__L.det() * (self.__bound - 1) + 1)]
+            short_vectors = [map(tuple, rs) for rs in self.__Ladj.short_vector_list_up_to_length(2 * self.__L.det() * (self.__bound - 1) + 1)]
             for n in xrange(1, self.__bound) :
-                for rs in short_vectors[:self.__L.det() * n] :
+                for rs in short_vectors[:2 * self.__L.det() * n] :
                     for r in rs :
                         yield (n, r)
                     
@@ -395,15 +396,15 @@ class JacobiFormD1Filter ( SageObject ) :
         if self.__reduced :
             for r in self.__monoid._r_reduced_representatives :
                 rsq = self.__Ladj(r)
-                if rsq % self.__L.det() == 0 :
-                    yield (rsq // self.__L.det(), r) 
+                if rsq % (2 * self.__L.det()) == 0 :
+                    yield (rsq // (2 * self.__L.det()), r) 
         else :
-            short_vectors = [map(tuple, rs) for rs in self.__Ladj.short_vector_list_up_to_length(self.__L.det() * (self.__bound - 1) + 1)]
+            short_vectors = [map(tuple, rs) for rs in self.__Ladj.short_vector_list_up_to_length(2 * self.__L.det() * (self.__bound - 1) + 1)]
             
             for (rsq, rs) in enumerate(short_vectors) :
                 for r in rs :
-                    if rsq % self.__L.det() == 0 :
-                        yield (rsq // self.__L.det(), r) 
+                    if rsq % (2 * self.__L.det()) == 0 :
+                        yield (rsq // (2 * self.__L.det()), r) 
         
         raise StopIteration
     
