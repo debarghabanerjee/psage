@@ -64,9 +64,14 @@ def jacobi_form_by_taylor_expansion(i, precision, weight) :
     
     OUTPUT:
     
-    - A lazy element of hte Fourier expansion module for Jacobi forms.
+    - A lazy element of the Fourier expansion module for Jacobi forms.
     
-    TESTS::
+    TESTS:
+
+    See also ``JacobiFormD1NNFactory_class._test__jacobi_corrected_taylor_expansions`` and
+    ``JacobiFormD1NNFactory_class._test__jacobi_torsion_point``
+    
+    ::
     
         sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import *
         sage: JacobiFormD1NNFactory_class._test__jacobi_taylor_coefficients( jacobi_form_by_taylor_expansion(1, JacobiFormD1NNFilter(20, 1), 10), 10 )
@@ -975,3 +980,98 @@ class JacobiFormD1NNFactory_class (SageObject) :
             taylor_coefficients.append(allf)
 
         return taylor_coefficients
+
+    @staticmethod
+    def _test__jacobi_corrected_taylor_expansions(nu, phi, weight) :
+        r"""
+        Return the ``2 nu``-th corrected Taylor coefficient.
+        INPUT:
+        
+        - ``nu`` -- An integer.  
+        
+        - ``phi`` -- A Fourier expansion of a Jacobi form.
+        
+        - ``weight`` -- An integer.
+        
+        OUTPUT:
+        
+        - A power series in `q`.
+        
+        ..TODO:
+        
+        Implement this for all Taylor coefficients.
+        
+        TESTS::
+        
+            sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import *
+            sage: from psage.modform.jacobiforms.jacobiformd1nn_types import *
+            sage: nu_bound = 10
+            sage: precision = 100
+            sage: weight = 10; index = 7
+            sage: phis = [jacobi_form_by_taylor_expansion(i, JacobiFormD1NNFilter(precision, index), weight) for i in range(JacobiFormD1NN_Gamma(weight, index)._rank(QQ))]
+            sage: fss = [ [JacobiFormD1NNFactory_class._test__jacobi_corrected_taylor_expansions(nu, phi, weight) for phi in phis] for nu in range(nu_bound) ]
+            sage: fss_vec = [ [vector(f.padded_list(precision)) for f in fs] for fs in fss ]
+            sage: mf_spans = [ span([vector(b.qexp(precision).padded_list(precision)) for b in ModularForms(1, weight + 2 * nu).basis()]) for nu in range(nu_bound) ] 
+            sage: all(f_vec in mf_span for (fs_vec, mf_span) in zip(fss_vec, mf_spans) for f_vec in fs_vec)
+        """
+        ## We use EZ85, p.29 (3), the factorial in one of the factors is missing
+        factors = [ (-1)**mu * factorial(2 * nu) * factorial(weight + 2 * nu - mu - 2) / ZZ(factorial(mu) * factorial(2 * nu - 2 * mu) * factorial(weight + nu - 2))
+                    for mu in range(nu + 1) ]
+        gegenbauer = lambda n, r: sum( f * r**(2 * nu - 2 * mu) * n**mu 
+                                       for (mu,f) in enumerate(factors) )
+        ch = JacobiFormD1WeightCharacter(weight)
+        jacobi_index = phi.precision().jacobi_index()
+        
+        coeffs = dict( (n, QQ(0)) for n in range(phi.precision().index()) )
+        for (n, r) in phi.precision().monoid_filter() :
+            coeffs[n] += gegenbauer(jacobi_index * n, r) * phi[(ch, (n,r))]
+        
+        return PowerSeriesRing(QQ, 'q')(coeffs)
+
+    @staticmethod
+    def _test__jacobi_torsion_point(phi, weight, torsion_point) :
+        r"""
+        Given a list of power series, which are the corrected Taylor coefficients
+        of a Jacobi form, return the specialization to ``torsion_point``.
+        
+        INPUT:
+        
+        - ``phi`` -- A Fourier expansion of a Jacobi form.
+        
+        - ``weight`` -- An integer.
+        
+        - ``torsion_point`` -- A rational.
+        
+        OUPUT:
+        
+        - A power series.
+        
+        TESTS:
+                
+        See jacobi_form_by_taylor_expansion.
+        
+            sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import *
+            sage: from psage.modform.jacobiforms.jacobiformd1nn_types import *
+            sage: precision = 50
+            sage: weight = 10; index = 7
+            sage: phis = [jacobi_form_by_taylor_expansion(i, JacobiFormD1NNFilter(precision, index), weight) for i in range(JacobiFormD1NN_Gamma(weight, index)._rank(QQ))]
+            sage: fs = [JacobiFormD1NNFactory_class._test__jacobi_torsion_point(phi, weight, 2/3) for phi in phis]
+            sage: fs_vec = [vector(f.padded_list(precision)) for f in fs]
+            sage: mf_span = span([vector(b.qexp(precision).padded_list(precision)) for b in ModularForms(GammaH(9, [4]), weight).basis()])
+            sage: all(f_vec in mf_span for f_vec in fs_vec)
+        
+        FIXME: The case of torsion points of order 5, which should lead to forms for Gamma1(25) fails even in the simplest case.
+        """
+        from sage.rings.all import CyclotomicField
+        
+        K = CyclotomicField(QQ(torsion_point).denominator()); zeta = K.gen()
+        R = PowerSeriesRing(K, 'q'); q = R.gen(0)
+
+        ch = JacobiFormD1WeightCharacter(weight)
+    
+        coeffs = dict( (n, QQ(0)) for n in range(phi.precision().index()) )
+        for (n, r) in phi.precision().monoid_filter() :
+            coeffs[n] += zeta**r * phi[(ch, (n,r))]
+        
+        return PowerSeriesRing(K, 'q')(coeffs) 
+    

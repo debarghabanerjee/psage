@@ -122,12 +122,14 @@ class JacobiFormD1Indices_class ( SageObject ) :
         Ladj = self.__Ladj
         preliminary_reps =   [ vector(self.__L_size * [0])] \
                            + [ s * b
-                                for (b, d) in zip( FreeModule(ZZ, self.__L_size).basis(),
-                                                   L.matrix().echelon_form().diagonal() )
-                                for s in range(1, d) ]
+                               for (b, d) in zip( FreeModule(ZZ, self.__L_size).basis(),
+                                                  L.matrix().echelon_form().diagonal() )
+                               for s in range(1, d) ]
         max_norm = max(Ladj(r) for r in preliminary_reps)
         
-        short_vectors = [map(vector, rrs) for rrs in Ladj.short_vector_list_up_to_length(max_norm + 1)]
+        ## DEBUG:
+#        short_vectors = [map(vector, rrs) for rrs in Ladj.short_vector_list_up_to_length(max_norm + 1)]
+        short_vectors = [map(vector, rrs) for rrs in L.short_vector_list_up_to_length(max_norm + 1)]
         self.__L_span = L.matrix().row_space()
                 
         representatives = list()
@@ -137,9 +139,9 @@ class JacobiFormD1Indices_class ( SageObject ) :
                 for rr in rrs :
                     if r - rr in self.__L_span :
                         representatives[-1].append(tuple(rr))
-                    
+                
                 if len(representatives[-1]) != 0 :
-                    break 
+                    break
         
         # This is a list of lists.  All elements in the interior lists
         # have the same norm and the set of first elements of the interior
