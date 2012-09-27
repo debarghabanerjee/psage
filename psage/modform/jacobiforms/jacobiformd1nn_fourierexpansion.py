@@ -259,6 +259,12 @@ class JacobiFormD1NNFilter ( SageObject ) :
         """
         return self.__weak_jacobi_forms
     
+    def monoid(self) :
+        return JacobiFormD1NNIndices(self.__m, self.__reduced, self.__weak_forms)
+    
+    def monoid_filter(self) :
+        return JacobiFormD1NNFilter(self.__bound, self.__m, False, self.__weak_forms)
+    
     def filter_all(self) :
         return JacobiFormD1NNFilter(infinity, self.__m, self.__reduced, self.__weak_forms)
 
