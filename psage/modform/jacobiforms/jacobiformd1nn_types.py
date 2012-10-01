@@ -28,7 +28,7 @@ from operator import xor
 from psage.modform.fourier_expansion_framework.gradedexpansions.gradedexpansion_grading import TrivialGrading
 from psage.modform.fourier_expansion_framework.modularforms.modularform_ambient import ModularFormsModule_generic
 from psage.modform.fourier_expansion_framework.modularforms.modularform_types import ModularFormType_abstract
-from psage.modform.jacobiforms.jacobiformd1_dimensionformula import dimension__vector_valued
+from psage.modform.jacobiforms.jacobiformd1_dimensionformula import dimension__jacobi
 from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import jacobi_form_by_taylor_expansion,\
     _jacobi_forms_by_taylor_expansion_coordinates
 from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFourierExpansionModule, \
@@ -114,7 +114,7 @@ class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
     @cached_method
     def _rank(self, K) :
         if K is QQ or K in NumberFields() :
-            return dimension__vector_valued( self.__weight - QQ((1,2)), QuadraticForm(matrix(1, [2 * self.__index])) )
+            return dimension__jacobi( self.__weight, QuadraticForm(matrix(1, [2 * self.__index])) )
                     
         raise NotImplementedError
     
