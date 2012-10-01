@@ -55,7 +55,7 @@ from copy import copy
 # jacobi_form_d1_by_restriction
 #===============================================================================
 
-def jacobi_form_d1_by_restriction(precision, k, L, i) :
+def jacobi_form_d1_by_restriction(precision, k, i) :
     r"""
     Lazy Fourier expansions of a basis of Jacobi forms (of arbitrary
     rank index).
@@ -66,17 +66,22 @@ def jacobi_form_d1_by_restriction(precision, k, L, i) :
     
     - `k` -- An integer; The weight of the Jacobi forms.
     
-    - `L` -- An even quadratic form; The index of the Jacobi forms.
-    
     - `i` -- A nonnegative integer less the dimension of the considered
              space of Jacobi forms.
     
     OUTPUT:
     
     - A lazy element of the corresponding module of Fourier expansions (over `\QQ`).
+    
+    TESTS::
+    
+        sage: from psage.modform.jacobiforms.jacobiformd1_fegenerators import *
+        sage: from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import *
+        sage: indices = JacobiFormD1Indices(QuadraticForm(matrix(2, [2,1,1,2])))
+        sage: h = jacobi_form_d1_by_restriction(indices.filter(5), 12, 1)
     """
-    expansion_ring = JacobiFormD1FourierExpansionModule(QQ, k, L)
-    coefficients_factory = JacobiFormD1DelayedFactory__restriction( precision, k, L, i )
+    expansion_ring = JacobiFormD1FourierExpansionModule(QQ, k, precision.jacobi_index())
+    coefficients_factory = JacobiFormD1DelayedFactory__restriction( precision, k, i )
     
     return EquivariantMonoidPowerSeries_lazy(expansion_ring, precision, coefficients_factory.getcoeff)
 
@@ -85,13 +90,22 @@ def jacobi_form_d1_by_restriction(precision, k, L, i) :
 #===============================================================================
 
 class JacobiFormD1DelayedFactory__restriction :
-    def __init__(self, precision, k, L, i) :
+    def __init__(self, precision, k, i) :
+        r"""
+        INPUT:
+    
+        - ``precision`` -- A filter for Fourier expansions of Jacobi forms. 
+        
+        - `k` -- An integer; The weight of the Jacobi forms.
+        
+        - `i` -- A nonnegative integer less the dimension of the considered
+                 space of Jacobi forms.
+        """
         self.__precision = precision
         self.__weight = k
-        self.__index = L
         self.__i = i
         
-        self.__ch = JacobiFormD1WeightCharacter(k, L.matrix().nrows())
+        self.__ch = JacobiFormD1WeightCharacter(k, precision.jacobi_index().matrix().nrows())
         
     def getcoeff(self, key, **kwds) :
         (ch, k) = key
@@ -99,7 +113,7 @@ class JacobiFormD1DelayedFactory__restriction :
         if ch != self.__ch :
             return 0
         else :
-            return _coefficient_by_restriction( self.__precision, self.__weight, self.__index )[self.__i][(ch,k)]                                    
+            return _coefficient_by_restriction( self.__precision, self.__weight )[self.__i][(ch,k)]                                    
 
 #===============================================================================
 # _find_complete_set_of_restriction_vectors
@@ -352,6 +366,11 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
     
     See [GKR12]. The algorithm will be applied for precision ``relation_precision``.
     The remaining Fourier coefficients will be determined using fewer restrictions.
+    
+    NOTE:
+    
+    In case ``relation_precision`` is not ``None``, we assume that it is of the form
+    `\{ (n, r) : n < B \}`, where `B` is the index of the filter.
     
     INPUT:
     
