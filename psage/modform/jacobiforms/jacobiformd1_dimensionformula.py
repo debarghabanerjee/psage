@@ -45,6 +45,13 @@ def dimension__jacobi(k, L) :
     - `k` -- An integer.
     
     - `L` -- A quadratic form or an even symmetric matrix (over `\ZZ`).
+    
+    TESTS::
+    
+        sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import _jacobi_forms_by_taylor_expansion_coordinates
+        sage: from psage.modform.jacobiforms.jacobiformd1_dimensionformula import *
+        sage: [ (k, m) for k in range(8, 16) for m in range(1, 10) if len(_jacobi_forms_by_taylor_expansion_coordinates(20, k, m)) != dimension__jacobi(k, QuadraticForm(matrix(1, [2 * m]))) ] # long test
+        []
     """
     try :
         Lmat = L.matrix()
