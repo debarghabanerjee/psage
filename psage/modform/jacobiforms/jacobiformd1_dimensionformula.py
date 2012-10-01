@@ -27,7 +27,8 @@ from sage.matrix.all import diagonal_matrix, identity_matrix, matrix
 from sage.misc.all import sum, mrange
 from sage.modules.all import vector 
 from sage.rings.all import ComplexIntervalField, ZZ, QQ, lcm
-from sage.quadratic_forms.all import QuadraticForm 
+from sage.rings.all import moebius, gcd, QuadraticField, fundamental_discriminant, kronecker_symbol
+from sage.quadratic_forms.all import QuadraticForm, BinaryQF_reduced_representatives 
 from sage.symbolic.all import I, pi
 from copy import copy
 import mpmath
@@ -53,6 +54,97 @@ def dimension__jacobi(k, L) :
 
     return dimension__vector_valued(k - ZZ(Lmat.ncols()) / 2, L, conjugate = True)
 
+def dimension__jacobi_scalar(k, m) :
+    raise RuntimeError( "There is a bug in the implementation" )
+    m = ZZ(m)
+    
+    dimension = 0
+    for d in (m // m.squarefree_part()).isqrt().divisors() :
+        m_d = m // d**2
+        dimension += sum ( dimension__jacobi_scalar_f(k, m_d, f)
+                            for f in m_d.divisors() )
+    
+    return dimension
+            
+def dimension__jacobi_scalar_f(k, m, f) :
+    if moebius(f) != (-1)**k :
+        return 0
+    
+    ## We use chapter 6 of Skoruppa's thesis
+    ts = filter(lambda t: gcd(t, m // t) == 1, m.divisors())
+    
+    ## Eisenstein part
+    eis_dimension = 0
+    
+    for t in ts :
+        eis_dimension +=   moebius(gcd(m // t, f)) \
+                        * (t // t.squarefree_part()).isqrt() \
+                        * (2 if (m // t) % 4 == 0 else 1) 
+    eis_dimension = eis_dimension // len(ts)
+    
+    if k == 2 and f == 1 :
+        eis_dimension -= len( (m // m.squarefree_part()).isqrt().divisors() ) 
+    
+    ## Cuspidal part
+    cusp_dimension = 0
+    
+    tmp = ZZ(0)
+    for t in ts :
+        tmp += moebius(gcd(m // t, f)) * t
+    tmp = tmp / len(ts)
+    cusp_dimension += tmp * (2 * k - 3) / ZZ(12)
+    print "1: ", cusp_dimension
+    
+    if m % 2 == 0 :
+        tmp = ZZ(0)
+        for t in ts :
+            tmp += moebius(gcd(m // t, f)) * kronecker_symbol(-4, t)
+        tmp = tmp / len(ts)
+        
+        cusp_dimension += 1/ZZ(2) * kronecker_symbol(8, 2 * k - 1) * tmp
+        print "2: ", 1/ZZ(2) * kronecker_symbol(8, 2 * k - 1) * tmp
+        
+    tmp = ZZ(0)
+    for t in ts :
+        tmp += moebius(gcd(m // t, f)) * kronecker_symbol(t, 3)
+    tmp = tmp / len(ts)
+    if m % 3 != 0 :
+        cusp_dimension += 1 / ZZ(3) * kronecker_symbol(k, 3) * tmp
+        print ": ", 1 / ZZ(3) * kronecker_symbol(k, 3) * tmp
+    elif k % 3 == 0 :
+        cusp_dimension += 2 / ZZ(3) * (-1)**k * tmp
+        print "3: ", 2 / ZZ(3) * (-1)**k * tmp
+    else :
+        cusp_dimension += 1 / ZZ(3) * (kronecker_symbol(k, 3) + (-1)**(k - 1)) * tmp
+        print "3: ", 1 / ZZ(3) * (kronecker_symbol(k, 3) + (-1)**(k - 1)) * tmp
+    
+    tmp = ZZ(0)
+    for t in ts :
+        tmp +=   moebius(gcd(m // t, f)) \
+               * (t // t.squarefree_part()).isqrt() \
+               * (2 if (m // t) % 4 == 0 else 1)
+    tmp = tmp / len(ts)
+    cusp_dimension -= 1 / ZZ(2) * tmp
+    print "4: ", -1 / ZZ(2) * tmp
+    
+    tmp = ZZ(0)
+    for t in ts :
+        tmp +=   moebius(gcd(m // t, f)) \
+               * sum(   (( len(BinaryQF_reduced_representatives(-d, True))
+                           if d not in [3, 4] else ( 1 / ZZ(3) if d == 3 else 1 / ZZ(2) ))
+                         if d % 4 == 0 or d % 4 == 3 else 0 )
+                      * kronecker_symbol(-d, m // t)
+                      * ( 1 if (m // t) % 2 != 0 else
+                          ( 4 if (m // t) % 4 == 0 else 2 * kronecker_symbol(-d, 2) ))
+                      for d in (4 * m).divisors() )
+    tmp = tmp / len(ts)
+    cusp_dimension -= 1 / ZZ(2) * tmp
+    print "5: ", -1 / ZZ(2) * tmp
+    
+    if k == 2 :
+        cusp_dimension += len( (m // f // (m // f).squarefree_part()).isqrt().divisors() )
+    
+    return eis_dimension + cusp_dimension
 #===============================================================================
 # dimension__vector_valued
 #===============================================================================
