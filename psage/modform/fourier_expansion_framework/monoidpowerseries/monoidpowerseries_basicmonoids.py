@@ -306,8 +306,11 @@ class CharacterMonoid_class ( SageObject ) :
             sage: cm2(cm(1))
             1
         """
-        if x.parent() == self :
-            x = x._monoid_element()
+        try :
+            if x.parent() == self :
+                x = x._monoid_element()
+        except AttributeError :
+            pass
         
         return CharacterMonoidElement_class(self, self.__C(x))
     
