@@ -89,6 +89,8 @@ class GradedExpansionRing_class ( GradedExpansionAmbient_abstract, Algebra ) :
         if not hasattr(self, '_element_class') :
             self._element_class = GradedExpansion_class
         
+        GradedExpansionAmbient_abstract.__init__(self, base_ring_generators, generators, relations, grading, all_relations, reduce_before_evaluating)
+
         if hasattr(self, "_extended_base_ring") :
             Algebra.__init__(self, self._extended_base_ring)
         elif base_ring_generators is None or len(base_ring_generators) == 0 :
@@ -104,10 +106,7 @@ class GradedExpansionRing_class ( GradedExpansionAmbient_abstract, Algebra ) :
                     grading.subgrading(xrange(len(base_ring_generators))), all_relations, reduce_before_evaluating)
             Algebra.__init__(self, R)
 
-        GradedExpansionAmbient_abstract.__init__(self, base_ring_generators, generators, relations, grading, all_relations, reduce_before_evaluating)
-
         self._populate_coercion_lists_(
-          coerce_list = [GradedExpansionBaseringInjection(self.base_ring(), self)],
 # This is deactivated since it leads to errors in the coercion system for Sage 4.8
 # TODO: Find out why
 #          convert_list = [self.relations().ring()],
