@@ -32,6 +32,7 @@ from sage.combinat.partition import number_of_partitions
 from sage.libs.flint.fmpz_poly import Fmpz_poly  
 from sage.matrix.constructor import matrix, zero_matrix
 from sage.misc.cachefunc import cached_function
+from sage.misc.cython import cython_lambda
 from sage.misc.functional import isqrt
 from sage.misc.flatten import flatten
 from sage.misc.misc import prod
@@ -296,24 +297,27 @@ def _global_restriction_matrix(precision, S, weight_parity, find_relations = Fal
         reductions[lred].append((l, sign)) 
 
     row_groups = [ len(index_filters[m]) for m in jacobi_indices ]
-    row_groups = [ (s, sum(row_groups[:i]), row_groups[i]) for (i, s) in enumerate(S) ]
+    row_groups = [ (s, m, sum(row_groups[:i]), row_groups[i]) for ((i, s), m) in zip(enumerate(S), jacobi_indices) ]
     row_labels = dict( (m, dict( (l, i) for (i, l) in enumerate(index_filters[m]) ))
                        for m in Set(jacobi_indices) )
 
-    mat = zero_matrix(ZZ, row_groups[-1][1] + row_groups[-1][2], len(column_labels))
+    dot_products = [ cython_lambda( ' , '.join([ 'int x{0}'.format(i) for i in range(len(s)) ]),
+                                    ' + '.join([ '{0} * x{1}'.format(s[i], i) for i in range(len(s)) ]) )
+                     for (s, _, _, _) in row_groups ]
+    
+    restriction_matrix = zero_matrix(ZZ, row_groups[-1][2] + row_groups[-1][3], len(column_labels))
     
     for (cind, l) in enumerate(column_labels) :
         for ((n, r), sign) in reductions[l] :
-            r = vector(r)
-            for (s, start, length) in row_groups :
-                row_labels_dict = row_labels[L(s)]
+            for ((s, m, start, length), dot_product) in zip(row_groups, dot_products) :
+                row_labels_dict = row_labels[m]
                 try :
-                    mat[start + row_labels_dict[(n, s.dot_product(r))], cind] \
+                    restriction_matrix[start + row_labels_dict[(n, dot_product(*r))], cind] \
                       += 1 if weight_parity == 0 else sign
                 except KeyError :
                     pass
     
-    return (mat, row_groups, row_labels, column_labels)
+    return (restriction_matrix, row_groups, row_labels, column_labels)
 
 #===============================================================================
 # _global_relation_matrix
@@ -336,12 +340,11 @@ def _global_relation_matrix(precision, S, weight_parity) :
     weight_parity = weight_parity % 2
     
     (mat, row_groups, row_labels, column_labels) = _global_restriction_matrix(precision, S, weight_parity, find_relations = True)
-        
-    reduced_index_indices = dict( (m, JacobiFormD1NNIndices(m)) for m in Set(L(s) for s in S) )
+    
+    reduced_index_indices = dict( (m, JacobiFormD1NNIndices(m)) for m in Set(m for (_,m,_,_) in row_groups) )
         
     relations = list()
-    for (s, start, length) in row_groups :
-        m = L(s)
+    for (s, m, start, length) in row_groups :
         row_labels_dict = row_labels[m]
         for (l, i) in row_labels_dict.iteritems() :
             (lred, sign) = reduced_index_indices[m].reduce(l)
@@ -406,7 +409,8 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
     try :
         expansions = _coefficient_by_restriction__cache[(k, Lmat)]
 
-        if expansions.precision() <= precision() :
+        if len(expansions) == 0 \
+          or expansions[0].precision() >= precision :
             ## TODO: This should be checked in the framework
             return [ f.truncate(precision) for f in expansions ]
     except KeyError :
@@ -436,8 +440,8 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
     if relation_precision == precision :
         assert column_labels == column_labels_relations
     if column_labels != column_labels_relations :
-        row_groups__small = [ len(filter( lambda (n,r): n < relation_precision.index(), row_labels[L(s)].keys())) for (s, _, _) in row_groups ]
-        row_groups__small = [ (s, sum(row_groups__small[:i]), row_groups__small[i]) for (i, (s, _, _)) in enumerate(row_groups) ]
+        row_groups__small = [ len(filter( lambda (n,r): n < relation_precision.index(), row_labels[m].keys())) for (_, m, _, _) in row_groups ]
+        row_groups__small = [ (sum(row_groups__small[:i]), row_groups__small[i]) for i in range(len(row_groups)) ]
         
         row_labels__small = dict()
         for (m, row_labels_dict) in row_labels.iteritems() :
@@ -452,7 +456,7 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
             row_labels__small[m] = row_labels_dict__small
         
         row_indices__small = list()
-        for ((s, start, _), (_, start_small, length_small)) in zip(row_groups, row_groups__small) :
+        for ((s, m, start, _), (start_small, length_small)) in zip(row_groups, row_groups__small) :
             row_labels_dict = row_labels__small[L(s)]
             row_indices__sub = length_small * [None]
             for (l,(i, i_pre)) in row_labels_dict.iteritems() :
@@ -466,15 +470,14 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
         global_restriction_matrix = global_restriction_matrix__big
     
     
-    jacobi_indices = [ L(s) for (s, _, _) in row_groups ]
+    jacobi_indices = [ m for (_, m, _, _) in row_groups ]
     index_filters = dict( (m, JacobiFormD1NNFilter(precision.index(), m)) for m in Set(jacobi_indices) )
     jacobi_forms = dict( (m, JacobiFormsD1NN(QQ, JacobiFormD1NN_Gamma(k, m), prec) )
                          for (m, prec) in index_filters.iteritems() )
     
     forms = list()
     ch1 = JacobiFormD1WeightCharacter(k)
-    for (s, start, length) in row_groups :
-        m = L(s)
+    for (s, m, start, length) in row_groups :
         row_labels_dict = row_labels[m]
         for f in jacobi_forms[m].graded_submodule(None).basis() :
             f = f.fourier_expansion()
@@ -483,7 +486,7 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
                 v[i] = f[(ch1, l)]
     
             forms.append(vector(   start*[0] + v.list()
-                                 + (row_groups[-1][1] + row_groups[-1][2] - start - length)*[0] ))
+                                 + (row_groups[-1][2] + row_groups[-1][3] - start - length)*[0] ))
     
     
     if relation_precision == precision :
@@ -518,7 +521,12 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
     expansions = list()
     for v in jacobi_expansions.change_ring(QQ).basis() :
         expansions.append( fourier_expansion_module( {chL: dict( (l, c) for (l, c) in zip(column_labels, v) )} ))
-        
+        for e in expansions :
+            e._set_precision(precision)
+
+    
+    _coefficient_by_restriction__cache[(k, Lmat)] = expansions
+    
     return expansions
 
 def _test__coefficient_by_restriction(precision, k, relation_precision = None, additional_lengths = 1 ) :
