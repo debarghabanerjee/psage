@@ -86,11 +86,11 @@ class JacobiFormD1_Gamma ( ModularFormType_abstract ) :
         sage: from psage.modform.jacobiforms import *
         sage: from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import JacobiFormD1Filter
         sage: L = QuadraticForm(matrix(2, [2,1,1,2])) 
-        sage: JR = JacobiFormsD1(QQ, JacobiFormD1_Gamma(6, L), JacobiFormD1Filter(10, L))
+        sage: JR = JacobiFormsD1(QQ, JacobiFormD1_Gamma(10, L), JacobiFormD1Filter(5, L))
         sage: JR.gens()
-        ???
+        (Graded expansion phiRes_0,)
         sage: JR.0 + 2 * JR.1
-        ???
+        Graded expansion phiRes_0 + 2*phiRes_1
     """
     def __init__(self, weight, index) :
         self.__weight = weight
@@ -115,7 +115,7 @@ class JacobiFormD1_Gamma ( ModularFormType_abstract ) :
     @cached_method
     def generators(self, K, precision) :
         if K is QQ or K in NumberFields() :
-            return Sequence( [ jacobi_form_d1_by_restriction(precision, self.__weight, self.__index, i)
+            return Sequence( [ jacobi_form_d1_by_restriction(precision, self.__weight, i)
                                for i in xrange(self._rank(K)) ],
                              universe = JacobiFormD1FourierExpansionModule(QQ, self.__weight, self.__index) )
         
