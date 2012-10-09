@@ -144,6 +144,13 @@ def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0) :
         sage: indices = JacobiFormD1Indices(QuadraticForm(matrix(2, [2,1,1,2])))
         sage: _find_complete_set_of_restriction_vectors(indices.jacobi_index(), indices._r_representatives)        
         [((-1, 0), 0), ((-1, 0), -1), ((-1, 0), 1)]
+        
+    ::
+     
+        sage: indices = JacobiFormD1Indices(QuadraticForm(matrix(4, [2,0,0,1, 0,2,0,1, 0,0,2,1, 1,1,1,2])))
+        sage: S = _find_complete_set_of_restriction_vectors(indices.jacobi_index(), indices._r_representatives)
+        sage: _local_restriction_matrix(indices._r_representatives, S).rank()
+        4
     """
     R = [map(vector, rs) for rs in R]
     
@@ -153,7 +160,7 @@ def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0) :
     short_vectors = L.short_vector_list_up_to_length(max_length, True)
     
     S = list()
-    restriction_space = FreeModule(ZZ, len(R)).span([])
+    restriction_space = FreeModule(QQ, len(R)).span([])
     
     
     while (len(S) < len(R) + additional_s ) :
@@ -162,7 +169,7 @@ def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0) :
             if max_length >= cur_length :
                 max_length += length_inc
                 short_vectors = L.short_vector_list_up_to_length(max_length, True)
-                
+        
         s = vector( short_vectors[cur_length].pop() )
         
         rcands = Set([ s.dot_product(r) for rs in R for r in rs ])
@@ -172,7 +179,7 @@ def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0) :
             if len(S) - restriction_space.rank() < additional_s \
               or v not in restriction_space :
                 S.append((s, r))
-                restriction_space = restriction_space + FreeModule(ZZ, len(R)).span([v])
+                restriction_space = restriction_space + FreeModule(QQ, len(R)).span([v])
                 
                 if len(S) == len(R) + additional_s :
                     break
