@@ -120,11 +120,7 @@ class JacobiFormD1Indices_class ( SageObject ) :
         
         # We fix representatives for ZZ^N / L ZZ^N with minimal norm.
         Ladj = self.__Ladj
-        preliminary_reps =   [ vector(self.__L_size * [0])] \
-                           + [ s * b
-                               for (b, d) in zip( FreeModule(ZZ, self.__L_size).basis(),
-                                                  L.matrix().echelon_form().diagonal() )
-                               for s in range(1, d) ]
+        preliminary_reps =  [r.lift() for r in FreeModule(ZZ, L.matrix().nrows()) / L.matrix().row_module()]
         max_norm = max(Ladj(r) for r in preliminary_reps)
         
         short_vectors = [map(vector, rrs) for rrs in Ladj.short_vector_list_up_to_length(max_norm + 1)]
