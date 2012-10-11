@@ -84,6 +84,9 @@ ext_modules = [
     Extension("psage.function_fields.function_field_element",
               ["psage/function_fields/function_field_element.pyx"]),
 
+    Extension("psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion_cython",
+              ["psage/modform/hermitianmodularforms/hermitianmodularformd2_fourierexpansion_cython.pyx"]),
+
     Extension("psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion_cython",
               ["psage/modform/jacobiforms/jacobiformd1nn_fourierexpansion_cython.pyx"]),
     
@@ -226,9 +229,11 @@ build_system.setup(
 
                 'psage.modform.rational',
 
-                'psage.modform.siegel',
+                'psage.modform.hermitianmodularforms',
                 'psage.modform.jacobiforms',
                 'psage.modform.maass',
+                'psage.modform.paramodularforms',
+                'psage.modform.siegel',
 
                 'psage.number_fields',
                 'psage.number_fields.sqrt5',
