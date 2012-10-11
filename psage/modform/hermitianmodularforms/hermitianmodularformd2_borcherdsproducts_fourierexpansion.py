@@ -28,8 +28,8 @@ AUTHOR :
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_basicmonoids import TrivialCharacterMonoid,\
     TrivialRepresentation
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_ring import EquivariantMonoidPowerSeriesRing
-from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import *
-from hermitianmodularforms.hermitianmodularformd2_fourierexpansion_cython import reduce_GL
+from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import *
+from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion_cython import reduce_GL
 from sage.functions.other import ceil, floor
 from sage.functions.other import sqrt
 from sage.groups.all import AbelianGroup

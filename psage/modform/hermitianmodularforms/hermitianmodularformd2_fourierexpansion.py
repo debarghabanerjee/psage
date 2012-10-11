@@ -33,7 +33,7 @@ from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseri
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_basicmonoids import TrivialCharacterMonoid,\
     TrivialRepresentation, CharacterMonoid_class
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_ring import EquivariantMonoidPowerSeriesRing
-from hermitianmodularforms.hermitianmodularformd2_fourierexpansion_cython import reduce_GL
+from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion_cython import reduce_GL
 from sage.groups.all import AbelianGroup
 from sage.misc.functional import isqrt
 from sage.misc.latex import latex

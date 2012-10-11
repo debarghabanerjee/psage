@@ -38,7 +38,7 @@ NOTE:
 #
 #===============================================================================
 
-from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import \
+from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import \
              HermitianModularFormD2Filter_diagonal, HermitianModularFormD2FourierExpansionRing
 from sage.misc.cachefunc import cached_method
 from sage.modular.congroup import Gamma1

@@ -51,14 +51,14 @@ the vector valued modular forms.
 #===============================================================================
 
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_element import EquivariantMonoidPowerSeries
-from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import \
+from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import \
                             HermitianModularFormD2Filter_diagonal_borcherds, HermitianModularFormD2Indices_diagonal_borcherds
-from hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
-from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import \
+from psage.modform.hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
+from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import \
                             HermitianModularFormD2FourierExpansionRing, HermitianModularFormD2Filter_diagonal,\
                             HermitianModularFormD2FourierExpansionTrivialCharacter, \
                             HermitianModularFormD2FourierExpansionTransposeCharacter
-from hermitianmodularforms.hermitianmodularformd2_fourierexpansion_cython import *
+from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion_cython import *
 from sage.functions.other import ceil
 from sage.matrix.all import matrix
 from sage.misc.all import prod
