@@ -569,8 +569,6 @@ def _test__coefficient_by_restriction(precision, k, relation_precision = None, a
         raise ValueError( "Relation precision must be less than or equal to precision." )
 
     expansions = _coefficient_by_restriction(precision, k, relation_precision)
-    for e in expansions :
-        print e.coefficients()
     verbose( "Start testing restrictions of {2} Jacobi forms of weight {0} and index {1}".format(k, L, len(expansions)) )
     
     ch1 = JacobiFormD1WeightCharacter(k)
@@ -620,10 +618,6 @@ def _test__coefficient_by_restriction(precision, k, relation_precision = None, a
             restricted_expansion = vector( restricted_expansion_dict.get(k, 0) for k in jacobi_forms.fourier_expansion_precision() )
             if restricted_expansion not in jacobi_forms_module :
                 raise RuntimeError( "{0}-th restricted via {1} is not a Jacobi form".format(i, s) )
-                print s, i
-                print restricted_expansion
-                print jacobi_forms_module.basis_matrix()
-                return (list(jacobi_forms.fourier_expansion_precision()), restricted_expansion, jacobi_forms_module.basis_matrix())
             
             if restricted_expansion != 0 :
                 non_zero_expansions.append(i)
