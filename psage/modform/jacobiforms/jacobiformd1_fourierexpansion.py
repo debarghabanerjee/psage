@@ -393,14 +393,18 @@ class JacobiFormD1Filter ( SageObject ) :
             for r in self.__monoid._r_reduced_representatives :
                 rsq = self.__Ladj(r)
                 if rsq % (2 * self.__L.det()) == 0 :
-                    yield (rsq // (2 * self.__L.det()), r) 
+                    n = rsq // (2 * self.__L.det())
+                    if n < self.__bound :
+                        yield (n, r) 
         else :
             short_vectors = [map(tuple, rs) for rs in self.__Ladj.short_vector_list_up_to_length(2 * self.__L.det() * (self.__bound - 1) + 1)]
             
             for (rsq, rs) in enumerate(short_vectors) :
                 for r in rs :
                     if rsq % (2 * self.__L.det()) == 0 :
-                        yield (rsq // (2 * self.__L.det()), r) 
+                        n = rsq // (2 * self.__L.det())
+                        if n < self.__bound :
+                            yield (n, r) 
         
         raise StopIteration
     
