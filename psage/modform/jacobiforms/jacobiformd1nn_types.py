@@ -93,9 +93,6 @@ class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
         Graded expansion TDE_0 + 2*TDE_1
     """
     def __init__(self, weight, index) :
-        if weight % 2 != 0 :
-            raise NotImplementedError, "Only even weight forms are implemented."
-  
         self.__index = index
         self.__weight = weight        
     
