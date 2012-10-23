@@ -307,7 +307,6 @@ def _global_restriction_matrix(precision, S, weight_parity, find_relations = Fal
     row_groups = [ (s, m, sum(row_groups[:i]), row_groups[i]) for ((i, s), m) in zip(enumerate(S), jacobi_indices) ]
     row_labels = dict( (m, dict( (l, i) for (i, l) in enumerate(index_filters[m]) ))
                        for m in Set(jacobi_indices) )
-
     dot_products = [ cython_lambda( ' , '.join([ 'int x{0}'.format(i) for i in range(len(s)) ]),
                                     ' + '.join([ '{0} * x{1}'.format(s[i], i) for i in range(len(s)) ]) )
                      for (s, _, _, _) in row_groups ]
@@ -323,7 +322,7 @@ def _global_restriction_matrix(precision, S, weight_parity, find_relations = Fal
                       += 1 if weight_parity == 0 else sign
                 except KeyError :
                     pass
-    
+
     return (restriction_matrix, row_groups, row_labels, column_labels)
 
 #===============================================================================
@@ -359,8 +358,8 @@ def _global_relation_matrix(precision, S, weight_parity) :
                 continue
             
             relations.append(mat.row(start + row_labels_dict[lred]) - (1 if weight_parity == 0 else sign) * mat.row(start + i))
-    
-    return (matrix(relations), column_labels)
+
+    return (matrix(len(relations), len(column_labels), relations), column_labels)
     
 #===============================================================================
 # _coefficient_by_restriction
@@ -443,7 +442,7 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
     (global_relation_matrix, column_labels_relations) = _global_relation_matrix(relation_precision, flatten(L.short_vector_list_up_to_length(max_S_length + 1, True)[1:]), k)
     global_restriction_matrix__big.change_ring(QQ)
     global_relation_matrix.change_ring(QQ)
-        
+
     if relation_precision == precision :
         assert column_labels == column_labels_relations
     if column_labels != column_labels_relations :
