@@ -208,9 +208,25 @@ class JacobiFormD1Indices_class ( SageObject ) :
                                    + min([k[0] for k in rs]),
                                    self.__L, self.__reduced, self.__weak_forms ) 
     
+    def reduce_r(self, r) :
+        for rred in map(lambda rs: rs[0], self._r_representatives) :
+            r_rred = vector(r) - vector(rred)
+            if r_rred in self.__L_span :
+                break
+        else :
+            raise RuntimeError( "Could not find reduced r" )
+        
+        if rred in self._r_reduced_representatives :
+            s = 1
+        else :
+            rred = tuple(map(operator.neg, rred))
+            s = -1
+
+        return (rred, s)
+
     def _reduction_function(self) :
         return self.reduce
-    
+
     def reduce(self, s) :
         (n, r) = s
         # find a representative that corresponds to s
