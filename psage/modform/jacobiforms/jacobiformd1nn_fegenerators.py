@@ -581,7 +581,7 @@ class JacobiFormD1NNFactory_class (SageObject) :
             ## computing the adjoint of a matrix with entries `w_{i,j}` in a
             ## polynomial algebra.
             if W.nrows() == 1 :
-                Wadj = matrix(PS, [[ W[0,0] ]])
+                Wadj = matrix(PS, [[ 1 ]])
             elif W.nrows() == 2 :
                 Wadj = matrix(PS, [ [ W[1,1], -W[0,1]],
                                     [-W[1,0],  W[0,0]] ])
@@ -863,6 +863,7 @@ class JacobiFormD1NNFactory_class (SageObject) :
             
             sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import *
             sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(200, 10, 2)
+            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(20, 11, 2)
             sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(200, 9, 3)      # long time 
             sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(200, 10, 10)    # long time
             sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(70, 7, 15)      # long time  
