@@ -1,6 +1,8 @@
 r"""
 We provide methods to create Fourier expansions of (weak) Jacobi forms `\mathrm{mod} p`.
 
+..note: This code currently does not work.
+
 TODO: Unify this code with the implementation for expansions of ZZ.
 """
 

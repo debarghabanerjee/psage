@@ -88,7 +88,7 @@ class JacobiFormD1_Gamma ( ModularFormType_abstract ) :
         sage: L = QuadraticForm(matrix(2, [2,1,1,2])) 
         sage: JR = JacobiFormsD1(QQ, JacobiFormD1_Gamma(10, L), JacobiFormD1Filter(5, L))
         sage: JR.gens()
-        (Graded expansion phiRes_0,)
+        (Graded expansion phiRes_0, Graded expansion phiRes_1)
         sage: JR.0 + 2 * JR.1
         Graded expansion phiRes_0 + 2*phiRes_1
     """

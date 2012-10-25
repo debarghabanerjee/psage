@@ -243,9 +243,9 @@ def _all_weak_jacobi_forms_by_taylor_expansion(precision, weight, index) :
     ::
         
         sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import _test__all_weak_jacobi_forms_by_taylor_expansion
-        sage: [ _test__all_weak_jacobi_forms_by_taylor_expansion(80, weight, jacobi_index) for (weight, jacobi_index) in [(10, 1), (12, 2), (9, 3)] ]
+        sage: [ _test__all_weak_jacobi_forms_by_taylor_expansion(40, weight, jacobi_index) for (weight, jacobi_index) in [(10, 1), (12, 2), (9, 3)] ]
         [None, None, None]
-        sage: [ _test__all_weak_jacobi_forms_by_taylor_expansion(80, weight, jacobi_index) for (weight, jacobi_index) in [(7, 5), (10, 10) ]          # long time
+        sage: [ _test__all_weak_jacobi_forms_by_taylor_expansion(40, weight, jacobi_index) for (weight, jacobi_index) in [(7, 5), (10, 10) ]          # long time
         [None, None]
     """
     factory = JacobiFormD1NNFactory(precision, index)
@@ -862,11 +862,11 @@ class JacobiFormD1NNFactory_class (SageObject) :
         TESTS::
             
             sage: from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import *
-            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(200, 10, 2)
+            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(100, 10, 2)
             sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(20, 11, 2)
-            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(200, 9, 3)      # long time 
-            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(200, 10, 10)    # long time
-            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(70, 7, 15)      # long time  
+            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(50, 9, 3)      # long time 
+            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(50, 10, 10)    # long time
+            sage: JacobiFormD1NNFactory_class._test__by_taylor_expansion(30, 7, 15)     # long time  
         """
         from sage.rings import big_oh
         
@@ -1014,6 +1014,7 @@ class JacobiFormD1NNFactory_class (SageObject) :
             sage: fss_vec = [ [vector(f.padded_list(precision)) for f in fs] for fs in fss ]
             sage: mf_spans = [ span([vector(b.qexp(precision).padded_list(precision)) for b in ModularForms(1, weight + 2 * nu).basis()]) for nu in range(nu_bound) ] 
             sage: all(f_vec in mf_span for (fs_vec, mf_span) in zip(fss_vec, mf_spans) for f_vec in fs_vec)
+            True
         """
         ## We use EZ85, p.29 (3), the factorial in one of the factors is missing
         factors = [ (-1)**mu * factorial(2 * nu) * factorial(weight + 2 * nu - mu - 2) / ZZ(factorial(mu) * factorial(2 * nu - 2 * mu) * factorial(weight + nu - 2))
@@ -1060,6 +1061,7 @@ class JacobiFormD1NNFactory_class (SageObject) :
             sage: fs_vec = [vector(f.padded_list(precision)) for f in fs]
             sage: mf_span = span([vector(b.qexp(precision).padded_list(precision)) for b in ModularForms(GammaH(9, [4]), weight).basis()])
             sage: all(f_vec in mf_span for f_vec in fs_vec)
+            True
         
         FIXME: The case of torsion points of order 5, which should lead to forms for Gamma1(25) fails even in the simplest case.
         """

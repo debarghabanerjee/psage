@@ -106,9 +106,9 @@ class JacobiFormD1Indices_class ( SageObject ) :
         
             sage: from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import JacobiFormD1Indices
             sage: JacobiFormD1Indices(QuadraticForm(matrix(2, [2,1,1,2])))._r_representatives
-            [(0, 0), (0, 1), (0, -1)]
+            [[(0, 0)], [(-1, -1), (0, 1), (1, 0)], [(1, 1), (0, -1), (-1, 0)]]
             sage: JacobiFormD1Indices(QuadraticForm(matrix(2, [2,1,1,2])))._r_reduced_representatives
-            [(0, 0), (0, 1)]
+            [(0, 0), (1, 1)]
         """
         self.__L = L
         ## This is two times the adjoint of L, which in all cases will be even

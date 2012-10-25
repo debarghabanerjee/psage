@@ -178,7 +178,12 @@ def dimension__vector_valued(k, L, conjugate = False) :
 
     TESTS::
 
-        sage: ??
+        sage: dimension__vector_valued(3, QuadraticForm(-matrix(2, [2, 1, 1, 2])))
+        1
+        sage: dimension__vector_valued(3, QuadraticForm(-matrix(2, [2, 0, 0, 2])))
+        1
+        sage: dimension__vector_valued(3, QuadraticForm(-matrix(2, [2, 0, 0, 4])))
+        1
     """
     if 2 * k not in ZZ :
         raise ValueError( "Weight must be half-integral" ) 

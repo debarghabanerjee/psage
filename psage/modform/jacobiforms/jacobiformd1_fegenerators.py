@@ -120,7 +120,7 @@ class JacobiFormD1DelayedFactory__restriction :
 # _find_complete_set_of_restriction_vectors
 #===============================================================================
 
-def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0) :
+def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0, reduction_function = None) :
     r"""
     Given a set R of elements in L^# (e.g. representatives for ( L^# / L ) / \pm 1)
     find a complete set of restriction vectors. (See [GKR])
@@ -131,6 +131,12 @@ def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0) :
     
     - `R` -- A list of tuples or vectors in L \otimes QQ (with
              given coordinates).
+
+    - ``additional_s`` -- A non-negative integer; Number of additional
+                          elements of `L` that should be returned.
+    
+    - ``reduction_function`` -- A function that takes a tuple representing an element in `L^\#`
+                                and returs a pair of a reduced element in `L^\#` and a sign.
     
     OUTPUT:
     
@@ -142,11 +148,14 @@ def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0) :
         sage: from psage.modform.jacobiforms.jacobiformd1_fegenerators import _find_complete_set_of_restriction_vectors
         sage: from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import *
         sage: indices = JacobiFormD1Indices(QuadraticForm(matrix(2, [2,1,1,2])))
-        sage: _find_complete_set_of_restriction_vectors(indices.jacobi_index(), indices._r_representatives)        
-        [((-1, 0), 0), ((-1, 0), -1), ((-1, 0), 1)]
+        sage: _find_complete_set_of_restriction_vectors(indices.jacobi_index(), indices._r_representatives)
+        [((1, 0), 0), ((1, 0), 1), ((-2, 1), 1)]
+        sage: _find_complete_set_of_restriction_vectors(indices.jacobi_index(), indices._r_representatives, reduction_function = indices.reduce_r)
+        [((1, 0), 0), ((1, 0), 1), ((-2, 1), 1)]
         
     ::
      
+        sage: from psage.modform.jacobiforms.jacobiformd1_fegenerators import _local_restriction_matrix
         sage: indices = JacobiFormD1Indices(QuadraticForm(matrix(4, [2,0,0,1, 0,2,0,1, 0,0,2,1, 1,1,1,2])))
         sage: S = _find_complete_set_of_restriction_vectors(indices.jacobi_index(), indices._r_representatives)
         sage: _local_restriction_matrix(indices._r_representatives, S).rank()
@@ -175,7 +184,7 @@ def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0) :
         rcands = Set([ s.dot_product(r) for rs in R for r in rs ])
         
         for r in rcands :
-            v = _eval_restriction_vector(R, s, r)
+            v = _eval_restriction_vector(R, s, r, reduction_function)
             if len(S) - restriction_space.rank() < additional_s \
               or v not in restriction_space :
                 S.append((s, r))
@@ -190,31 +199,38 @@ def _find_complete_set_of_restriction_vectors(L, R, additional_s = 0) :
 # _eval_restriction_vector
 #===============================================================================
 
-def _eval_restriction_vector(R, s, r) :
+def _eval_restriction_vector(R, s, r, reduction_function) :
     r"""
     For each list rs in R compute the multiplicity of s r' = r, r' in rs.
     
     INPUT:
     
-    - `R` -- A list of list of vectors.
+    - `R` -- A list of lists of vectors.
     
     - `s` -- A vector of the same length.
     
     - `r` -- An integer.
+    
+    - ``reduction_function`` -- A function that takes a tuple representing an element in `L^\#`
+                                and returs a pair of a reduced element in `L^\#` and a sign.
     
     OUTPUT:
     
     - A vector with integer entries that correspond to the elements
       of R in the given order.
     """
-    return vector( len([ rp for rp in rs if s.dot_product(rp) == r ])
-                   for rs in R )
+    if reduction_function is None :
+        return vector([ len([ rp for rp in rs if s.dot_product(rp) == r ])
+                        for rs in R ])
+    else :
+        return vector([ sum( reduction_function(rp)[1] for rp in rs if s.dot_product(rp) == r )
+                        for rs in R ])
 
 #===============================================================================
 # _local_restriction_matrix
 #===============================================================================
 
-def _local_restriction_matrix(R, S) :
+def _local_restriction_matrix(R, S, reduction_function = None) :
     r"""
     Return a matrix whose rows correspond to the evaluations of the restriction
     vectors (s, r) in S.
@@ -225,6 +241,9 @@ def _local_restriction_matrix(R, S) :
     
     - `S` -- A list of pairs `(s, r)`, where `s` is a vector,
              and `r` is an integer.
+
+    - ``reduction_function`` -- A function that takes a tuple representing an element in `L^\#`
+                                and returs a pair of a reduced element in `L^\#` and a sign.
              
     OUTPUT:
     
@@ -240,16 +259,16 @@ def _local_restriction_matrix(R, S) :
         sage: S = _find_complete_set_of_restriction_vectors(indices.jacobi_index(), R, 4)        
         sage: _local_restriction_matrix(R, S)
         [1 1 1]
-        [0 1 0]
-        [0 0 1]
-        [1 0 0]
         [0 1 1]
         [0 1 1]
         [1 1 1]
+        [0 1 1]
+        [0 1 1]
+        [0 2 0]
     """
     R = [map(vector, rs) for rs in R]
     
-    return matrix([ _eval_restriction_vector(R, vector(s), r) for (s, r) in S ])
+    return matrix([ _eval_restriction_vector(R, vector(s), r, reduction_function) for (s, r) in S ])
 
 #===============================================================================
 # _global_restriction_matrix
@@ -275,20 +294,20 @@ def _global_restriction_matrix(precision, S, weight_parity, find_relations = Fal
     
         sage: from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import *
         sage: from psage.modform.jacobiforms.jacobiformd1_fegenerators import _global_restriction_matrix
-        sage: precision = JacobiFormD1Filter(5, QuadraticForm(matrix(2, [2,1,1,2]))
+        sage: precision = JacobiFormD1Filter(5, QuadraticForm(matrix(2, [2,1,1,2])))
         sage: (global_restriction_matrix, row_groups, row_labels, column_labels) = _global_restriction_matrix(precision, [vector((1,0))], 12)
         sage: global_restriction_matrix
         [1 0 0 0 0 0 0 0 0]
-        [0 1 4 0 0 0 0 0 0]
-        [0 2 2 0 0 0 0 0 0]
-        [0 2 0 1 4 0 0 0 0]
-        [0 0 2 2 2 0 0 0 0]
-        [0 0 2 2 0 1 4 0 0]
-        [0 0 2 0 2 2 2 0 0]
-        [0 0 0 0 2 2 0 1 4]
-        [0 2 0 0 2 0 2 2 2]
+        [0 1 2 0 0 0 0 0 0]
+        [2 0 2 0 0 0 0 0 0]
+        [0 0 2 1 2 0 0 0 0]
+        [0 2 0 0 2 0 0 0 0]
+        [2 0 0 0 2 1 2 0 0]
+        [0 0 2 2 0 0 2 0 0]
+        [0 2 0 0 0 0 2 1 2]
+        [0 0 0 0 2 2 0 0 2]
         sage: (row_groups, row_labels, column_labels)
-        ([((1, 0), 0, 9)], [{(0, 0): 0, (3, 0): 5, (3, 1): 6, (2, 1): 4, (2, 0): 3, (1, 0): 1, (4, 1): 8, (1, 1): 2, (4, 0): 7}], [(0, (0, 0)), (1, (0, 0)), (1, (0, 1)), (2, (0, 0)), (2, (0, 1)), (3, (0, 0)), (3, (0, 1)), (4, (0, 0)), (4, (0, 1))]
+        ([((1, 0), 1, 0, 9)], {1: {(0, 0): 0, (3, 0): 5, (3, 1): 6, (2, 1): 4, (2, 0): 3, (1, 0): 1, (4, 1): 8, (1, 1): 2, (4, 0): 7}}, [(0, (0, 0)), (1, (0, 0)), (1, (1, 1)), (2, (0, 0)), (2, (1, 1)), (3, (0, 0)), (3, (1, 1)), (4, (0, 0)), (4, (1, 1))])
     """
     L = precision.jacobi_index()
     weight_parity = weight_parity % 2
@@ -428,7 +447,7 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
         return []
 
     R = precision.monoid()._r_representatives
-    S_extended = _find_complete_set_of_restriction_vectors(L, R)
+    S_extended = _find_complete_set_of_restriction_vectors(L, R, reduction_function = precision.monoid().reduce_r)
     S = list()
     for (s, _) in S_extended :
         if s not in S :
@@ -551,8 +570,8 @@ def _test__coefficient_by_restriction(precision, k, relation_precision = None, a
     ::
 
         sage: indices = JacobiFormD1Indices(QuadraticForm(matrix(2, [4,1,1,2])))
-        sage: precision = JacobiFormD1Filter(3, indices.jacobi_index())
-        sage: _test__coefficient_by_restriction(precision, 40, additional_lengths = 4)
+        sage: precision = JacobiFormD1Filter(5, indices.jacobi_index())
+        sage: _test__coefficient_by_restriction(precision, 40, additional_lengths = 4) # long test
         
     We use different precisions for relations and restrictions::
 
@@ -565,7 +584,7 @@ def _test__coefficient_by_restriction(precision, k, relation_precision = None, a
     
     L = precision.jacobi_index()
     
-    if not relation_precision <= precision :
+    if relation_precision is not None and not relation_precision <= precision :
         raise ValueError( "Relation precision must be less than or equal to precision." )
 
     expansions = _coefficient_by_restriction(precision, k, relation_precision)

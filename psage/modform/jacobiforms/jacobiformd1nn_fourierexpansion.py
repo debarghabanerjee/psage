@@ -434,7 +434,7 @@ def JacobiFormD1FourierExpansionCharacterMonoid(index_size = 1) :
         sage: M
         Character monoid over Multiplicative Abelian Group isomorphic to C2
         sage: M([1]) * M([1])
-        f0
+        1
     """
     global _character_eval_function_cache
     
