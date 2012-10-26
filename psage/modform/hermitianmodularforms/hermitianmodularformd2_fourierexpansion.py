@@ -87,9 +87,8 @@ class HermitianModularFormD2Filter_diagonal ( SageObject ) :
 
         TESTS::
             sage: filter = HermitianModularFormD2Filter_diagonal(4,-3)
-            sage: filter = HermitianModularFormD2Filter_diagonal((4, 2),-3)
             sage: filter = HermitianModularFormD2Filter_diagonal(4,-4,True)
-            sage: filter = HermitianModularFormD2Filter_diagonal((3, 1),-4,True)
+            sage: filter = HermitianModularFormD2Filter_diagonal((1, 3),-4,True)
             sage: filter = HermitianModularFormD2Filter_diagonal(4,-4,True,False)
             sage: filter = HermitianModularFormD2Filter_diagonal(4,-3,reduced=False)
             sage: filter = HermitianModularFormD2Filter_diagonal((4, 4), -3)
@@ -112,15 +111,15 @@ class HermitianModularFormD2Filter_diagonal ( SageObject ) :
             sage: HermitianModularFormD2Filter_diagonal(-1,-3)
             Traceback (most recent call last):
             ...
-            ValueError: If bound is not a filter, bound has to be a nonnegative integer or infinity.
+            ValueError: Integer bounds must be non-negative.
             sage: HermitianModularFormD2Filter_diagonal((-1, 3),-3)
             Traceback (most recent call last):
             ...
-            ValueError: All integer bounds must be a nonnegative.
+            ValueError: All integer bounds must be non-negative.
             sage: HermitianModularFormD2Filter_diagonal((3, -1),-3)
             Traceback (most recent call last):
             ...
-            ValueError: All integer bounds must be a nonnegative.
+            ValueError: All integer bounds must be non-negative.
             sage: filter = HermitianModularFormD2Filter_diagonal(4,-3); filter
             Reduced diagonal filter for discriminant -3 with bound 4
             sage: HermitianModularFormD2Filter_diagonal(filter,reduced=False)
@@ -158,7 +157,7 @@ class HermitianModularFormD2Filter_diagonal ( SageObject ) :
                    not all(isinstance(b, (int, Integer)) or b is infinity for b in bound) :
                     raise TypeError( "If bound is of list type, it must have length 2 with entries integers or infinity." )
                 if any(b < 0 for b in bound) :
-                    raise ValueError( "All integer bounds must be a nonnegative." )
+                    raise ValueError( "All integer bounds must be non-negative." )
                 if bound[0] > bound[1] :
                     raise ValueError( "If two bounds are given, the first must be less than or equal to the second." )
             else :
@@ -266,7 +265,7 @@ class HermitianModularFormD2Filter_diagonal ( SageObject ) :
             8
             sage: filter = HermitianModularFormD2Filter_diagonal((2, 5),-3)
             sage: filter.index()
-            (5, 2)
+            (2, 5)
 
         TESTS::
         
@@ -330,7 +329,7 @@ class HermitianModularFormD2Filter_diagonal ( SageObject ) :
             sage: filter = HermitianModularFormD2Filter_diagonal(4,-4,with_character=True)
             sage: filter._enveloping_discriminant_bound()
             197
-            sage: filter = HermitianModularFormD2Filter_diagonal((4, 2),-3)
+            sage: filter = HermitianModularFormD2Filter_diagonal((2, 4),-3)
             sage: filter._enveloping_discriminant_bound()
             10
         """
@@ -543,7 +542,7 @@ class HermitianModularFormD2Filter_diagonal ( SageObject ) :
 
         EXAMPLES::
         
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: filter = HermitianModularFormD2Filter_diagonal(4,-3)
             sage: list(filter.iter_positive_forms_for_character())
             [(1, 0, 0, 1), (1, 1, 1, 1), (1, 0, 0, 2), (1, 1, 1, 2), (1, 0, 0, 3), (1, 1, 1, 3), (2, 0, 0, 2), (2, 1, 1, 2), (2, 2, 2, 2), (2, 3, 2, 2), (2, 0, 0, 3), (2, 1, 1, 3), (2, 2, 2, 3), (2, 3, 2, 3), (3, 0, 0, 3), (3, 1, 1, 3), (3, 2, 2, 3), (3, 3, 2, 3), (3, 3, 3, 3), (3, 4, 3, 3)]
@@ -825,7 +824,7 @@ class HermitianModularFormD2Filter_diagonal ( SageObject ) :
 
         EXAMPLES::
 
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: filter = HermitianModularFormD2Filter_diagonal(4,-3)
             sage: list(filter.iter_positive_forms_for_character_with_content_and_discriminant())
             [((1, 0, 0, 1), 1, 3), ((1, 1, 1, 1), 1, 2), ((1, 0, 0, 2), 1, 6), ((1, 1, 1, 2), 1, 5), ((1, 0, 0, 3), 1, 9), ((1, 1, 1, 3), 1, 8), ((2, 0, 0, 2), 2, 12), ((2, 1, 1, 2), 1, 11), ((2, 2, 2, 2), 2, 8), ((2, 3, 2, 2), 1, 9), ((2, 0, 0, 3), 1, 18), ((2, 1, 1, 3), 1, 17), ((2, 2, 2, 3), 1, 14), ((2, 3, 2, 3), 1, 15), ((3, 0, 0, 3), 3, 27), ((3, 1, 1, 3), 1, 26), ((3, 2, 2, 3), 1, 23), ((3, 3, 2, 3), 1, 24), ((3, 3, 3, 3), 3, 18), ((3, 4, 3, 3), 1, 20)]
@@ -1055,17 +1054,17 @@ class HermitianModularFormD2Filter_diagonal ( SageObject ) :
                  self.__bound )
     
     def _latex_(self) :
-        """
+        r"""
         OUTPUT:
             - A string
 
         TESTS::
             sage: filter = HermitianModularFormD2Filter_diagonal(4,-3)
             sage: filter._latex_()
-            'Reduced diagonal filter for discriminant $-3$ with bound $4$'
+            '\text{Reduced diagonal filter for discriminant $-3$ with bound $4$}'
             sage: filter = HermitianModularFormD2Filter_diagonal(4,-4,with_character=True,reduced=False)
             sage: filter._latex_()
-            'Diagonal filter for discriminant $-4$ respecting characters with bound $8$'
+            '\text{Diagonal filter for discriminant $-4$ respecting characters with bound $8$}'
         """
         return "\text{%siagonal filter for discriminant $%s$%s with bound $%s$}" % \
                ( "Reduced d" if self.__reduced else "D", latex(self.__D), 
@@ -1109,7 +1108,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
                                   with respect to `\mathrm{GL}_{2}(o_{\Q(\sqrt{D})}` are considered.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3, True)
             Traceback (most recent call last):
             ...
@@ -1135,7 +1134,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             The result is always mathematically wrong.
 
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds.ngens()
             2
@@ -1152,7 +1151,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             One the two generators with non-vanishing entries on the diagonal are returned.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds.gen(0)
             (1, 0, 0, 0)
@@ -1177,7 +1176,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             One the two generators with non-vanishing entries on the diagonal are returned.
 
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds.gens()
             [(1, 0, 0, 0), (0, 0, 0, 1)]
@@ -1190,7 +1189,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             A boolean.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds.is_commutative()
             True
@@ -1205,7 +1204,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             A boolean.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds.has_reduced_filters()
             True
@@ -1223,7 +1222,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             A boolean.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds.has_filters_with_character()
             False
@@ -1242,7 +1241,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             An instance of :class:`~.HermitianModularFormD2Indices_diagonal`.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds_a = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds_woa = HermitianModularFormD2Indices_diagonal(-3, reduced = False)
             sage: inds_a.monoid() == inds_woa
@@ -1267,7 +1266,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             The return value may change later to the actual group.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds_a = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds_woa = HermitianModularFormD2Indices_diagonal(-3, reduced = False)
             sage: inds_a.group()
@@ -1291,7 +1290,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             A boolean.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds_a = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds_woa = HermitianModularFormD2Indices_diagonal(-3, reduced = False)
             sage: inds_a.is_monoid_action()
@@ -1318,8 +1317,8 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             An instance of :class:`~.HermitianModularFormD2Filter_diagonal`.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds.filter(2) == HermitianModularFormD2Filter_diagonal(2, -3)
             True
@@ -1348,7 +1347,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             An instance of :class:`~HermitianModularFormD2Filter_diagonal`.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds.filter_all().is_all()
             True
@@ -1375,7 +1374,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             An instance of :class:`~HermitianModularFormD2Filter_diagonal`.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds.minimal_composition_filter([], []).index()
             0
@@ -1425,7 +1424,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             A function accepting one argument.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds._reduction_function() == inds.reduce
             True
@@ -1454,7 +1453,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             `0` and `|\mathfrak{o}_{\Q(\sqrt{D})}^\times|`.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds.reduce((1,0,0,1))
             ((1, 0, 0, 1), (1, 0, 1))
@@ -1486,7 +1485,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             A generator interating over pairs of 4-tuples of integers.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: len(list(inds._decompositions_with_stepsize((2,0,0,2), 1, 0)))
             21
@@ -1550,7 +1549,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             A generator interating over pairs of 4-tuples of integers.
             
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds_a = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds_woa = HermitianModularFormD2Indices_diagonal(-3, reduced = False)
             sage: len(list(inds_a.decompositions((2,1,0,2))))
@@ -1588,7 +1587,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             A 4-tuple of integers.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds.zero_element()
             (0, 0, 0, 0)
@@ -1604,7 +1603,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             A boolean.
             
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: (2, 2, 3, 4) in inds
             True
@@ -1624,7 +1623,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
     def __cmp__(self, other) :
         """
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: inds = HermitianModularFormD2Indices_diagonal(-3)
             sage: inds == 2
             False 
@@ -1648,7 +1647,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
     def __hash__(self) :
         """
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: hash( HermitianModularFormD2Indices_diagonal(-3) )
             16
             sage: hash( HermitianModularFormD2Indices_diagonal(-4, True) )
@@ -1663,7 +1662,7 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
     def _repr_(self) :
         """
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: repr( HermitianModularFormD2Indices_diagonal(-3) )
             'Reduced quadratic forms over o_QQ(\\sqrt -3)'
             sage: repr( HermitianModularFormD2Indices_diagonal(-4, True) )
@@ -1678,19 +1677,19 @@ class HermitianModularFormD2Indices_diagonal( SageObject ) :
             " for character forms" if self.__with_character else "" )
             
     def _latex_(self) :
-        """
+        r"""
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
             sage: latex( HermitianModularFormD2Indices_diagonal(-3) )
-            Reduced quadratic forms over $\mathfrak{o}_{\mathbb{Q}(\sqrt{-3})}$
+            \text{Reduced quadratic forms over $\mathfrak{o}_{\mathbb{Q}(\sqrt{-3})}$}
             sage: latex( HermitianModularFormD2Indices_diagonal(-4, True) )
-            Reduced quadratic forms over $\mathfrak{o}_{\mathbb{Q}(\sqrt{-4})}$ for character forms
+            \text{Reduced quadratic forms over $\mathfrak{o}_{\mathbb{Q}(\sqrt{-4})}$ for character forms}
             sage: latex( HermitianModularFormD2Indices_diagonal(-7, reduced = False) )
-            Non-reduced quadratic forms over $\mathfrak{o}_{\mathbb{Q}(\sqrt{-7})}$
+            \text{Non-reduced quadratic forms over $\mathfrak{o}_{\mathbb{Q}(\sqrt{-7})}$}
             sage: latex( HermitianModularFormD2Indices_diagonal(-8, True, False) )
-            Non-reduced quadratic forms over $\mathfrak{o}_{\mathbb{Q}(\sqrt{-8})}$ for character forms
+            \text{Non-reduced quadratic forms over $\mathfrak{o}_{\mathbb{Q}(\sqrt{-8})}$ for character forms}
         """
-        return "\text{%seduced quadratic forms over $\mathfrak{o}_{\mathbb{Q}(\sqrt{%s})}$%s}" % \
+        return "\\text{%seduced quadratic forms over $\mathfrak{o}_{\mathbb{Q}(\sqrt{%s})}$%s}" % \
           ( "R" if self.__reduced else "Non-r", latex(self.__D),
             " for character forms" if self.__with_character else "" )
 
@@ -1721,7 +1720,7 @@ def HermitianModularFormD2FourierExpansionCharacterMonoid( D, K ) :
         A monoid of characters.
     
     TESTS:
-        sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2FourierExpansionCharacterMonoid
+        sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2FourierExpansionCharacterMonoid
         sage: HermitianModularFormD2FourierExpansionCharacterMonoid(-4, ZZ)
         Character monoid over Multiplicative Abelian Group isomorphic to C2 x C2 x C2
         sage: HermitianModularFormD2FourierExpansionCharacterMonoid(-3, ZZ)
@@ -1770,7 +1769,7 @@ def HermitianModularFormD2FourierExpansionTrivialCharacter(D, K, weight_parity =
         An element of a monoid of characters.
     
     TESTS:
-        sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2FourierExpansionCharacterMonoid
+        sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2FourierExpansionCharacterMonoid
         sage: ch = HermitianModularFormD2FourierExpansionTrivialCharacter(-4, ZZ)
         sage: map(ch, [(-1,0,1), (1,1,1), (1,1,-1)])
         [1, 1, 1]
@@ -1815,7 +1814,7 @@ def HermitianModularFormD2FourierExpansionTransposeCharacter(D, K, weight_parity
         An element of a monoid of characters.
     
     TESTS:
-        sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2FourierExpansionCharacterMonoid
+        sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2FourierExpansionCharacterMonoid
         sage: ch = HermitianModularFormD2FourierExpansionTransposeCharacter(-4, ZZ)
         sage: map(ch, [(-1,0,1), (1,1,1), (1,1,-1)])
         [-1, 1, 1]
@@ -1827,10 +1826,10 @@ def HermitianModularFormD2FourierExpansionTransposeCharacter(D, K, weight_parity
         [-1, 1]
         sage: ch = HermitianModularFormD2FourierExpansionTransposeCharacter(-4, ZZ)
         sage: map(ch, [(-1,0,1), (1,1,1), (1,1,-1)])
-        [-1, -1, -1]
+        [-1, 1, 1]
         sage: ch = HermitianModularFormD2FourierExpansionTransposeCharacter(-3, ZZ)
         sage: map(ch, [(-1,0,0), (1, 1,0)])
-        [-1, -1]
+        [-1, 1]
     """
     chmonoid = HermitianModularFormD2FourierExpansionCharacterMonoid(D, K)
     monoid = chmonoid.monoid()
@@ -1865,8 +1864,8 @@ def HermitianModularFormD2FourierExpansionRing(K, D, with_nu_character = False) 
         An instance of :class:`~fourier_expansion_framework.monoidpowerseries.monoidpowerseries_ring.EquivariantMonoidPowerSeriesRing_generic`.
     
     TESTS::
-        sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
-        sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2FourierExpansionRing
+        sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Indices_diagonal
+        sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2FourierExpansionRing
         sage: fe_ring = HermitianModularFormD2FourierExpansionRing(ZZ, -3)
         sage: fe_ring.action() == HermitianModularFormD2Indices_diagonal(-3)
         True

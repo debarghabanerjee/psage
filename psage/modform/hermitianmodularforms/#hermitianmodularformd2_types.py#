@@ -59,8 +59,8 @@ def HermitianModularFormsD2(A, type, precision, *args, **kwds) :
         An instance of :class:~fourier_expansion_framework.modularforms.modularform_ambient.ModularFormsAmbient_abstract`. 
 
     TESTS::
-        sage: from psage.modform.hermitianmodularforms import *
-            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
+        sage: from hermitianmodularforms import *
+            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
         sage: HermitianModularFormsD2(QQ, HermitianModularFormD2_Gamma(-3), HermitianModularFormD2Filter_diagonal(4, -3))
         Graded expansion ring with generators HE4, HE6, HE10, HE12, Hphi9
     """
@@ -96,7 +96,7 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
                      an imaginary quadratic field.
         
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
+            sage: from hermitianmodularforms import *
             sage: t = HermitianModularFormD2_Gamma(-3)
             sage: HermitianModularFormD2_Gamma(-1)
             Traceback (most recent call last):
@@ -133,7 +133,7 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
                 A ring or module of modular forms.
         
         TESTS::
-            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_types import HermitianModularFormsD2, HermitianModularFormD2_Gamma
+            sage: from hermitianmodularforms.hermitianmodularformd2_types import HermitianModularFormsD2, HermitianModularFormD2_Gamma
             sage: HermitianModularFormD2_Gamma(-3)._ambient_construction_function() is HermitianModularFormsD2
             True
         """
@@ -151,7 +151,7 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
             to return a group.
         
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
+            sage: from hermitianmodularforms import *
             sage: HermitianModularFormD2_Gamma(-3).group()
             '\\mathrm{Sp}(2, \\mathfrak{o}_{\\QQ(-3)})'
         """
@@ -172,8 +172,8 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
             An equivariant monoid power series over `\Z`.
         
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
-            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
+            sage: from hermitianmodularforms import *
+            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
             sage: HermitianModularFormD2_Gamma(-3)._e4_D3(HermitianModularFormD2Filter_diagonal(2, -3)).parent().coefficient_domain()
             Integer Ring
         """
@@ -194,8 +194,8 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
             An equivariant monoid power series over `\Z`.
         
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
-            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
+            sage: from hermitianmodularforms import *
+            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
             sage: HermitianModularFormD2_Gamma(-3)._e6_D3(HermitianModularFormD2Filter_diagonal(2, -3)).parent().coefficient_domain()
             Integer Ring
         """
@@ -216,8 +216,8 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
             An equivariant monoid power series over `\Z`.
         
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
-            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
+            sage: from hermitianmodularforms import *
+            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
             sage: HermitianModularFormD2_Gamma(-3)._e10_D3(HermitianModularFormD2Filter_diagonal(2, -3)).parent().coefficient_domain()
             Integer Ring
         """
@@ -241,8 +241,8 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
             An equivariant monoid power series over `\Z`.
         
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
-            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
+            sage: from hermitianmodularforms import *
+            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
             sage: HermitianModularFormD2_Gamma(-3)._e12_D3(HermitianModularFormD2Filter_diagonal(2, -3)).parent().coefficient_domain()
             Integer Ring
         """
@@ -266,8 +266,8 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
             An equivariant monoid power series over `\Z`.
         
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
-            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
+            sage: from hermitianmodularforms import *
+            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
             sage: HermitianModularFormD2_Gamma(-3)._phi9_D3(HermitianModularFormD2Filter_diagonal(2, -3)).parent().coefficient_domain()
             Integer Ring
         """
@@ -291,9 +291,9 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
             A sequence of equivariant monoid power series.
         
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
-            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
-            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2FourierExpansionRing
+            sage: from hermitianmodularforms import *
+            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
+            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2FourierExpansionRing
             sage: HermitianModularFormD2_Gamma(-3).generators(QQ, HermitianModularFormD2Filter_diagonal(2, -3)).universe() == HermitianModularFormD2FourierExpansionRing(QQ, -3)
             True
             sage: HermitianModularFormD2_Gamma(-3).generators(GF(2), HermitianModularFormD2Filter_diagonal(2, -3))
@@ -326,7 +326,7 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
             This coincides with the weight grading.
         
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
+            sage: from hermitianmodularforms import *
             sage: HermitianModularFormD2_Gamma(-3).grading(QQ)
             Degree grading (4, 6, 10, 12, 18)
             sage: HermitianModularFormD2_Gamma(-3).grading(GF(2))
@@ -354,7 +354,7 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
             A list of strings.
         
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
+            sage: from hermitianmodularforms import *
             sage: HermitianModularFormD2_Gamma(-3)._generator_names(QQ)
             ['HE4', 'HE6', 'HE10', 'HE12', 'Hphi9']
             sage: HermitianModularFormD2_Gamma(-3)._generator_names(GF(2))
@@ -383,7 +383,7 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
             An element of a polynomial ring.
         
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
+            sage: from hermitianmodularforms import *
             sage: HermitianModularFormD2_Gamma(-3)._generator_by_name(QQ, "HE4")
             HE4
             sage: HermitianModularFormD2_Gamma(-3)._generator_by_name(QQ, "???")
@@ -420,7 +420,7 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
             An ideal in a polynomial ring.
             
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
+            sage: from hermitianmodularforms import *
             sage: HermitianModularFormD2_Gamma(-3).generator_relations(QQ)
             Ideal (0) of Multivariate Polynomial Ring in HE4, HE6, HE10, HE12, Hphi9 over Rational Field
             sage: HermitianModularFormD2_Gamma(-3).generator_relations(GF(2))
@@ -449,7 +449,7 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
             A boolean.
         
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
+            sage: from hermitianmodularforms import *
             sage: HermitianModularFormD2_Gamma(-3).graded_submodules_are_free()
             True
         """
@@ -458,7 +458,7 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
     def __cmp__(self, other) :
         """
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
+            sage: from hermitianmodularforms import *
             sage: HermitianModularFormD2_Gamma(-3) == HermitianModularFormD2_Gamma(-3)
             True
         """
@@ -472,25 +472,25 @@ class HermitianModularFormD2_Gamma ( ModularFormType_abstract ) :
     def _repr_(self) :
         """
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
+            sage: from hermitianmodularforms import *
             sage: HermitianModularFormD2_Gamma(-3)
             Type for Hermitian modular forms associated to \mathrm{Sp}(2, \mathfrak{o}_{\QQ(-3)})
         """
         return "Type for Hermitian modular forms associated to %s" % (self.group(),)
 
     def _latex_(self) :
-        r"""
-            sage: from psage.modform.hermitianmodularforms import *
-            sage: latex(HermitianModularFormD2_Gamma(-3))
-            \text{Type for Hermitian modular forms associated to }\verb|\mathrm{Sp}(2,|\phantom{x}\verb|\mathfrak{o}_{\QQ(-3)})|
         """
-        return "\\text{Type for Hermitian modular forms associated to }%s" % (latex(self.group()),)
+            sage: from hermitianmodularforms import *
+            sage: latex(HermitianModularFormD2_Gamma(-3))
+            Type for Hermitian modular forms associated to \texttt{\mathrm{Sp}(2, \mathfrak{o}_{\QQ(-3)})}
+        """
+        return "Type for Hermitian modular forms associated to %s" % (latex(self.group()),)
 
 
     def __hash__(self) :
         """
         TESTS::
-            sage: from psage.modform.hermitianmodularforms import *
+            sage: from hermitianmodularforms import *
             sage: hash(HermitianModularFormD2_Gamma(-3))
             -57
         """

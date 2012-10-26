@@ -65,7 +65,7 @@ def reduce_GL(s, int D) :
         `0` and `|\mathfrak{o}_{\Q(\sqrt{D})}^\times|`.
         
     TEST::
-        sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion_cython import reduce_GL
+        sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion_cython import reduce_GL
         sage: reduce_GL((2,1,1,2), -3)
         ((2, 1, 1, 2), (1, 0, 1))
         sage: reduce_GL((1,0,0,-1), -3)
@@ -116,7 +116,7 @@ cdef hermitian_form_with_character_evaluation _reduce_GL(int a, int b1, int b2, 
     In all other cases it also satisfies `2 b1 + D b2 \le 0`.
         
     TEST::
-        sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion_cython import reduce_GL
+        sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion_cython import reduce_GL
         sage: reduce_GL((1,0,0,2), -3) # indirect doctest
         ((1, 0, 0, 2), (1, 0, 1))
         sage: reduce_GL((2,0,0,1), -3) # indirect doctest

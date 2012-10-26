@@ -91,8 +91,8 @@ def HermitianModularFormD2AdditiveLift( precision, forms, discriminant = None, w
         An element of the ring of all Fourier expansions of hermitian modular forms.
 
     EXAMPLES::
-        sage: from hermitianmodularforms import HermitianModularFormD2AdditiveLift
-        sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
+        sage: from psage.modform.hermitianmodularforms import HermitianModularFormD2AdditiveLift
+        sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal
         sage: HermitianModularFormD2AdditiveLift(2, [ModularForms(1, 4).0, 0, 0], -3)
         Equivariant monoid power series in Ring of equivariant monoid power series over Non-reduced quadratic forms over o_QQ(\sqrt -3)
     
@@ -209,8 +209,8 @@ def HermitianModularFormD2Factory( precision, discriminant = None ) :
         :class:~`.HermitianModularFormD2Factory_class`.
     
     TESTS::
-        sage: from hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory
-        sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
+        sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory
+        sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
         sage: h = HermitianModularFormD2Factory(3, -3)
         sage: h.precision()
         Reduced diagonal filter for discriminant -3 with bound 3
@@ -274,8 +274,8 @@ class HermitianModularFormD2Factory_class ( SageObject ) :
             - ``precision``  -- A precision class for hermitian modular forms.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
             sage: h = HermitianModularFormD2Factory_class( HermitianModularFormD2Filter_diagonal(4, -3) )
         """
         self.__precision = precision
@@ -294,8 +294,8 @@ class HermitianModularFormD2Factory_class ( SageObject ) :
             An instance of a precision class.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
             sage: h = HermitianModularFormD2Factory_class( HermitianModularFormD2Filter_diagonal(4, -3) )
             sage: h.precision() == HermitianModularFormD2Filter_diagonal(4, -3)
             True
@@ -310,8 +310,8 @@ class HermitianModularFormD2Factory_class ( SageObject ) :
             A power series ring.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
             sage: HermitianModularFormD2Factory_class( HermitianModularFormD2Filter_diagonal(4, -3) ).power_series_ring()
             Power Series Ring in q over Rational Field
         """
@@ -325,8 +325,8 @@ class HermitianModularFormD2Factory_class ( SageObject ) :
             A power series ring.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
             sage: HermitianModularFormD2Factory_class( HermitianModularFormD2Filter_diagonal(4, -3) ).integral_power_series_ring()
             Power Series Ring in q over Integer Ring
         """
@@ -340,8 +340,8 @@ class HermitianModularFormD2Factory_class ( SageObject ) :
             A Pari-GP interface.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
             sage: h = HermitianModularFormD2Factory_class( HermitianModularFormD2Filter_diagonal(4, -3) )
             sage: h._pari()
             Interface to the PARI C library
@@ -370,8 +370,8 @@ class HermitianModularFormD2Factory_class ( SageObject ) :
             An integer.
 
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
             sage: HermitianModularFormD2Factory_class( HermitianModularFormD2Filter_diagonal(4, -3))._qexp_precision()
             28
         """
@@ -392,8 +392,8 @@ class HermitianModularFormD2Factory_class ( SageObject ) :
             [p.82, D]
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
             sage: h = HermitianModularFormD2Factory_class( HermitianModularFormD2Filter_diagonal(4, -3), )
             sage: h._reduce_vector_valued_index((0,0))
             (0, 0)
@@ -714,7 +714,7 @@ class HermitianModularFormD2Factory_class ( SageObject ) :
             We use the explicite formulas in [D].
 
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2AdditiveLift
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2AdditiveLift
             sage: HermitianModularFormD2AdditiveLift(4, [1,0,0], -3, 4).coefficients()
             {(2, 3, 2, 2): 720, (1, 1, 1, 1): 27, (1, 0, 0, 2): 270, (3, 3, 3, 3): 2943, (2, 1, 1, 3): 2592, (0, 0, 0, 2): 9, (2, 2, 2, 2): 675, (2, 3, 2, 3): 2160, (1, 1, 1, 2): 216, (3, 0, 0, 3): 8496, (2, 0, 0, 3): 2214, (1, 0, 0, 3): 720, (2, 1, 1, 2): 1080, (0, 0, 0, 1): 1, (3, 3, 2, 3): 4590, (3, 1, 1, 3): 4590, (1, 1, 1, 3): 459, (2, 0, 0, 2): 1512, (1, 0, 0, 1): 72, (0, 0, 0, 0): 1/240, (3, 4, 3, 3): 2808, (0, 0, 0, 3): 28, (3, 2, 2, 3): 4752, (2, 2, 2, 3): 1350}
             sage: HermitianModularFormD2AdditiveLift(4, [0,1,0], -3, 6).coefficients()
@@ -812,8 +812,8 @@ class HermitianModularFormD2Factory_class ( SageObject ) :
     def _repr_(self) :
         """
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
             sage: HermitianModularFormD2Factory_class(HermitianModularFormD2Filter_diagonal(2, -3))
             Factory for Fourier expansions of hermitian modular forms with precision Reduced diagonal filter for discriminant -3 with bound 2
         """
@@ -822,8 +822,8 @@ class HermitianModularFormD2Factory_class ( SageObject ) :
     def __hash__(self) :
         """
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
-            sage: from hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fegenerators import HermitianModularFormD2Factory_class
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion import HermitianModularFormD2Filter_diagonal 
             sage: hash(HermitianModularFormD2Factory_class(HermitianModularFormD2Filter_diagonal(2, -3)))
             5669639111474785029 # 64-bit
             ?? # 32-bit

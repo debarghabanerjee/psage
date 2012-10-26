@@ -369,7 +369,7 @@ class HermitianModularFormD2Filter_diagonal_borcherds ( HermitianModularFormD2Fi
 
         EXAMPLES::
             sage: filter = HermitianModularFormD2Filter_diagonal_borcherds(5,4,-2,-4)
-            sage: filter.determinant_bound()
+            sage: filter.lower_discriminant_bound()
             -2
         """
         return self.__d
@@ -469,9 +469,9 @@ class HermitianModularFormD2Filter_diagonal_borcherds ( HermitianModularFormD2Fi
             - A generator over 3-tuples of a 4-tuple of integers and 2 integers.
 
         EXAMPLES::
-            sage: filter = HermitianModularFormD2Filter_diagonal_borcherds(4,D=-3,d=-1)
+            sage: filter = HermitianModularFormD2Filter_diagonal_borcherds(4,D=-3,d=-2)
             sage: list(filter)
-            [((0, 0, 0, 1), 1, 0), ((0, 0, 0, 2), 2, 0), ((0, 0, 0, 3), 3, 0), ((1, 0, 0, 1), 1, 3), ((1, 1, 1, 1), 1, 2), ((1, 0, 0, 2), 1, 6), ((1, 1, 1, 2), 1, 5), ((1, 0, 0, 3), 1, 9), ((1, 1, 1, 3), 1, 8), ((2, 0, 0, 2), 2, 12), ((2, 1, 1, 2), 1, 11), ((2, 2, 2, 2), 2, 8), ((2, 3, 2, 2), 1, 9), ((2, 0, 0, 3), 1, 18), ((2, 1, 1, 3), 1, 17), ((2, 2, 2, 3), 1, 14), ((2, 3, 2, 3), 1, 15), ((3, 0, 0, 3), 3, 27), ((3, 1, 1, 3), 1, 26), ((3, 2, 2, 3), 1, 23), ((3, 3, 2, 3), 1, 24), ((3, 3, 3, 3), 3, 18), ((3, 4, 3, 3), 1, 20), ((1, -3, -2, 1), 1, 0), ((1, -3, -1, 1), 1, 0), ((1, 0, -1, 1), 1, 0), ((1, 0, 1, 1), 1, 0), ((1, 3, 1, 1), 1, 0), ((1, 3, 2, 1), 1, 0), ((1, -6, -3, 3), 1, 0), ((1, -3, -3, 3), 1, 0), ((1, -3, 0, 3), 1, 0), ((1, 3, 0, 3), 1, 0), ((1, 3, 3, 3), 1, 0), ((1, 6, 3, 3), 1, 0), ((2, -6, -4, 2), 2, 0), ((2, -6, -2, 2), 2, 0), ((2, 0, -2, 2), 2, 0), ((2, 0, 2, 2), 2, 0), ((2, 6, 2, 2), 2, 0), ((2, 6, 4, 2), 2, 0), ((3, -6, -3, 1), 1, 0), ((3, -3, -3, 1), 1, 0), ((3, -3, 0, 1), 1, 0), ((3, 3, 0, 1), 1, 0), ((3, 3, 3, 1), 1, 0), ((3, 6, 3, 1), 1, 0), ((3, -9, -6, 3), 3, 0), ((3, -9, -3, 3), 3, 0), ((3, 0, -3, 3), 3, 0), ((3, 0, 3, 3), 3, 0), ((3, 9, 3, 3), 3, 0), ((3, 9, 6, 3), 3, 0), ((0, 0, 0, 1), 1, 0), ((0, 0, 0, 2), 2, 0), ((0, 0, 0, 3), 3, 0), ((1, 0, 0, 0), 1, 0), ((2, 0, 0, 0), 2, 0), ((3, 0, 0, 0), 3, 0), ((0, -3, -2, 0), 1, -3), ((0, -3, -1, 0), 1, -3), ((0, -2, -1, 0), 1, -1), ((0, -1, -1, 0), 1, -1), ((0, 0, -1, 0), 1, -3)]
+[((0, 0, 0, 0), 0, 0), ((0, 0, 0, 1), 1, 0), ((0, 0, 0, 2), 2, 0), ((0, 0, 0, 3), 3, 0), ((1, 0, 0, 1), 1, 3), ((1, 1, 1, 1), 1, 2), ((1, 0, 0, 2), 1, 6), ((1, 1, 1, 2), 1, 5), ((1, 0, 0, 3), 1, 9), ((1, 1, 1, 3), 1, 8), ((2, 0, 0, 2), 2, 12), ((2, 1, 1, 2), 1, 11), ((2, 2, 2, 2), 2, 8), ((2, 3, 2, 2), 1, 9), ((2, 0, 0, 3), 1, 18), ((2, 1, 1, 3), 1, 17), ((2, 2, 2, 3), 1, 14), ((2, 3, 2, 3), 1, 15), ((3, 0, 0, 3), 3, 27), ((3, 1, 1, 3), 1, 26), ((3, 2, 2, 3), 1, 23), ((3, 3, 2, 3), 1, 24), ((3, 3, 3, 3), 3, 18), ((3, 4, 3, 3), 1, 20), ((1, -4, -2, 1), 1, -1), ((1, -3, -2, 1), 1, 0), ((1, -2, -2, 1), 1, -1), ((1, -3, -1, 1), 1, 0), ((1, 0, -1, 1), 1, 0), ((1, -2, 0, 1), 1, -1), ((1, 2, 0, 1), 1, -1), ((1, 0, 1, 1), 1, 0), ((1, 3, 1, 1), 1, 0), ((1, 2, 2, 1), 1, -1), ((1, 3, 2, 1), 1, 0), ((1, 4, 2, 1), 1, -1), ((1, -5, -3, 2), 1, -1), ((1, -4, -3, 2), 1, -1), ((1, -5, -2, 2), 1, -1), ((1, -1, -2, 2), 1, -1), ((1, -4, -1, 2), 1, -1), ((1, 1, -1, 2), 1, -1), ((1, -1, 1, 2), 1, -1), ((1, 4, 1, 2), 1, -1), ((1, 1, 2, 2), 1, -1), ((1, 5, 2, 2), 1, -1), ((1, 4, 3, 2), 1, -1), ((1, 5, 3, 2), 1, -1), ((1, -6, -3, 3), 1, 0), ((1, -3, -3, 3), 1, 0), ((1, -3, 0, 3), 1, 0), ((1, 3, 0, 3), 1, 0), ((1, 3, 3, 3), 1, 0), ((1, 6, 3, 3), 1, 0), ((2, -5, -3, 1), 1, -1), ((2, -4, -3, 1), 1, -1), ((2, -5, -2, 1), 1, -1), ((2, -1, -2, 1), 1, -1), ((2, -4, -1, 1), 1, -1), ((2, 1, -1, 1), 1, -1), ((2, -1, 1, 1), 1, -1), ((2, 4, 1, 1), 1, -1), ((2, 1, 2, 1), 1, -1), ((2, 5, 2, 1), 1, -1), ((2, 4, 3, 1), 1, -1), ((2, 5, 3, 1), 1, -1), ((2, -7, -4, 2), 1, -1), ((2, -6, -4, 2), 2, 0), ((2, -5, -4, 2), 1, -1), ((2, -7, -3, 2), 1, -1), ((2, -2, -3, 2), 1, -1), ((2, -6, -2, 2), 2, 0), ((2, 0, -2, 2), 2, 0), ((2, -5, -1, 2), 1, -1), ((2, 2, -1, 2), 1, -1), ((2, -2, 1, 2), 1, -1), ((2, 5, 1, 2), 1, -1), ((2, 0, 2, 2), 2, 0), ((2, 6, 2, 2), 2, 0), ((2, 2, 3, 2), 1, -1), ((2, 7, 3, 2), 1, -1), ((2, 5, 4, 2), 1, -1), ((2, 6, 4, 2), 2, 0), ((2, 7, 4, 2), 1, -1), ((2, -8, -5, 3), 1, -1), ((2, -7, -5, 3), 1, -1), ((2, -8, -3, 3), 1, -1), ((2, -1, -3, 3), 1, -1), ((2, -7, -2, 3), 1, -1), ((2, 1, -2, 3), 1, -1), ((2, -1, 2, 3), 1, -1), ((2, 7, 2, 3), 1, -1), ((2, 1, 3, 3), 1, -1), ((2, 8, 3, 3), 1, -1), ((2, 7, 5, 3), 1, -1), ((2, 8, 5, 3), 1, -1), ((3, -6, -3, 1), 1, 0), ((3, -3, -3, 1), 1, 0), ((3, -3, 0, 1), 1, 0), ((3, 3, 0, 1), 1, 0), ((3, 3, 3, 1), 1, 0), ((3, 6, 3, 1), 1, 0), ((3, -8, -5, 2), 1, -1), ((3, -7, -5, 2), 1, -1), ((3, -8, -3, 2), 1, -1), ((3, -1, -3, 2), 1, -1), ((3, -7, -2, 2), 1, -1), ((3, 1, -2, 2), 1, -1), ((3, -1, 2, 2), 1, -1), ((3, 7, 2, 2), 1, -1), ((3, 1, 3, 2), 1, -1), ((3, 8, 3, 2), 1, -1), ((3, 7, 5, 2), 1, -1), ((3, 8, 5, 2), 1, -1), ((3, -10, -6, 3), 1, -1), ((3, -9, -6, 3), 3, 0), ((3, -8, -6, 3), 1, -1), ((3, -10, -4, 3), 1, -1), ((3, -2, -4, 3), 1, -1), ((3, -9, -3, 3), 3, 0), ((3, 0, -3, 3), 3, 0), ((3, -8, -2, 3), 1, -1), ((3, 2, -2, 3), 1, -1), ((3, -2, 2, 3), 1, -1), ((3, 8, 2, 3), 1, -1), ((3, 0, 3, 3), 3, 0), ((3, 9, 3, 3), 3, 0), ((3, 2, 4, 3), 1, -1), ((3, 10, 4, 3), 1, -1), ((3, 8, 6, 3), 1, -1), ((3, 9, 6, 3), 3, 0), ((3, 10, 6, 3), 1, -1), ((0, -2, -1, 1), 1, -1), ((0, -1, -1, 1), 1, -1), ((0, -1, 0, 1), 1, -1), ((0, 0, 0, 1), 1, 0), ((0, 1, 0, 1), 1, -1), ((0, 1, 1, 1), 1, -1), ((0, 2, 1, 1), 1, -1), ((0, -2, -1, 2), 1, -1), ((0, -1, -1, 2), 1, -1), ((0, -1, 0, 2), 1, -1), ((0, 0, 0, 2), 2, 0), ((0, 1, 0, 2), 1, -1), ((0, 1, 1, 2), 1, -1), ((0, 2, 1, 2), 1, -1), ((0, -2, -1, 3), 1, -1), ((0, -1, -1, 3), 1, -1), ((0, -1, 0, 3), 1, -1), ((0, 0, 0, 3), 3, 0), ((0, 1, 0, 3), 1, -1), ((0, 1, 1, 3), 1, -1), ((0, 2, 1, 3), 1, -1), ((1, -2, -1, 0), 1, -1), ((1, -1, -1, 0), 1, -1), ((1, -1, 0, 0), 1, -1), ((1, 0, 0, 0), 1, 0), ((1, 1, 0, 0), 1, -1), ((1, 1, 1, 0), 1, -1), ((1, 2, 1, 0), 1, -1), ((2, -2, -1, 0), 1, -1), ((2, -1, -1, 0), 1, -1), ((2, -1, 0, 0), 1, -1), ((2, 0, 0, 0), 2, 0), ((2, 1, 0, 0), 1, -1), ((2, 1, 1, 0), 1, -1), ((2, 2, 1, 0), 1, -1), ((3, -2, -1, 0), 1, -1), ((3, -1, -1, 0), 1, -1), ((3, -1, 0, 0), 1, -1), ((3, 0, 0, 0), 3, 0), ((3, 1, 0, 0), 1, -1), ((3, 1, 1, 0), 1, -1), ((3, 2, 1, 0), 1, -1), ((0, -1, 0, 0), 1, -1), ((0, -2, -1, 0), 1, -1), ((0, -1, -1, 0), 1, -1)]
 
         TESTS::
             sage: filter = HermitianModularFormD2Filter_diagonal_borcherds(infinity,D=-3,d=-1)
@@ -533,9 +533,9 @@ class HermitianModularFormD2Filter_diagonal_borcherds ( HermitianModularFormD2Fi
         if self.is_infinite() :
             raise ArithmeticError( "Cannot iterate over infinite filters." )
         if self.__with_character and not for_character :
-            return (((0,0,0,c), c//2, 0) for c in xrange(2, self.__bound_c, 2))
+            return (((0,0,0,c), c//2, 0) for c in xrange(0, self.__bound_c, 2))
         elif not self.__with_character and not for_character :
-            return (((0,0,0,c), c, 0) for c in xrange(1, self.__bound_c))
+            return (((0,0,0,c), c, 0) for c in xrange(0, self.__bound_c))
         else :
             return (a for a in [])
     
@@ -566,7 +566,7 @@ class HermitianModularFormD2Filter_diagonal_borcherds ( HermitianModularFormD2Fi
             [((1, 0, 0, 1), 1, 3), ((1, 1, 1, 1), 1, 2), ((1, 0, 0, 2), 1, 6), ((1, 1, 1, 2), 1, 5), ((1, 0, 0, 3), 1, 9), ((1, 1, 1, 3), 1, 8), ((2, 0, 0, 2), 2, 12), ((2, 1, 1, 2), 1, 11), ((2, 2, 2, 2), 2, 8), ((2, 3, 2, 2), 1, 9), ((2, 0, 0, 3), 1, 18), ((2, 1, 1, 3), 1, 17), ((2, 2, 2, 3), 1, 14), ((2, 3, 2, 3), 1, 15), ((3, 0, 0, 3), 3, 27), ((3, 1, 1, 3), 1, 26), ((3, 2, 2, 3), 1, 23), ((3, 3, 2, 3), 1, 24), ((3, 3, 3, 3), 3, 18), ((3, 4, 3, 3), 1, 20)]
 
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds =  HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: filter = HermitianModularFormD2Filter_diagonal_borcherds(4,D=-3,d=-1)
             sage: iterated = map(lambda s: s[0], filter.iter_positive_forms_for_character_with_content_and_discriminant())
@@ -734,7 +734,6 @@ class HermitianModularFormD2Filter_diagonal_borcherds ( HermitianModularFormD2Fi
             sage: filter = HermitianModularFormD2Filter_diagonal_borcherds(2,D=-3,d=-5)
             sage: list(filter.iter_positive_diagonal_indefinite_forms_with_content_and_discriminant())
             [((1, -5, -3, 1), 1, -4), ((1, -4, -3, 1), 1, -4), ((1, -5, -2, 1), 1, -4), ((1, -4, -2, 1), 1, -1), ((1, -3, -2, 1), 1, 0), ((1, -2, -2, 1), 1, -1), ((1, -1, -2, 1), 1, -4), ((1, -4, -1, 1), 1, -4), ((1, -3, -1, 1), 1, 0), ((1, 0, -1, 1), 1, 0), ((1, 1, -1, 1), 1, -4), ((1, -2, 0, 1), 1, -1), ((1, 2, 0, 1), 1, -1), ((1, -1, 1, 1), 1, -4), ((1, 0, 1, 1), 1, 0), ((1, 3, 1, 1), 1, 0), ((1, 4, 1, 1), 1, -4), ((1, 1, 2, 1), 1, -4), ((1, 2, 2, 1), 1, -1), ((1, 3, 2, 1), 1, 0), ((1, 4, 2, 1), 1, -1), ((1, 5, 2, 1), 1, -4), ((1, 4, 3, 1), 1, -4), ((1, 5, 3, 1), 1, -4)]
-
 
         TESTS::
             sage: filter = HermitianModularFormD2Filter_diagonal_borcherds(infinity,D=-3,d=-1)
@@ -913,7 +912,7 @@ class HermitianModularFormD2Filter_diagonal_borcherds ( HermitianModularFormD2Fi
             sage: list(filter.iter_semidefinite_diagonal_indefinite_forms_with_content_and_discriminant())
             Traceback (most recent call last):
             ...
-            NotImplementedError: Iteration over non reduced forms
+            NotImplementedError: Iteration over non reduced forms.
         """
         if self.is_infinite() :
             raise ArithmeticError( "Cannot iterate over infinite filters." )
@@ -1171,7 +1170,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
                                   with respect to `\mathrm{GL}_{2}(o_{\Q(\sqrt{D})}` are considered.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3, True)
             Traceback (most recent call last):
             ...
@@ -1197,7 +1196,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             The result is always mathematically wrong.
 
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds.ngens()
             2
@@ -1214,7 +1213,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             Only the two generators with non-vanishing entries on the diagonal are returned.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds.gen(0)
             (1, 0, 0, 0)
@@ -1239,7 +1238,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             One the two generators with non-vanishing entries on the diagonal are returned.
 
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds.gens()
             [(1, 0, 0, 0), (0, 0, 0, 1)]
@@ -1252,7 +1251,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             A boolean.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds.is_commutative()
             True
@@ -1267,7 +1266,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             A boolean.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds.has_reduced_filters()
             True
@@ -1285,7 +1284,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             A boolean.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds.has_filters_with_character()
             False
@@ -1304,7 +1303,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             An instance of :class:`~.HermitianModularFormD2Indices_diagonal_borcherds`.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds_a = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds_woa = HermitianModularFormD2Indices_diagonal_borcherds(-3, reduced = False)
             sage: inds_a.monoid() == inds_woa
@@ -1329,7 +1328,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             The return value may change later to the actual group.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds_a = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds_woa = HermitianModularFormD2Indices_diagonal_borcherds(-3, reduced = False)
             sage: inds_a.group()
@@ -1353,7 +1352,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             A boolean.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds_a = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds_woa = HermitianModularFormD2Indices_diagonal_borcherds(-3, reduced = False)
             sage: inds_a.is_monoid_action()
@@ -1386,10 +1385,10 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             An instance of :class:`~.HermitianModularFormD2Filter_Borcherds_diagonal`.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Filter_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Filter_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
-            sage: inds.filter(4,3,-1) == HermitianModularFormD2Filter_diagonal_borcherds(4,3,,-1-3)
+            sage: inds.filter(4,3,-1) == HermitianModularFormD2Filter_diagonal_borcherds(4,3,-1,-3)
             True
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-7, reduced = False)
             sage: inds.filter(3,3,-2) == HermitianModularFormD2Filter_diagonal_borcherds(3,3,-2,-7,reduced = False)
@@ -1407,7 +1406,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
         return HermitianModularFormD2Filter_diagonal_borcherds( bound_a, bound_c, d, self.__D,
                  with_character = self.__with_character, reduced = self.__reduced )
         
-    def filter_all(self, d) :
+    def filter_all(self, d = -1) :
         """
         Return the filter associated to this monoid of quadratic forms which contains all
         elements.
@@ -1419,7 +1418,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             An instance of :class:`~HermitianModularFormD2Filter_Borcherds_diagonal`.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds.filter_all(-1).is_all()
             True
@@ -1446,10 +1445,10 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             An instance of :class:`~HermitianModularFormD2Filter_Borcherds_diagonal`.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds.minimal_composition_filter([], []).index()
-            0
+            (0, 0)
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-4, True, False)
             sage: fil = inds.minimal_composition_filter([], [])
             sage: fil.is_with_character()
@@ -1498,7 +1497,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             A function accepting one argument.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds._reduction_function() == inds.reduce
             True
@@ -1527,7 +1526,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             `0` and `|\mathfrak{o}_{\Q(\sqrt{D})}^\times|`.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds.reduce((1,0,0,1))
             ((1, 0, 0, 1), (1, 0, 1))
@@ -1574,10 +1573,10 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             A generator interating over pairs of 4-tuples of integers.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: len(list(inds._decompositions_with_stepsize((1,0,0,1), 1, 0, -1, -1)))
-            60
+            34
             sage: ((0,0,0,0), (4,0,0,4)) in inds._decompositions_with_stepsize((4,0,0,4), 2, 1, -1, -1)
             False
             sage: list(inds._decompositions_with_stepsize((2,0,0,2), 2, 0, -1, -1))                    
@@ -1589,11 +1588,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
 
         for a1 in xrange(offset, a + 1, stepsize) :
             a2 = a - a1
-            if offset == 0 and a1 == 0 :
-                cmin = stepsize
-            else :
-                cmin = offset
-            for c1 in xrange(cmin, c + 1, stepsize) :
+            for c1 in xrange(offset, c + 1, stepsize) :
                 c2 = c - c1
                 
                 ## the positive semi definite case
@@ -1759,11 +1754,11 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             A generator interating over pairs of 4-tuples of integers.
             
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds_a = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds_woa = HermitianModularFormD2Indices_diagonal_borcherds(-3, reduced = False)
             sage: len(list(inds_a.decompositions((2,1,0,2),0,-1,-1)))
-            61
+            62
             sage: list(inds_a.decompositions((2,1,0,2),0,-1,-1)) == list(inds_woa.decompositions((2,1,0,2),0,-1,-1))
             True
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-4, True)
@@ -1799,7 +1794,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
             A 4-tuple of integers.
         
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds.zero_element()
             (0, 0, 0, 0)
@@ -1809,7 +1804,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
     def __cmp__(self, other) :
         """
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: inds = HermitianModularFormD2Indices_diagonal_borcherds(-3)
             sage: inds == 2
             False 
@@ -1833,7 +1828,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
     def __hash__(self) :
         """
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: hash( HermitianModularFormD2Indices_diagonal_borcherds(-3) )
             16
             sage: hash( HermitianModularFormD2Indices_diagonal_borcherds(-4, True) )
@@ -1849,7 +1844,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
     def _repr_(self) :
         """
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: repr( HermitianModularFormD2Indices_diagonal_borcherds(-3) )
             'Reduced quadratic forms for Borcherds products over o_QQ(\\sqrt -3)'
             sage: repr( HermitianModularFormD2Indices_diagonal_borcherds(-4, True) )
@@ -1866,7 +1861,7 @@ class HermitianModularFormD2Indices_diagonal_borcherds( HermitianModularFormD2In
     def _latex_(self) :
         """
         TESTS::
-            sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+            sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
             sage: latex( HermitianModularFormD2Indices_diagonal_borcherds(-3) )
             Reduced quadratic forms for Borcherds products over $\mathfrak{o}_{\mathbb{Q}(\sqrt{-3})}$
             sage: latex( HermitianModularFormD2Indices_diagonal_borcherds(-4, True) )
@@ -1899,8 +1894,8 @@ def HermitianModularFormD2FourierExpansionRing_borcherds(K, D, with_nu_character
         An instance of :class:`~fourier_expansion_framework.monoidpowerseries.monoidpowerseries_ring.EquivariantMonoidPowerSeriesRing_generic`.
     
     TESTS::
-        sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
-        sage: from hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2FourierExpansionRing_borcherds
+        sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2Indices_diagonal_borcherds
+        sage: from psage.modform.hermitianmodularforms.hermitianmodularformd2_borcherdsproducts_fourierexpansion import HermitianModularFormD2FourierExpansionRing_borcherds
         sage: fe_ring = HermitianModularFormD2FourierExpansionRing_borcherds(ZZ, -3)
         sage: fe_ring.action() == HermitianModularFormD2Indices_diagonal_borcherds(-3)
         True
