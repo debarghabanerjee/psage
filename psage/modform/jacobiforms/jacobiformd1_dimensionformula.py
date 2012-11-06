@@ -24,7 +24,7 @@ apply it to the case of Jacobi forms
 
 from sage.functions.all import exp, sqrt, sign
 from sage.matrix.all import diagonal_matrix, identity_matrix, matrix
-from sage.misc.all import sum, mrange
+from sage.misc.all import sum, mrange, prod, cython_lambda
 from sage.modules.all import vector 
 from sage.rings.all import ComplexIntervalField, ZZ, QQ, lcm
 from sage.rings.all import moebius, gcd, QuadraticField, fundamental_discriminant, kronecker_symbol
@@ -222,17 +222,42 @@ def dimension__vector_valued(k, L, conjugate = False) :
     discriminant_form = discriminant_basis.transpose() * L.matrix() * discriminant_basis
 
     if conjugate :
-        disc_quadratic = lambda x : -x * discriminant_form * x / 2
+        discriminant_form = - discriminant_form
+
+    if prod(elementary_divisors_inv) > 100 :
+        disc_den = discriminant_form.denominator()
+        disc_bilinear_pre = \
+            cython_lambda( ', '.join(   ['int a{0}'.format(i) for i in range(discriminant_form.nrows())]
+                                        + ['int b{0}'.format(i) for i in range(discriminant_form.nrows())] ),
+                           ' + '.join('{0} * a{1} * b{2}'.format(disc_den * discriminant_form[i,j], i, j)
+                                      for i in range(discriminant_form.nrows())
+                                      for j in range(discriminant_form.nrows())) )
+        disc_bilinear = lambda *a: disc_bilinear_pre(*a) / disc_den
     else :
-        disc_quadratic = lambda x : x * discriminant_form * x / 2
-    disc_bilinear = lambda x,y : disc_quadratic(x + y) - disc_quadratic(x) - disc_quadratic(y)
+        disc_bilinear = lambda *xy: vector(ZZ, xy[:discriminant_form.nrows()]) * discriminant_form * vector(ZZ, xy[discriminant_form.nrows():])
+
+    disc_quadratic = lambda *a: disc_bilinear(*(2 * a)) / 2
 
     ## red gives a normal form for elements in the discriminant group
-    red = lambda x : vector(map(operator.mod, x, elementary_divisors_inv))
+    red = lambda x : map(operator.mod, x, elementary_divisors_inv)
+    def is_singl(x) :
+        y = red(map(operator.neg, x))
+        for (e, f) in zip(x, y) :
+            if e < f :
+                return -1
+            elif e > f :
+                return 1
+        return 0
     ## singls and pairs are elements of the discriminant group that are, respectively,
-    ## fixed and not fixed by negation. 
-    singls = filter(lambda x: red(-x) - x == 0, mrange(elementary_divisors_inv, vector))
-    pairs = filter(lambda x: red(-x) - x != 0 and x < red(-x), mrange(elementary_divisors_inv, vector))
+    ## fixed and not fixed by negation.
+    singls = list()
+    pairs = list()
+    for x in mrange(elementary_divisors_inv) :
+        si = is_singl(x)
+        if si == 0 :
+            singls.append(x)
+        elif si == 1 :
+            pairs.append(x)
 
     if plus_basis :
         subspace_dimension = len(singls + pairs)
@@ -251,18 +276,18 @@ def dimension__vector_valued(k, L, conjugate = False) :
     sqrt2  = CC(sqrt(2))
     drt  = CC(sqrt(L.det()))
 
-    Tmat  = diagonal_matrix(CC, [zeta**(zeta_order*disc_quadratic(a)) for a in (singls + pairs if plus_basis else pairs)])
+    Tmat  = diagonal_matrix(CC, [zeta**(zeta_order*disc_quadratic(*a)) for a in (singls + pairs if plus_basis else pairs)])
     if plus_basis :        
         Smat = zeta**(zeta_order / 8 * L_dimension) / drt  \
-               * matrix( CC, [  [zeta**(-zeta_order * disc_bilinear(gamma,delta)) for delta in singls]
-                              + [sqrt2 * zeta**(-zeta_order * disc_bilinear(gamma,delta)) for delta in pairs]
+               * matrix( CC, [  [zeta**(-zeta_order * disc_bilinear(*(gamma + delta))) for delta in singls]
+                              + [sqrt2 * zeta**(-zeta_order * disc_bilinear(*(gamma + delta))) for delta in pairs]
                               for gamma in singls] \
-                           + [  [sqrt2 * zeta**(-zeta_order * disc_bilinear(gamma,delta)) for delta in singls]
-                              + [zeta**(-zeta_order * disc_bilinear(gamma,delta)) + zeta**(-zeta_order * disc_bilinear(gamma,-delta)) for delta in pairs]
+                           + [  [sqrt2 * zeta**(-zeta_order * disc_bilinear(*(gamma + delta))) for delta in singls]
+                              + [zeta**(-zeta_order * disc_bilinear(*(gamma + delta))) + zeta**(-zeta_order * disc_bilinear(*(gamma + map(operator.neg, delta)))) for delta in pairs]
                               for gamma in pairs] )
     else :
         Smat = zeta**(zeta_order / 8 * L_dimension) / drt  \
-               * matrix( CC, [  [zeta**(-zeta_order * disc_bilinear(gamma,delta)) - zeta**(-zeta_order * disc_bilinear(gamma,-delta))  for delta in pairs]
+               * matrix( CC, [  [zeta**(-zeta_order * disc_bilinear(*(gamma + delta))) - zeta**(-zeta_order * disc_bilinear(*(gamma + map(operator.neg,delta))))  for delta in pairs]
                                for gamma in pairs ] )
     STmat = Smat * Tmat
     
@@ -283,7 +308,7 @@ def dimension__vector_valued(k, L, conjugate = False) :
     ## this asserts that the computed multiplicities are correct
     assert sum(ST_ev_multiplicity) == subspace_dimension
 
-    T_evs = [ ZZ((zeta_order * disc_quadratic(a)) % zeta_order) / zeta_order
+    T_evs = [ ZZ((zeta_order * disc_quadratic(*a)) % zeta_order) / zeta_order
               for a in (singls + pairs if plus_basis else pairs) ]
 
     return subspace_dimension * (1 + QQ(k) / 12) \
