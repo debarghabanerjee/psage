@@ -10,7 +10,7 @@ AUTHOR :
 
 ## TODO: Implement monoid, monoid_filter function for all filters.
 
-#===============================================================================
+#================n===============================================================
 # 
 # Copyright (C) 2012 Martin Raum
 # 
@@ -143,15 +143,19 @@ class JacobiFormD1Indices_class ( SageObject ) :
         self._r_representatives = representatives
         
         representatives = list()
-        for r in map(lambda rs: rs[0], self._r_representatives) :
-            for ri in r :
+        for rs in self._r_representatives :
+            if any(r in representatives or tuple(map(operator.neg, r)) in representatives for r in rs) :
+                break
+
+            for ri in rs[0] :
                 if ri > 0 :
-                    representatives.append(r)
+                    representatives.append(rs[0])
                     break
                 if ri < 0 :
+                    representatives.append(tuple(map(operator.neg, rs[0])))
                     break
             else :
-                representatives.append(r)
+                representatives.append(rs[0])
 
         self._r_reduced_representatives = representatives
         
