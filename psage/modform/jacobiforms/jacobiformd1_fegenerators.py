@@ -51,6 +51,7 @@ from sage.sets.all import Set
 from sage.structure.sage_object import SageObject
 import operator
 from copy import copy
+from random import Random
 
 #===============================================================================
 # jacobi_form_d1_by_restriction
@@ -392,7 +393,7 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
     
     ALGORITHM:
     
-    See [GKR12]. The algorithm will be applied for precision ``relation_precision``.
+    See [Raum, Computing vector valued modular forms and Jacobi forms]. The algorithm will be applied for precision ``relation_precision``.
     The remaining Fourier coefficients will be determined using fewer restrictions.
     
     NOTE:
@@ -440,11 +441,13 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
             return [ f.truncate(precision) for f in expansions ]
     except KeyError :
         pass
-     
     
     dim = dimension__jacobi(k, Lmat)
     if dim == 0 :
         return []
+
+    if relation_precision is None :
+        relation_precision = precision
 
     R = precision.monoid()._r_representatives
     S_extended = _find_complete_set_of_restriction_vectors(L, R, reduction_function = precision.monoid().reduce_r)
@@ -454,14 +457,100 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
             S.append(s) 
     max_S_length = max([L(s) for s in S])
 
-    if relation_precision is None :
-        relation_precision = precision
+    (global_restriction_matrix__big, row_groups, row_labels, column_labels, global_relation_matrix, column_labels_relations) = \
+        _prepare_coefficient_by_restriction(precision, k, relation_precision, S)
 
-    (global_restriction_matrix__big, row_groups, row_labels, column_labels) = _global_restriction_matrix(precision, S, k)
-    (global_relation_matrix, column_labels_relations) = _global_relation_matrix(relation_precision, flatten(L.short_vector_list_up_to_length(max_S_length + 1, True)[1:]), k)
+    expansions = _coefficient_by_restriction__with_restriction_matrix( precision, k, relation_precision, global_restriction_matrix__big,
+                                                                       row_groups, row_labels, column_labels, global_relation_matrix, column_labels_relations, dim )
+
+    _coefficient_by_restriction__cache[(k, Lmat)] = expansions
+    return expansions
+
+#===============================================================================
+# _prepare_coefficient_by_restriction
+#===============================================================================
+
+def _prepare_coefficient_by_restriction(precision, weight_parity, relation_precision, S) :
+    r"""
+    Provide input data to ``_coefficient_by_restriction__with_restriction_matrix``.
+
+    INPUT:
+    
+    - ``precision`` -- A filter for Jacobi forms of arbitrary index.
+    
+    - ``weight_parity`` -- An integer.
+    
+    - ``relation_precision`` -- A filter for Jacobi forms.
+
+    - ``S`` -- A list of vectors.
+    """
+    L = precision.jacobi_index()
+
+    rand = Random()
+    max_S_length = max([L(s) for s in S])
+    relation_S_pre = flatten(L.short_vector_list_up_to_length(max_S_length + 1, True)[1:])
+    relation_S = list()
+    for _ in range(4 * L.det()) :
+        s = rand.choice(relation_S_pre)
+        if s not in relation_S :
+            relation_S.append(s)
+
+    (global_restriction_matrix__big, row_groups, row_labels, column_labels) = _global_restriction_matrix(precision, S, weight_parity)
+    (global_relation_matrix, column_labels_relations) = _global_relation_matrix(relation_precision, relation_S, weight_parity )
     global_restriction_matrix__big.change_ring(QQ)
     global_relation_matrix.change_ring(QQ)
 
+    return ( global_restriction_matrix__big, row_groups, row_labels, column_labels,
+             global_relation_matrix, column_labels_relations )
+
+#===============================================================================
+# _coefficient_by_restriction__with_restriction_matrix
+#===============================================================================
+
+def _coefficient_by_restriction__with_restriction_matrix( precision, k, relation_precision, global_restriction_matrix__big, row_groups, row_labels, column_labels, global_relation_matrix, column_labels_relations, dim = None ) :
+    r"""
+    Compute the Fourier expansions of Jacobi forms (over `\QQ`) of weight `k` and 
+    index `L` (an even symmetric matrix) up to given precision.
+
+    NOTE:
+    
+    In case ``relation_precision`` is not ``None``, we assume that it is of the form
+    `\{ (n, r) : n < B \}`, where `B` is the index of the filter.
+    
+    INPUT:
+    
+    - ``precision`` -- A filter for Jacobi forms of arbitrary index.
+    
+    - `k` -- An integer.
+    
+    - ``relation_precision`` -- A filter for Jacobi forms or ``None`` (default: ``None``).
+    
+    OUTPUT:
+    
+    - A list of elements of the corresponding Fourier expansion module.
+    
+    TESTS:
+    
+    See ``_test__coefficient_by_restriction`` for further tests.
+    
+    ::
+    
+        sage: from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import *
+        sage: from psage.modform.jacobiforms.jacobiformd1_fegenerators import _coefficient_by_restriction
+        sage: indices = JacobiFormD1Indices(QuadraticForm(matrix(2, [2,1,1,2])))
+        sage: precision = indices.filter(20)
+        sage: relation_precision = indices.filter(10)
+        sage: _coefficient_by_restriction(precision, 10) == _coefficient_by_restriction(precision, 10, relation_precision) 
+        True
+    """
+    L = precision.jacobi_index()
+    Lmat = L.matrix()
+    Lmat.set_immutable()
+
+    if dim is None :
+        dim = dimension__jacobi(k, Lmat)
+
+    
     if relation_precision == precision :
         assert column_labels == column_labels_relations
     if column_labels != column_labels_relations :
@@ -549,8 +638,6 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
         for e in expansions :
             e._set_precision(precision)
 
-    
-    _coefficient_by_restriction__cache[(k, Lmat)] = expansions
     
     return expansions
 
