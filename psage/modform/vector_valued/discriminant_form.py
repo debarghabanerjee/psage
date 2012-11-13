@@ -26,21 +26,34 @@ AUTHOR:
 #===============================================================================
 
 from sage.groups.additive_abelian.additive_abelian_group import AdditiveAbelianGroup_class, \
-                                                    cover_and_relations_from_invariants
+                                                    cover_and_relations_from_invariants, AdditiveAbelianGroupElement
 from sage.matrix.all import identity_matrix, matrix, diagonal_matrix
-from sage.misc.all import cached_method, prod
+from sage.misc.all import cached_method, prod, flatten
 from sage.modules.all import FreeModule, vector
 from sage.modular.arithgroup.all import GammaH
+from sage.quadratic_forms.all import QuadraticForm
 from sage.rings.all import lcm
 from sage.rings.all import QQ, ZZ, CyclotomicField, PolynomialRing
 from copy import copy
 import operator
+
+
+#===============================================================================
+# DiscriminantFormElement
+#===============================================================================
+
+class DiscrimiantFormElement( AdditiveAbelianGroupElement ) :
+
+    def elementary_representation(self) :
+        return tuple(self.lift())
 
 #===============================================================================
 # DiscriminantForm
 #===============================================================================
 
 class DiscriminantForm( AdditiveAbelianGroup_class ) :
+
+    Element = DiscrimiantFormElement
 
     def __init__(self, L) :
         r"""
@@ -49,8 +62,14 @@ class DiscriminantForm( AdditiveAbelianGroup_class ) :
         
         INPUT:
         
-        - `L` -- A symmetric matrix over `\ZZ` with even diagonal entries.
+        - `L` -- A symmetric matrix over `\ZZ` with even diagonal entries
+                or a quadratic form.
         """
+        try :
+            L = L.matrix()
+        except AttributeError :
+            pass
+
         self._L = copy(L)
         assert L.base_ring() is ZZ
         (elementary_divisors, _, pre_basis) = L.smith_form()
@@ -59,6 +78,64 @@ class DiscriminantForm( AdditiveAbelianGroup_class ) :
         
         AdditiveAbelianGroup_class.__init__(self, *cover_and_relations_from_invariants(elementary_divisors))
     
+    def positive_quadratic_form(self) :
+        r"""
+        Find the Gram matrix of a positive definite quadratic form
+        which is stabily equivalent to `L`.
+        """
+        E8_gram = matrix(ZZ, 8,
+                [2, -1, 0, 0,  0, 0, 0, 0,
+                -1, 2, -1, 0,  0, 0, 0, 0,
+                0, -1, 2, -1,  0, 0, 0, -1,
+                0, 0, -1, 2,  -1, 0, 0, 0,
+                0, 0, 0, -1,  2, -1, 0, 0,
+                0, 0, 0, 0,  -1, 2, -1, 0,
+                0, 0, 0, 0,  0, -1, 2, 0,
+                0, 0, -1, 0,  0, 0, 0, 2])
+        E8 = QuadraticForm(E8_gram)
+        L = self._L
+        
+        ## This is a workaround since GP crashes
+        is_positive_definite = lambda L: all( L[:n,:n].det() > 0 for n in range(1, L.nrows() + 1) )
+        def _split_hyperbolic(L) :
+            cur_cor = 2
+            Lcor = L + cur_cor * identity_matrix(L.nrows())
+            while not is_positive_definite(Lcor) :
+                cur_cor += 2
+                Lcor = L + cur_cor * identity_matrix(L.nrows())
+
+            a = FreeModule(ZZ, L.nrows()).gen(0)
+            if a * L * a >= 0 :
+                Lcor_length_inc = max(3, a * L * a)
+                cur_Lcor_length = Lcor_length_inc
+                while True :
+                    short_vectors = flatten(QuadraticForm(Lcor).short_vector_list_up_to_length( a * Lcor * a )[cur_Lcor_length - Lcor_length_inc: cur_Lcor_length], max_level = 1)
+                    for a in short_vectors :
+                        if a * L * a < 0 :
+                            break
+                    else :
+                        continue
+                    break
+            n = -a * L * a // 2
+
+            short_vectors = E8.short_vector_list_up_to_length(n + 1)[-1]
+
+            for v in short_vectors :
+                for w in short_vectors :
+                    if v * E8_gram * w == 2 * n - 1 :
+                        LE8_mat = L.block_sum(E8_gram)
+                        v_form = vector( list(a) + list(v) ) * LE8_mat
+                        w_form = vector( list(a) + list(w) ) * LE8_mat
+                        Lred_basis = matrix(ZZ, [v_form, w_form]).right_kernel().basis_matrix().transpose()
+                        Lred_basis = matrix(ZZ, Lred_basis)
+
+                        return Lred_basis.transpose() * LE8_mat * Lred_basis
+
+        while not is_positive_definite(L) :
+            L = _split_hyperbolic(L)
+        
+        return L
+
     def lattice(self) :
         return self._L
 
@@ -282,6 +359,10 @@ class DiscriminantForm( AdditiveAbelianGroup_class ) :
 
         # ll = [get_coset(g * h) for (i,g) in enumerate(trivial_cosets) for h in trivial_cosets[i:]]
         # assert all(g in trivial_cosets for g in ll)
+
+    def _an_element_(self) :
+        return DiscrimiantFormElement(len(self.invariants())*[0])
+
 
     def _repr_(self) :
         return "Discrimiant group of lattice of size {0} ( isomorphic to {1} )".format(self._L.nrows(), self.short_name())
