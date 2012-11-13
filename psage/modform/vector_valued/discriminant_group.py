@@ -37,10 +37,10 @@ from copy import copy
 import operator
 
 #===============================================================================
-# DiscriminantGroup
+# DiscriminantForm
 #===============================================================================
 
-class DiscriminantGroup( AdditiveAbelianGroup_class ) :
+class DiscriminantForm( AdditiveAbelianGroup_class ) :
 
     def __init__(self, L) :
         r"""
@@ -74,7 +74,7 @@ class DiscriminantGroup( AdditiveAbelianGroup_class ) :
         
         - A pair of a discriminant group and a homomorphism from self to this group.
         """
-        n_disc = DiscriminantGroup(u.transpose() * self._L * u)
+        n_disc = DiscriminantForm(u.transpose() * self._L * u)
         
         uinv = u.inverse()
         basis_images = [ sum(map(operator.mul, b.lift(), self._dual_basis.columns()))
@@ -105,7 +105,7 @@ class DiscriminantGroup( AdditiveAbelianGroup_class ) :
         TESTS:
         
             sage: from psage.modform.vector_valued.discriminant_group import *
-            sage: A = DiscriminantGroup(matrix(2, [2, 1, 1, 2]))
+            sage: A = DiscriminantForm(matrix(2, [2, 1, 1, 2]))
             sage: A._from_jacobi_index((0,0))
             (0, 0)
             sage: A._from_jacobi_index((0,1))
@@ -142,7 +142,7 @@ class DiscriminantGroup( AdditiveAbelianGroup_class ) :
                  raise ValueError( "L must be the Gram matrix of an even unimodular lattice")   
         
         nL = self._L.block_sum(L)
-        n_disc = DiscriminantGroup(nL)
+        n_disc = DiscriminantForm(nL)
         
         basis_images = [ sum(map(operator.mul, b.lift(), self._dual_basis.columns()))
                          for b in self.smith_form_gens() ]
@@ -185,7 +185,7 @@ class DiscriminantGroup( AdditiveAbelianGroup_class ) :
             raise ValueError( "The sublattice defined by L_basis_matrix must be an orthogonal summand" )
 
         K = K_basis_matrix.transpose() * self._L * K_basis_matrix
-        n_disc = DiscriminantGroup(K)
+        n_disc = DiscriminantForm(K)
         
         total_basis_matrix = L_basis_matrix.change_ring(QQ).augment(K_basis_matrix * n_disc._dual_basis)
 

@@ -30,7 +30,7 @@ AUTHOR:
 #
 #===============================================================================
 
-from psage.modform.vector_valued.discriminant_group import DiscriminantGroup
+from psage.modform.vector_valued.discriminant_form import DiscriminantForm
 from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1WeightCharacter
 from sage.rings.all import ZZ
 import operator
@@ -62,7 +62,7 @@ def to_vector_valued_modular_form(phi, phi_weight, mor = None) :
         raise ValueError( "The Jacobi index and the lattice attached to the codomain of the morphism must equal.")
     
     if mor is None :
-        disc_group = DiscriminantGroup(phi.parent().monoid().jacobi_index().matrix())
+        disc_group = DiscriminantForm(phi.parent().monoid().jacobi_index().matrix())
     else :
         disc_group = mor.codomain()
     
