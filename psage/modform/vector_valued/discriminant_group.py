@@ -30,6 +30,7 @@ from sage.groups.additive_abelian.additive_abelian_group import AdditiveAbelianG
 from sage.matrix.all import identity_matrix, matrix, diagonal_matrix
 from sage.misc.all import cached_method, prod
 from sage.modules.all import FreeModule, vector
+from sage.modular.arithgroup.all import GammaH
 from sage.rings.all import lcm
 from sage.rings.all import QQ, ZZ, CyclotomicField, PolynomialRing
 from copy import copy
@@ -40,7 +41,7 @@ import operator
 #===============================================================================
 
 class DiscriminantGroup( AdditiveAbelianGroup_class ) :
-    
+
     def __init__(self, L) :
         r"""
         A discriminant group attached to an integral lattice `L` (with a
@@ -230,6 +231,57 @@ class DiscriminantGroup( AdditiveAbelianGroup_class ) :
         
         return (Tmat, Smat)
 
+    def weil_representation_kernel(self) :
+        r"""
+        Compute a scalar `r` and a group `\Gamma` which contains the translation `T`
+        so that `\diag(1, 1/r) \Gamma \diag(1, r) \subseteq \ker( \rho_D )`.
+
+        OUTPUT:
+        
+        - A pair of an integer and an arithmetic group.
+        """
+        if self._L == matrix(2, [2, 1, 1, 2]) or self._L == -matrix(2, [2, 1, 1, 2]) :
+            return (ZZ(3),  GammaH(9, [4]))
+
+        level = 2 * self._L.inverse().denominator()
+        return ( level, GammaH( level**2, filter(lambda n: n % level == 1, range(level**2)) ))
+
+        ## We compute the kernel of the Weil representation of L0 = (2, 1; 1, 2)
+        ## The step that we need to perform are commented out. The result, GG,
+        ## is defined below.
+
+        # (Tmat, Smat) = disc_mL0.weil_representation()
+        # Rmat = Smat * Tmat.inverse() * Smat.inverse()
+        # compute_gmat = lambda g: prod( ((Tmat if lr == 0 else Rmat)**mult for (lr, mult) in sl2z_word_problem(g)), identity_matrix(3) )
+
+        # G = FareySymbol(Gamma(12))
+
+        # neg_mat = compute_gmat(-identity_matrix(2))
+        # pre_trivial_cosets_inv = [(matrix(2, list(g)), compute_gmat(g)) for g in G.coset_reps()]
+        # pre_trivial_cosets_inv = pre_trivial_cosets_inv + [(-g, neg_mat * m) for (g,m) in pre_trivial_cosets_inv]
+        # trivial_cosets = [g.inverse() for (g,m) in pre_trivial_cosets_inv if m == identity_matrix(3)]
+         # ## This equals
+        # # assert trivial_cosets == [g for (g,m) in pre_trivial_cosets if m.rows()[1] == vector((0,1,0))]
+
+        # rescaling_factor = ZZ(3)
+        # gen_factor = diagonal_matrix([rescaling_factor, 1])
+        # gen_factor_inv = gen_factor.inverse()
+        # additional_gens = [matrix(ZZ, gen_factor_inv * g * gen_factor) for g in trivial_cosets]
+
+        ## Kernel of the Weil representation is
+        # GG = GammaH(9, [4])
+        # assert GG.index() == Gamma(12).index() / len(additional_gens)
+        # assert all(g in GG for g in additional_gens)
+
+
+        ## This is an additional check for concistency
+        # Gcosets_inv = map(lambda m: matrix(2, list(m)), G.coset_reps())
+        # Gcosets_inv = Gcosets_inv + map(operator.neg, Gcosets_inv)
+        # Gcosets = [g.inverse() for g in Gcosets_inv]
+        # get_coset = lambda m: filter(lambda ginv: m * ginv in Gamma(12), Gcosets_inv)[0].inverse()
+
+        # ll = [get_coset(g * h) for (i,g) in enumerate(trivial_cosets) for h in trivial_cosets[i:]]
+        # assert all(g in trivial_cosets for g in ll)
+
     def _repr_(self) :
         return "Discrimiant group of lattice of size {0} ( isomorphic to {1} )".format(self._L.nrows(), self.short_name())
-    
