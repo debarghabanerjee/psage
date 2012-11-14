@@ -30,6 +30,7 @@ from psage.modform.fourier_expansion_framework.gradedexpansions.gradedexpansion_
 from psage.modform.fourier_expansion_framework.modularforms.modularform_ambient import ModularFormsModule_generic
 from psage.modform.fourier_expansion_framework.modularforms.modularform_types import ModularFormType_abstract
 from psage.modform.jacobiforms.jacobiformd1_dimensionformula import dimension__jacobi
+from psage.modform.jacobiforms.jacobiformd1_element import JacobiFormD1_class
 from psage.modform.jacobiforms.jacobiformd1_fegenerators import jacobi_form_d1_by_restriction
 from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import JacobiFormD1FourierExpansionModule, \
                                                                     JacobiFormD1Filter
@@ -104,6 +105,9 @@ class JacobiFormD1_Gamma ( ModularFormType_abstract ) :
     
     def _ambient_construction_function(self) :
         return JacobiFormsD1
+
+    def _ambient_element_class(self) :
+        return JacobiFormD1_class
     
     def group(self) :
         return "\Gamma^J_{0}".format(self.__index.matrix().nrows())
