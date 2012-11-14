@@ -54,11 +54,11 @@ class JacobiFormD1_class ( ModularForm_generic ) :
         Ldet = jacobi_index.det()
         ch = JacobiFormD1WeightCharacter( self.parent().type().weight(), jacobi_index.dim() )
 
-        f = dict( (disc_form._from_jacobi_index(rs[0]), dict())
+        f = dict( (disc_form._from_jacobi_fourier_index(rs[0]), dict())
                   for rs in fe_ambient.action()._r_representatives )
 
         for (n, r) in fe.precision() :
-            b = disc_form._from_jacobi_index(r)
+            b = disc_form._from_jacobi_fourier_index(r)
             disc = n - Ladj(r) / ZZ(2 * Ldet)
             f[b][disc] = fe[(ch,(n,r))]
             if b != -b :

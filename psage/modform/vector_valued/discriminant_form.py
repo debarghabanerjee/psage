@@ -37,7 +37,6 @@ from sage.rings.all import QQ, ZZ, CyclotomicField, PolynomialRing
 from copy import copy
 import operator
 
-
 #===============================================================================
 # DiscriminantFormElement
 #===============================================================================
@@ -45,7 +44,10 @@ import operator
 class DiscrimiantFormElement( AdditiveAbelianGroupElement ) :
 
     def elementary_representation(self) :
-        return tuple(self.lift())
+        r = self.parent()._to_jacobi_fourier_index(self)
+        r.set_immutable()
+
+        return r
 
 #===============================================================================
 # DiscriminantForm
@@ -71,6 +73,7 @@ class DiscriminantForm( AdditiveAbelianGroup_class ) :
             pass
 
         self._L = copy(L)
+        self._L_echelon = self._L.echelon_form()
         assert L.base_ring() is ZZ
         (elementary_divisors, _, pre_basis) = L.smith_form()
         self._dual_basis = pre_basis * elementary_divisors.inverse()
@@ -165,17 +168,18 @@ class DiscriminantForm( AdditiveAbelianGroup_class ) :
         return (n_disc, coercion_hom)
 
     @cached_method
-    def _jacobi_indices_matrix(self) :
+    def _jacobi_fourier_index_matrices(self) :
         r"""
-        A basis change matrix mapping indices `r` of Jacobi forms to elements of ``self``.  
+        A basis change matrix mapping indices `r` of Jacobi forms to elements of ``self``.
         
         OUTPUT:
         
         - A matrix over `\ZZ`.
         """
-        return (self._L * self._dual_basis).inverse()
+        m = (self._L * self._dual_basis)
+        return (m, m.inverse())
     
-    def _from_jacobi_index(self, r) :
+    def _from_jacobi_fourier_index(self, r) :
         r"""
         Return an element of ``self`` that corresponds to a given index of a Jacobi Fourier expansion.
         
@@ -183,12 +187,34 @@ class DiscriminantForm( AdditiveAbelianGroup_class ) :
         
             sage: from psage.modform.vector_valued.discriminant_group import *
             sage: A = DiscriminantForm(matrix(2, [2, 1, 1, 2]))
-            sage: A._from_jacobi_index((0,0))
+            sage: A._from_jacobi_fourier_index((0,0))
             (0, 0)
-            sage: A._from_jacobi_index((0,1))
+            sage: A._from_jacobi_fourier_index((0,1))
             (0, 1)
         """
-        return self(self._jacobi_indices_matrix() * vector(ZZ, r))
+        return self(self._jacobi_fourier_index_matrices()[1] * vector(ZZ, r))
+
+    def _to_jacobi_fourier_index(self, r) :
+        r"""
+        Return a tuple that corresponds to a given element of ``self``.
+        
+        TESTS:
+        
+            sage: from psage.modform.vector_valued.discriminant_group import *
+            sage: A = DiscriminantForm(matrix(2, [2, 1, 1, 2]))
+            sage: A._to_jacobi_fourier_index(self([0]))
+            (0, 0)
+            sage: A._to_jacobi_fourier_index(self([1]))
+            (0, 1)
+        """
+        r = vector(ZZ, self._jacobi_fourier_index_matrices()[0] * r.lift())
+        L_echelon = self._L_echelon
+        for (i,j) in enumerate(L_echelon.pivots()) :
+            m = r[j] // L_echelon[i,j]
+            if m != 0 :
+                r = r - m * L_echelon.row(i)
+        
+        return r
 
     def add_unimodular_lattice(self, L = None) :
         r"""
@@ -361,8 +387,7 @@ class DiscriminantForm( AdditiveAbelianGroup_class ) :
         # assert all(g in trivial_cosets for g in ll)
 
     def _an_element_(self) :
-        return DiscrimiantFormElement(len(self.invariants())*[0])
-
+        return DiscrimiantFormElement(self, vector(ZZ, self._L.nrows()*[0]))
 
     def _repr_(self) :
         return "Discrimiant group of lattice of size {0} ( isomorphic to {1} )".format(self._L.nrows(), self.short_name())
