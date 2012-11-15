@@ -35,8 +35,7 @@ class JacobiFormD1_class ( ModularForm_generic ) :
 
     def theta_decomposition(self) :
         r"""
-        Apply the theta decomposition to a Fourier expansion `\phi` and, if not ``None`` apply the
-        isomorphism of discriminant modules ``mor`` to the labels of the components.
+        Apply the theta decomposition to a Jacobi form `\phi`.
 
         OUTPUT:
 
@@ -44,27 +43,7 @@ class JacobiFormD1_class ( ModularForm_generic ) :
           values are dictionaries whose keys are rationals (the exponents of `q`) and whose
           values are also rationals (the corresponding coefficients). 
         """
-        jacobi_index = self.parent().type().index()
-
-        fe = self.fourier_expansion()
-        fe_ambient = fe.parent()
-        disc_form = DiscriminantForm(jacobi_index.matrix())
-
-        Ladj = fe_ambient.action()._Ladjoint()
-        Ldet = jacobi_index.det()
-        ch = JacobiFormD1WeightCharacter( self.parent().type().weight(), jacobi_index.dim() )
-
-        f = dict( (disc_form._from_jacobi_fourier_index(rs[0]), dict())
-                  for rs in fe_ambient.action()._r_representatives )
-
-        for (n, r) in fe.precision() :
-            b = disc_form._from_jacobi_fourier_index(r)
-            disc = n - Ladj(r) / ZZ(2 * Ldet)
-            f[b][disc] = fe[(ch,(n,r))]
-            if b != -b :
-                f[-b][disc] = fe[(ch,(n,tuple(map(operator.neg, r))))]
-
-        return f
+        return self.parent()._theta_decomposition(self.fourier_expansion())
 
 
 

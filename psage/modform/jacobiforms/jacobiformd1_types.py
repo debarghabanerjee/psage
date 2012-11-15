@@ -34,6 +34,7 @@ from psage.modform.jacobiforms.jacobiformd1_element import JacobiFormD1_class
 from psage.modform.jacobiforms.jacobiformd1_fegenerators import jacobi_form_d1_by_restriction
 from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import JacobiFormD1FourierExpansionModule, \
                                                                     JacobiFormD1Filter
+from psage.modform.jacobiforms.jacobiformd1_module import JacobiFormD1Module
 from sage.categories.number_fields import NumberFields
 from sage.matrix.constructor import diagonal_matrix, matrix, zero_matrix,\
     identity_matrix
@@ -66,7 +67,7 @@ def JacobiFormsD1(A, type, precision, *args, **kwds) :
         return _jacobiforms_cache[k]
     except KeyError :
         if isinstance(type, JacobiFormD1_Gamma) :
-            M = ModularFormsModule_generic(A, type, precision)
+            M = JacobiFormD1Module(A, type, precision)
         else :
             raise TypeError( "{0} must be a Jacobi form type,".format(type) )
         
