@@ -66,7 +66,7 @@ def JacobiFormsD1(A, type, precision, *args, **kwds) :
     try :
         return _jacobiforms_cache[k]
     except KeyError :
-        if isinstance(type, JacobiFormD1_Gamma) :
+        if isinstance(type, JacobiFormD1Gamma) :
             M = JacobiFormD1Module(A, type, precision)
         else :
             raise TypeError( "{0} must be a Jacobi form type,".format(type) )
@@ -75,10 +75,10 @@ def JacobiFormsD1(A, type, precision, *args, **kwds) :
         return M
     
 #===============================================================================
-# JacobiFormD1_Gamma
+# JacobiFormD1Gamma
 #===============================================================================
 
-class JacobiFormD1_Gamma ( ModularFormType_abstract ) :
+class JacobiFormD1Gamma ( ModularFormType_abstract ) :
     r"""
     Type of Jacobi forms of degree `1` and arbitrary rank index associated with
     the full modular group.
@@ -88,7 +88,7 @@ class JacobiFormD1_Gamma ( ModularFormType_abstract ) :
         sage: from psage.modform.jacobiforms import *
         sage: from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import JacobiFormD1Filter
         sage: L = QuadraticForm(matrix(2, [2,1,1,2])) 
-        sage: JR = JacobiFormsD1(QQ, JacobiFormD1_Gamma(10, L), JacobiFormD1Filter(5, L))
+        sage: JR = JacobiFormsD1(QQ, JacobiFormD1Gamma(10, L), JacobiFormD1Filter(5, L))
         sage: JR.gens()
         (Graded expansion phiRes_0, Graded expansion phiRes_1)
         sage: JR.0 + 2 * JR.1

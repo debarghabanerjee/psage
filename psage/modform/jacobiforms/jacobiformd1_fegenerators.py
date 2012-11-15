@@ -27,7 +27,7 @@ from psage.modform.jacobiforms.jacobiformd1_dimensionformula import dimension__j
 from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import JacobiFormD1FourierExpansionModule, \
                                                                     JacobiFormD1Filter
 from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNIndices, JacobiFormD1NNFilter, JacobiFormD1WeightCharacter
-from psage.modform.jacobiforms.jacobiformd1nn_types import JacobiFormsD1NN, JacobiFormD1NN_Gamma
+from psage.modform.jacobiforms.jacobiformd1nn_types import JacobiFormsD1NN, JacobiFormD1NNGamma
 from sage.combinat.partition import number_of_partitions
 from sage.libs.flint.fmpz_poly import Fmpz_poly  
 from sage.matrix.constructor import matrix, zero_matrix
@@ -586,7 +586,7 @@ def _coefficient_by_restriction__with_restriction_matrix( precision, k, relation
     
     jacobi_indices = [ m for (_, m, _, _) in row_groups ]
     index_filters = dict( (m, JacobiFormD1NNFilter(precision.index(), m)) for m in Set(jacobi_indices) )
-    jacobi_forms = dict( (m, JacobiFormsD1NN(QQ, JacobiFormD1NN_Gamma(k, m), prec) )
+    jacobi_forms = dict( (m, JacobiFormsD1NN(QQ, JacobiFormD1NNGamma(k, m), prec) )
                          for (m, prec) in index_filters.iteritems() )
     
     forms = list()
@@ -704,7 +704,7 @@ def _test__coefficient_by_restriction(precision, k, relation_precision = None, a
         try :
             jacobi_forms = jacobi_forms_dict[m]
         except KeyError : 
-            jacobi_forms = JacobiFormsD1NN(QQ, JacobiFormD1NN_Gamma(k, m), JacobiFormD1NNFilter(precision.index(), m))
+            jacobi_forms = JacobiFormsD1NN(QQ, JacobiFormD1NNGamma(k, m), JacobiFormD1NNFilter(precision.index(), m))
             jacobi_forms_dict[m] = jacobi_forms
         jacobi_forms_module = span([ vector( b[(ch1, k)] for k in jacobi_forms.fourier_expansion_precision() )
                                      for b in map(lambda b: b.fourier_expansion(), jacobi_forms.graded_submodule(None).basis()) ])

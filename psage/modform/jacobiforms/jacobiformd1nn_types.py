@@ -65,7 +65,7 @@ def JacobiFormsD1NN(A, type, precision, *args, **kwds) :
     try :
         return _jacobiforms_cache[k]
     except KeyError :
-        if isinstance(type, JacobiFormD1NN_Gamma) :
+        if isinstance(type, JacobiFormD1NNGamma) :
             M = ModularFormsModule_generic(A, type, precision)
         else :
             raise TypeError, "%s must be a Jacobi form type" % (type,)
@@ -74,10 +74,10 @@ def JacobiFormsD1NN(A, type, precision, *args, **kwds) :
         return M
     
 #===============================================================================
-# JacobiFormD1NN_Gamma
+# JacobiFormD1NNGamma
 #===============================================================================
 
-class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
+class JacobiFormD1NNGamma ( ModularFormType_abstract ) :
     r"""
     Type of Jacobi forms of degree `1` and index in `\mathbb{N}` associated with
     the full modular group.
@@ -86,7 +86,7 @@ class JacobiFormD1NN_Gamma ( ModularFormType_abstract ) :
     
         sage: from psage.modform.jacobiforms import *
         sage: from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFilter 
-        sage: JR = JacobiFormsD1NN(QQ, JacobiFormD1NN_Gamma(6, 3), JacobiFormD1NNFilter(10, 3))
+        sage: JR = JacobiFormsD1NN(QQ, JacobiFormD1NNGamma(6, 3), JacobiFormD1NNFilter(10, 3))
         sage: JR.gens()
         (Graded expansion TDE_0, Graded expansion TDE_1)
         sage: JR.0 + 2 * JR.1
