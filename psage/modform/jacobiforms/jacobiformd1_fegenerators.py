@@ -590,6 +590,7 @@ def _coefficient_by_restriction__with_restriction_matrix( precision, k, relation
                          for (m, prec) in index_filters.iteritems() )
     
     forms = list()
+    nmb_forms_coords = row_groups[-1][2] + row_groups[-1][3]
     ch1 = JacobiFormD1WeightCharacter(k)
     for (s, m, start, length) in row_groups :
         row_labels_dict = row_labels[m]
@@ -600,13 +601,14 @@ def _coefficient_by_restriction__with_restriction_matrix( precision, k, relation
                 v[i] = f[(ch1, l)]
     
             forms.append(vector(   start*[0] + v.list()
-                                 + (row_groups[-1][2] + row_groups[-1][3] - start - length)*[0] ))
-    
+                                 + (nmb_forms_coords - start - length)*[0] ))
+
+
     
     if relation_precision == precision :
-        restriction_expansion = span(forms)
+        restriction_expansion = FreeModule(QQ, nmb_forms_coords).span(forms)
     else :
-        restriction_expansion_matrix__big = matrix(forms).transpose()
+        restriction_expansion_matrix__big = matrix(len(forms), nmb_forms_coords, forms).transpose()
         restriction_expansion_matrix = restriction_expansion_matrix__big.matrix_from_rows(row_indices__small)
         
         restriction_expansion = restriction_expansion_matrix.column_module() 

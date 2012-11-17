@@ -25,37 +25,18 @@ AUTHOR :
 #
 #===============================================================================
 
-from operator import xor
-from psage.modform.fourier_expansion_framework.gradedexpansions.gradedexpansion_grading import TrivialGrading
-from psage.modform.fourier_expansion_framework.modularforms.modularform_types import ModularFormType_abstract
-from psage.modform.jacobiforms.jacobiformd1_dimensionformula import dimension__jacobi
-from psage.modform.jacobiforms.jacobiformd1_element import JacobiFormD1_class
-from psage.modform.jacobiforms.jacobiformd1_fegenerators import jacobi_form_d1_by_restriction
-from psage.modform.jacobiforms.jacobiformd1_fourierexpansion import JacobiFormD1FourierExpansionModule, \
-                                                                    JacobiFormD1Filter
-from sage.categories.number_fields import NumberFields
-from sage.matrix.constructor import diagonal_matrix, matrix, zero_matrix,\
-    identity_matrix
-from sage.misc.cachefunc import cached_method
-from sage.misc.mrange import mrange
-from sage.modular.modform.constructor import ModularForms
-from sage.rings.all import Integer
-from sage.rings.integer_ring import ZZ
-from sage.rings.number_field.number_field import CyclotomicField
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.rational_field import QQ
-from sage.structure.sequence import Sequence
-
-
-
+import operator
 from psage.modform.fourier_expansion_framework.modularforms.modularform_ambient import ModularFormsModule_generic
+from psage.modform.jacobiforms.jacobiformd1_fourierexpansion  import JacobiFormD1WeightCharacter
+from psage.modform.vector_valued import DiscriminantForm
+from sage.rings.integer_ring import ZZ
 
 #===============================================================================
 # JacobiFormD1Module
 #===============================================================================
 
 class JacobiFormD1Module( ModularFormsModule_generic ) :
-    def _theta_decomposition(phi) :
+    def _theta_decomposition(self, phi) :
         r"""
         Apply the theta decomposition to a Fourier expansion `\phi`.
 
@@ -77,11 +58,11 @@ class JacobiFormD1Module( ModularFormsModule_generic ) :
         f = dict( (disc_form._from_jacobi_fourier_index(rs[0]), dict())
                   for rs in fe_ambient.action()._r_representatives )
 
-        for (n, r) in fe.precision() :
+        for (n, r) in phi.precision() :
             b = disc_form._from_jacobi_fourier_index(r)
             disc = n - Ladj(r) / ZZ(2 * Ldet)
-            f[b][disc] = fe[(ch,(n,r))]
+            f[b][disc] = phi[(ch,(n,r))]
             if b != -b :
-                f[-b][disc] = fe[(ch,(n,tuple(map(operator.neg, r))))]
+                f[-b][disc] = phi[(ch,(n,tuple(map(operator.neg, r))))]
 
         return f
