@@ -44,8 +44,7 @@ import operator
 class DiscrimiantFormElement( AdditiveAbelianGroupElement ) :
 
     def elementary_representation(self) :
-        r = self.parent()._to_jacobi_fourier_index(self)
-        r.set_immutable()
+        r = tuple( self.parent()._to_jacobi_fourier_index(self) )
 
         return r
 
