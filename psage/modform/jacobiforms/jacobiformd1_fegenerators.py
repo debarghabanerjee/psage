@@ -456,6 +456,11 @@ def _coefficient_by_restriction( precision, k, relation_precision = None ) :
         if s not in S :
             S.append(s) 
     max_S_length = max([L(s) for s in S])
+    B_correction = 1 + (k + max_S_length) // 12
+    if precision.index() < B_correction :
+        precision = precision.monoid().filter(B_correction)
+    if relation_precision.index() < B_correction :
+        relation_precision = precision.monoid().filter(B_correction)
 
     (global_restriction_matrix__big, row_groups, row_labels, column_labels, global_relation_matrix, column_labels_relations) = \
         _prepare_coefficient_by_restriction(precision, k, relation_precision, S)
