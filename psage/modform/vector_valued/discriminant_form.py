@@ -344,6 +344,12 @@ class DiscriminantForm( AdditiveAbelianGroup_class ) :
         """
         if self._L == matrix(2, [2, 1, 1, 2]) or self._L == -matrix(2, [2, 1, 1, 2]) :
             return (ZZ(3),  GammaH(9, [4]))
+        if self._L == matrix(2, [2, 0, 0, 2]) or self._L == -matrix(2, [2, 0, 0, 2]) :
+            return (ZZ(4), GammaH(16, [5]))
+
+        if self._L == matrix(2, [2, 0, 0, 4]) or self._L == -matrix(2, [2, 0, 0, 4]) :
+            return (ZZ(8), GammaH(64, [57]))
+
 
         level = 2 * self._L.inverse().denominator()
         return ( level, GammaH( level**2, filter(lambda n: n % level == 1, range(level**2)) ))
