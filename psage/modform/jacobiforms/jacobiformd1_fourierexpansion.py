@@ -145,7 +145,7 @@ class JacobiFormD1Indices_class ( SageObject ) :
         representatives = list()
         for rs in self._r_representatives :
             if any(r in representatives or tuple(map(operator.neg, r)) in representatives for r in rs) :
-                break
+                continue
 
             for ri in rs[0] :
                 if ri > 0 :
@@ -234,7 +234,12 @@ class JacobiFormD1Indices_class ( SageObject ) :
     def reduce(self, s) :
         (n, r) = s
         # find a representative that corresponds to s
-        for rred in map(lambda rs: rs[0], self._r_representatives) :
+        for rred in self._r_reduced_representatives :
+            r_rred = vector(r) - vector(rred)
+            if r_rred in self.__L_span :
+                break
+
+            rred = tuple(map(operator.neg, rred))
             r_rred = vector(r) - vector(rred)
             if r_rred in self.__L_span :
                 break
