@@ -387,6 +387,15 @@ class JacobiFormD1NNFilter ( SageObject ) :
                         yield(n, -rt_fmm)
         
         raise StopIteration
+
+    def _hecke_operator(self, l) :
+        if not self.__reduced :
+            raise NotImplementedError( "Hecke action precision is only defined for filters of reduced indices" )
+
+        # ( 4 * m * (B - 1) - m**2 ) (l / a)**2 \ge (4 m * (Bh - 1))
+        # ( (B - 1) - m / 4 ) / l**2 \ge Bh - 1
+        return JacobiFormD1NNFilter( ((self.__bound - 1) - (self.__m + 3) // 4) // l**2 + 1,
+                                     self.__m, self.__reduced )
     
     def __cmp__(self, other) :
         c = cmp(type(self), type(other))

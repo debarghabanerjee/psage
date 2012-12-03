@@ -33,6 +33,7 @@ from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import jacobi_form_by
     _jacobi_forms_by_taylor_expansion_coordinates
 from psage.modform.jacobiforms.jacobiformd1nn_fourierexpansion import JacobiFormD1NNFourierExpansionModule, \
                                                                       JacobiFormD1NNFilter
+from psage.modform.jacobiforms.jacobiformd1nn_heckeaction import JacobiFormD1NNFourierExpansionHeckeAction
 from sage.categories.number_fields import NumberFields
 from sage.matrix.constructor import diagonal_matrix, matrix, zero_matrix,\
     identity_matrix
@@ -160,6 +161,9 @@ class JacobiFormD1NNGamma ( ModularFormType_abstract ) :
 
     def graded_submodules_are_free(self) :
         return True
+
+    def _hecke_operator_class(self) :
+        return lambda l: JacobiFormD1NNFourierExpansionHeckeAction(self.__weight, self.__index, l)
 
     def __cmp__(self, other) :
         c = cmp(type(self), type(other))
