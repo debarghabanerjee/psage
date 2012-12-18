@@ -19,6 +19,11 @@ cdef extern from 'short_vector_file.h' :
      cppclass ShortVectorFile :
           ShortVectorFile(object, object, unsigned int64)
           ShortVectorFile(object)
+          
+          object stored_vectors()
+          object read_vectors( uint64_t )
           object write_vectors( uint64_t, object )
+
           uint64_t maximal_vector_length()
           void increase_maximal_vector_length( uint64_t )
+
