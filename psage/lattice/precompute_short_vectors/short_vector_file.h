@@ -33,9 +33,10 @@ private:
   // The maximal length that can be stored. The maximum may be attained!
   uint64_t maximal_vector_length__cache;
   std::vector<std::tuple<uint64_t, size_t, uint64_t>> stored_vectors__cache;
+  size_t next_free_position;
 
-  void read_header();
-  void write_header();
+  size_t read_header();
+  size_t write_header();
 
   void parse_python_lattice( PyObject* );
   void read_lattice();

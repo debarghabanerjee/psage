@@ -1,3 +1,5 @@
+/// Something is completely wrong about get. Find out what exactly.
+
 #include "Python.h"
 
 #include <algorithm>
@@ -33,7 +35,7 @@ ShortVectorFile::ShortVectorFile(
 
     this->maximal_vector_length__cache = maximal_vector_length;
 
-    this->write_header();
+    this->next_free_position = this->write_header();
 }
 
 ShortVectorFile::ShortVectorFile(
@@ -44,7 +46,7 @@ ShortVectorFile::ShortVectorFile(
     this->output_file.open( output_file_name,
           fstream::out | fstream::app | fstream::binary );
 	  
-    this->read_header();
+    this->next_free_position = this->read_header();
 }
 
 ShortVectorFile::~ShortVectorFile()
@@ -52,22 +54,35 @@ ShortVectorFile::~ShortVectorFile()
     this->output_file.close();
 }
 
-void
+size_t
 ShortVectorFile::read_header()
 {
     this->read_lattice();
     this->read_stored_vectors();
     this->output_file >> this->maximal_vector_length__cache;
+
+    if ( this->stored_vectors__cache.size() == 0 )
+      return (1 + this->lattice.size() * this->lattice.size() + 1 + 3 * (this->maximal_vector_length__cache << 2) + 1) * sizeof(uint64_t);
+    else
+      {
+        auto data_blocks = this->data_blocks();
+        auto last_block = *data_blocks.cend();
+        return last_block.second + last_block.first * this->lattice.size() * sizeof(uint64_t);
+      }
 }
 
-void
+size_t
 ShortVectorFile::write_header()
 {
+  this->output_file.seekp( 0, ios_base::beg );
   this->write_lattice();
   *this << this->maximal_vector_length__cache;
   this->write_stored_vectors__empty();
 
   *this << (uint64_t)0;
+
+  return (   1 + this->lattice.size() * this->lattice.size()
+           + 1 + 3 * (this->maximal_vector_length__cache / 2) + 1 ) * sizeof(uint64_t);
 }
 
 void
@@ -134,7 +149,7 @@ ShortVectorFile::read_stored_vectors()
   uint64_t length, nmb_vectors;
   size_t position;
 
-  this->output_file.seekg( (this->lattice.size()^2 + 2) * sizeof(int64_t), ios_base::beg );
+  this->output_file.seekg( (this->lattice.size() * this->lattice.size() + 2) * sizeof(int64_t), ios_base::beg );
   for ( size_t it = 0; it < this->maximal_vector_length__cache; ++it )
     {
       *this >> length >> nmb_vectors >> position;
@@ -181,13 +196,13 @@ ShortVectorFile::read_vectors(
     const uint64_t length
     )
 {
-  size_t data_position;
+  size_t data_position = 0;
   uint64_t nmb_vectors;
 
   PyObject* py_vectors;
   PyObject* py_vector;
   PyObject* py_entry;
-  uint64_t entry;
+  int64_t entry;
 
   for ( auto it : this->stored_vectors__cache )
     if ( get<0>( it ) == length )
@@ -195,18 +210,20 @@ ShortVectorFile::read_vectors(
         data_position = get<1>( it );
         nmb_vectors = get<2>( it );
       }
+  if ( data_position == 0 )
+    return Py_None;
 
   py_vectors = PyList_New( nmb_vectors );
-  size_t rank = this->lattice.size();
+  size_t lattice_rank = this->lattice.size();
 
   this->output_file.seekg( data_position, ios_base::beg );
   for ( uint64_t it = 0; it < nmb_vectors; ++it )
     {
-      py_vector = PyTuple_New( rank );
-      for ( uint64_t it_e = 0; it < rank; ++it_e )
+      py_vector = PyTuple_New( lattice_rank );
+      for ( uint64_t it_e = 0; it_e < lattice_rank; ++it_e )
         {
           *this >> entry;
-          py_entry = PyInt_FromLong( entry );
+          py_entry = PyInt_FromLong( (long)entry );
           PyTuple_SetItem( py_vector, it_e, py_entry );
         }
       PyList_SetItem( py_vectors, it, py_vector );
@@ -232,20 +249,18 @@ ShortVectorFile::write_vectors(
         return Py_False;
 
     // Write the header entry for this set of vectors.
-    size_t header_entry_position = (this->lattice.size()^2 + 1)
-            * sizeof(int64_t) + (2 * length - 1) * sizeof(int64_t);
+    size_t header_entry_position = (this->lattice.size() * this->lattice.size() + 1 + 3 * (length / 2 - 1) + 1) * sizeof(int64_t);
     
     this->output_file.seekp( header_entry_position, ios_base::beg );
     *this << (uint64_t)PyList_Size( py_vectors );
-    this->output_file.seekg( 0, ios_base::end );
-    *this << (uint64_t)( this->output_file.tellg() );
+    this->output_file.seekp( header_entry_position + 8, ios_base::beg );
+    *this << (uint64_t)( this->next_free_position );
 
     PyObject* py_vector;
     PyObject* py_entry;
-    long entry;
+    int64_t entry;
 
-    this->output_file.seekp( 0, ios_base::end );
-    size_t insert_position = this->output_file.tellp();
+    this->output_file.seekp( this->next_free_position, ios_base::beg );
     try
       {
         for ( Py_ssize_t it = 0; it < PyList_Size( py_vectors ); ++it )
@@ -260,7 +275,7 @@ ShortVectorFile::write_vectors(
                 if (! PyInt_Check( py_entry ) )
                   throw( string( "conversion failed" ) );
 
-                entry = PyInt_AsLong( py_entry );
+                entry = (int64_t)PyInt_AsLong( py_entry );
                 *this << entry;
               }
         }
@@ -278,7 +293,8 @@ ShortVectorFile::write_vectors(
           throw;
       }
     this->stored_vectors__cache.push_back(
-        tuple<uint64_t, size_t, uint64_t>( length, insert_position, PyList_Size( py_vectors ) ) );
+        tuple<uint64_t, size_t, uint64_t>( length, this->next_free_position, PyList_Size( py_vectors ) ) );
+    this->next_free_position += PyList_Size( py_vectors ) * this->lattice.size() * sizeof(int64_t);
 
     return Py_True;
 }
@@ -297,7 +313,7 @@ ShortVectorFile::increase_maximal_vector_length(
     for ( auto it : data_blocks )
       this->move_data_block( it.first, it.first + additional_size, it.second );
 
-    this->output_file.seekp( (this->lattice.size()^2 + 2 + 3 * this->maximal_vector_length__cache) * sizeof(int64_t) );
+    this->output_file.seekp( (this->lattice.size() * this->lattice.size() + 2 + 3 * this->maximal_vector_length__cache) * sizeof(int64_t) );
     for ( size_t length = this->maximal_vector_length__cache + 2;
           length <= maximal_vector_length;
           length += 2 )
@@ -305,6 +321,7 @@ ShortVectorFile::increase_maximal_vector_length(
 
     *this << (uint64_t)0;
 
+    this->next_free_position += 3 * ( (this->maximal_vector_length__cache - maximal_vector_length) / 2);
     this->maximal_vector_length__cache = maximal_vector_length;
 }
 
@@ -342,7 +359,7 @@ ShortVectorFile::move_data_block(
 
     this->output_file.seekp( dest, ios_base::beg );
     for ( auto it : data )
-	*this << it;
+      *this << it;
 }
 
 template <class T>
@@ -353,7 +370,7 @@ operator>>(
     T& dest
     )
 {
-    stream.output_file.get( reinterpret_cast<char*>( &dest ), sizeof(T) );
+    stream.output_file.read( reinterpret_cast<char*>( &dest ), sizeof(T) );
     return stream;
 }
 
