@@ -84,6 +84,12 @@ ext_modules = [
     Extension("psage.function_fields.function_field_element",
               ["psage/function_fields/function_field_element.pyx"]),
 
+    Extension("psage.lattice.precompute_short_vectors.short_vector_file__python",
+              ["psage/lattice/precompute_short_vectors/short_vector_file__python.pyx",
+               "psage/lattice/precompute_short_vectors/short_vector_file.cpp"],
+              language = 'c++',
+              extra_compile_args = ['-std=c++11']),
+
     Extension("psage.modform.hermitianmodularforms.hermitianmodularformd2_fourierexpansion_cython",
               ["psage/modform/hermitianmodularforms/hermitianmodularformd2_fourierexpansion_cython.pyx"]),
 
@@ -212,6 +218,9 @@ build_system.setup(
                 'psage.ellff',
 
                 'psage.function_fields',
+
+                'psage.lattice',
+                'psage.lattice.precompute_short_vectors',
 
                 'psage.lmfdb',
                 'psage.lmfdb.ellcurves',
