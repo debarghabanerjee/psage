@@ -45,8 +45,9 @@ private:
   void read_stored_vectors();
   void write_stored_vectors__empty();
 
-  std::vector<std::pair<size_t, uint64_t>>& data_blocks();
   void move_data_block( size_t, size_t, uint64_t );
+
+
 };
 
 #endif

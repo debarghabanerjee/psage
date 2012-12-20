@@ -26,4 +26,3 @@ cdef extern from 'short_vector_file.h' :
 
           uint64_t maximal_vector_length()
           void increase_maximal_vector_length( uint64_t )
-

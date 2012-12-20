@@ -44,7 +44,7 @@ ShortVectorFile::ShortVectorFile(
 {
     string output_file_name = string( PyString_AsString( py_output_file_name ) );
     this->output_file.open( output_file_name,
-          fstream::out | fstream::app | fstream::binary );
+          fstream::in | fstream::out | fstream::app | fstream::binary );
 	  
     this->next_free_position = this->read_header();
 }
@@ -58,16 +58,15 @@ size_t
 ShortVectorFile::read_header()
 {
     this->read_lattice();
+    *this >> this->maximal_vector_length__cache;
     this->read_stored_vectors();
-    this->output_file >> this->maximal_vector_length__cache;
 
     if ( this->stored_vectors__cache.size() == 0 )
       return (1 + this->lattice.size() * this->lattice.size() + 1 + 3 * (this->maximal_vector_length__cache << 2) + 1) * sizeof(uint64_t);
     else
       {
-        auto data_blocks = this->data_blocks();
-        auto last_block = *data_blocks.cend();
-        return last_block.second + last_block.first * this->lattice.size() * sizeof(uint64_t);
+        auto last_block = *this->stored_vectors__cache.cend();
+        return get<2>( last_block ) + get<1>( last_block ) * this->lattice.size() * sizeof(uint64_t);
       }
 }
 
@@ -80,6 +79,8 @@ ShortVectorFile::write_header()
   this->write_stored_vectors__empty();
 
   *this << (uint64_t)0;
+
+  this->output_file.flush();
 
   return (   1 + this->lattice.size() * this->lattice.size()
            + 1 + 3 * (this->maximal_vector_length__cache / 2) + 1 ) * sizeof(uint64_t);
@@ -140,7 +141,7 @@ ShortVectorFile::write_lattice()
   *this << (uint64_t)this->lattice.size();
   for ( auto row_it : this->lattice )
     for ( auto it : row_it )
-      *this << (uint64_t)(it);
+      *this << (uint64_t)it;
 }
 
 void
@@ -149,13 +150,13 @@ ShortVectorFile::read_stored_vectors()
   uint64_t length, nmb_vectors;
   size_t position;
 
-  this->output_file.seekg( (this->lattice.size() * this->lattice.size() + 2) * sizeof(int64_t), ios_base::beg );
-  for ( size_t it = 0; it < this->maximal_vector_length__cache; ++it )
+  for ( size_t it = 0; it < this->maximal_vector_length__cache / 2; ++it )
     {
       *this >> length >> nmb_vectors >> position;
-      this->stored_vectors__cache.push_back( tuple<uint64_t, size_t, uint64_t>( length, position, nmb_vectors ) );
+      if ( position != 0 )
+          this->stored_vectors__cache.push_back( tuple<uint64_t, uint64_t, size_t>( length, nmb_vectors, position ) );
     }
-  sort( this->stored_vectors__cache.begin(), this->stored_vectors__cache.end() );
+  sort( this->stored_vectors__cache.begin(), this->stored_vectors__cache.end(), [] (tuple<uint64_t, uint64_t, size_t> fst, tuple<uint64_t, uint64_t, size_t> snd) { return get<2>( fst ) < get<2>( snd ); } );
 }
 
 void
@@ -179,7 +180,7 @@ ShortVectorFile::stored_vectors()
       vector_data = this->stored_vectors__cache[it];
 
       py_vector_length = PyInt_FromLong( get<0>( vector_data ) );
-      py_nmb_vectors = PyInt_FromLong( get<2>( vector_data ) );
+      py_nmb_vectors = PyInt_FromLong( get<1>( vector_data ) );
 
       py_vector_data = PyTuple_New( 2 );
       PyTuple_SetItem( py_vector_data, 0, py_vector_length );
@@ -207,8 +208,8 @@ ShortVectorFile::read_vectors(
   for ( auto it : this->stored_vectors__cache )
     if ( get<0>( it ) == length )
       {
-        data_position = get<1>( it );
-        nmb_vectors = get<2>( it );
+        nmb_vectors = get<1>( it );
+        data_position = get<2>( it );
       }
   if ( data_position == 0 )
     return Py_None;
@@ -249,7 +250,7 @@ ShortVectorFile::write_vectors(
         return Py_False;
 
     // Write the header entry for this set of vectors.
-    size_t header_entry_position = (this->lattice.size() * this->lattice.size() + 1 + 3 * (length / 2 - 1) + 1) * sizeof(int64_t);
+    size_t header_entry_position = (1 + this->lattice.size() * this->lattice.size() + 1 + 3 * (length / 2 - 1) + 1) * sizeof(int64_t);
     
     this->output_file.seekp( header_entry_position, ios_base::beg );
     *this << (uint64_t)PyList_Size( py_vectors );
@@ -293,8 +294,10 @@ ShortVectorFile::write_vectors(
           throw;
       }
     this->stored_vectors__cache.push_back(
-        tuple<uint64_t, size_t, uint64_t>( length, this->next_free_position, PyList_Size( py_vectors ) ) );
+        tuple<uint64_t, uint64_t, size_t>( length, PyList_Size( py_vectors ), this->next_free_position ) );
     this->next_free_position += PyList_Size( py_vectors ) * this->lattice.size() * sizeof(int64_t);
+
+    this->output_file.flush();
 
     return Py_True;
 }
@@ -307,35 +310,42 @@ ShortVectorFile::increase_maximal_vector_length(
     if ( this->maximal_vector_length__cache >= maximal_vector_length )
       return;
 
-    uint64_t additional_size = 3 * (maximal_vector_length - this->maximal_vector_length__cache) * sizeof(int64_t);
+    uint64_t additional_size = 3 * ( (maximal_vector_length - this->maximal_vector_length__cache) / 2 ) * sizeof(int64_t);
 
-    vector<pair<size_t, uint64_t>> data_blocks = this->data_blocks();
-    for ( auto it : data_blocks )
-      this->move_data_block( it.first, it.first + additional_size, it.second );
+    for ( auto& it : this->stored_vectors__cache )
+      {
+        this->move_data_block( get<2>( it ), get<2>( it ) + additional_size, get<1>( it ) );
+        get<2>( it ) += additional_size;
+      }
 
-    this->output_file.seekp( (this->lattice.size() * this->lattice.size() + 2 + 3 * this->maximal_vector_length__cache) * sizeof(int64_t) );
-    for ( size_t length = this->maximal_vector_length__cache + 2;
+    uint64_t nmb_vectors, position;
+    this->output_file.seekg( ( this->lattice.size() * this->lattice.size() + 2 ) * sizeof(int64_t), ios_base::beg );
+    this->output_file.seekp( ( this->lattice.size() * this->lattice.size() + 2 ) * sizeof(int64_t), ios_base::beg );
+    for ( uint64_t length = 2; length <= this->maximal_vector_length__cache; length += 2 )
+      {
+        this->output_file.seekg( sizeof(int64_t), ios_base::cur );
+        *this >> nmb_vectors >> position;
+        if ( position != 0 )
+          {
+            this->output_file.seekp( -2 * sizeof(int64_t), ios_base::cur );
+            *this << nmb_vectors << (position + additional_size);
+          }
+      }
+
+    for ( uint64_t length = this->maximal_vector_length__cache + 2;
           length <= maximal_vector_length;
           length += 2 )
       *this << length << (uint64_t)0 << (uint64_t)0;
 
     *this << (uint64_t)0;
 
-    this->next_free_position += 3 * ( (this->maximal_vector_length__cache - maximal_vector_length) / 2);
+    this->next_free_position += additional_size;
+
     this->maximal_vector_length__cache = maximal_vector_length;
-}
+    this->output_file.seekp( ( this->lattice.size() * this->lattice.size() + 1 ) * sizeof(int64_t) );
+    *this << maximal_vector_length;
 
-vector<pair<size_t, uint64_t>>&
-ShortVectorFile::data_blocks()
-{
-  vector<pair<size_t, uint64_t>> blocks;
-
-  for ( auto it : stored_vectors__cache )
-    blocks.push_back( pair<size_t, uint64_t>( get<1>( it ), get<2>( it ) ) );
-
-  sort( blocks.begin(), blocks.end() );
-
-  return blocks;
+    this->output_file.flush();
 }
 
 void
@@ -345,13 +355,11 @@ ShortVectorFile::move_data_block(
     uint64_t nmb_vectors
     )
 {
-    vector<uint64_t> data;
-    uint64_t value;
-    
+    vector<int64_t> data;
+    int64_t value;
+
     this->output_file.seekg( src, ios_base::beg );
-    for ( size_t it = 0;
-	  it < nmb_vectors * this->lattice.size() * sizeof(int64_t);
-	  ++it )
+    for ( size_t it = 0; it < nmb_vectors * this->lattice.size(); ++it )
       {
 	*this >> value;
 	data.push_back(value);

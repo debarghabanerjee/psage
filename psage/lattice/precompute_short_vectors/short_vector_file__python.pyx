@@ -8,7 +8,7 @@ include "short_vector_file.pxd"
 
 cdef class ShortVectorFile__python :
     cdef ShortVectorFile *this_ptr
-    
+
     def __cinit__( self, output_file_name, lattice = None, maximal_vector_length = None ) :
         if lattice is None :
             sig_on()
