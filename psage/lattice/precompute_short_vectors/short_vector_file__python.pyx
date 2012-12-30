@@ -15,7 +15,7 @@ cdef class ShortVectorFile__python :
             self.this_ptr = new ShortVectorFile(output_file_name)
             sig_off()
         else :
-            self._check_lattice( lattice )
+            lattice = self._check_lattice( lattice )
 
             f = file(output_file_name, 'a')
             f.close()
@@ -33,6 +33,8 @@ cdef class ShortVectorFile__python :
             for j in range(len(lattice)) :
                 if lattice[i][j] not in ZZ or (i == j and lattice[i][j] % 2 != 0) :
                     raise ValueError( "lattice must be even" )
+
+        return [[int(e) for e in row] for row in lattice]
     
     def stored_vectors( self ) :
         sig_on()
