@@ -12,6 +12,8 @@ def precompute_short_vectors__magma( lattice, lengths, output_file_name, maximal
     if maximal_length is None :
         maximal_length = max(lengths)
 
+    lattice =  map(list, lattice.rows())
+
     if output_file_name in os.listdir('.') :
         lattice_file = ShortVectorFile__python( output_file_name )
         if lattice_file.maximal_vector_length() < maximal_length :
@@ -19,9 +21,12 @@ def precompute_short_vectors__magma( lattice, lengths, output_file_name, maximal
     else :
         lattice_file = ShortVectorFile__python( output_file_name, lattice, maximal_length ) 
 
-    magma.eval("L := LatticeWithGram(Matrix({0}));".format([r.list() for r in lattice.rows()]))
+    magma.eval( "L := LatticeWithGram(Matrix({0}));".format(lattice) )
     
     for m in lengths :
         svs = magma.eval( "ShortVectors(L, {0}, {0});".format(m) ).split('\n')[1:-1]
-        svs = [tuple(map(lambda e: Integer(e), sv.split(',')[0].lstrip()[2:-1].split(" "))) for sv in svs]
+        svs = [sv.split(',')[0].lstrip()[2:-1].split(" ") for sv in svs]
+        svs = [filter( lambda s: s != "", sv ) for sv in svs]
+        svs = [map(lambda e: Integer(e), sv) for sv in svs]
+
         lattice_file.write_vectors( m, svs )

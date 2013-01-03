@@ -24,8 +24,7 @@ cdef class ShortVectorFile__python :
             self.this_ptr = new ShortVectorFile(output_file_name, lattice, maximal_vector_length)
             sig_off()
             
-    def __deallocpp__( self ) :
-        print "called pre"
+    def __dealloc__( self ) :
         del self.this_ptr
     
     def _check_lattice( self, lattice ) :
