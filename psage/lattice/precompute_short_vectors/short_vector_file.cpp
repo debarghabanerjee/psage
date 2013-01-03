@@ -239,15 +239,24 @@ ShortVectorFile::write_vectors(
     PyObject* py_vectors
     )
 {
-    if (! PyList_Check( py_vectors ) )
-      return Py_False;
+    if (! PyList_Check( py_vectors ) ) 
+      {
+	Py_INCREF(Py_False);
+	return Py_False;
+      }
     if ( length > this->maximal_vector_length__cache )
-      return Py_False;
+      {
+	Py_INCREF(Py_False);
+	return Py_False;
+      }
 
     // Verify that this entry has not yet been written.
     for ( auto it : this->stored_vectors__cache )
       if ( get<0>( it ) == length )
-        return Py_False;
+      {
+	Py_INCREF(Py_False);
+	return Py_False;
+      }
 
     // Write the header entry for this set of vectors.
     size_t header_entry_position = (1 + this->lattice.size() * this->lattice.size() + 1 + 3 * (length / 2 - 1) + 1) * sizeof(int64_t);
@@ -288,7 +297,8 @@ ShortVectorFile::write_vectors(
             this->output_file.seekp( header_entry_position, ios_base::beg );
             *this << (uint64_t)0 << (uint64_t)0;
 
-            return Py_False;
+	    Py_INCREF(Py_False);
+	    return Py_False;
           }
         else
           throw;
@@ -299,6 +309,7 @@ ShortVectorFile::write_vectors(
 
     this->output_file.flush();
 
+    Py_INCREF(Py_True);
     return Py_True;
 }
 
