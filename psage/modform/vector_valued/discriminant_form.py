@@ -116,6 +116,7 @@ class DiscriminantForm( AdditiveAbelianGroup_class ) :
                         if a * L * a < 0 :
                             break
                     else :
+                        cur_Lcor_length += Lcor_length_inc
                         continue
                     break
             n = -a * L * a // 2
