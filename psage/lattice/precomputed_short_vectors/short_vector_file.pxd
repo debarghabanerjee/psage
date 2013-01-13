@@ -18,6 +18,8 @@ cdef extern from 'short_vector_file.h' :
           ShortVectorFile(object, object, unsigned int)
           ShortVectorFile(object)
           
+          void flush()
+
           object stored_vectors_py()
           object read_vectors_py( unsigned int )
           object write_vectors_py( unsigned int, object )

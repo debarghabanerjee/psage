@@ -123,19 +123,21 @@ ShortVectorFile::get_lattice_py() const
 size_t
 ShortVectorFile::read_header()
 {
-    this->read_lattice();
-    uint64_t maximal_vector_length__cache_64;
-    *this >> maximal_vector_length__cache_64;
-    this->maximal_vector_length__cache = (unsigned int)maximal_vector_length__cache_64;
-    this->read_stored_vectors();
+  this->read_lattice();
+  uint64_t maximal_vector_length__cache_64;
+  *this >> maximal_vector_length__cache_64;
+  this->maximal_vector_length__cache = (unsigned int)maximal_vector_length__cache_64;
+  this->read_stored_vectors();
 
-    if ( this->stored_vectors__cache.size() == 0 )
-      return (1 + this->lattice.size() * this->lattice.size() + 1 + 3 * (this->maximal_vector_length__cache << 2) + 1) * sizeof(uint64_t);
-    else
-      {
-        auto last_block = *this->stored_vectors__cache.cend();
-        return get<2>( last_block ) + get<1>( last_block ) * this->lattice.size() * sizeof(uint64_t);
-      }
+
+  if ( this->stored_vectors__cache.size() == 0 )
+    return (1 + this->lattice.size() * this->lattice.size() + 1
+	    + 3 * (this->maximal_vector_length__cache << 2) + 1) * sizeof(uint64_t);
+  else
+    {
+      auto last_block = *this->stored_vectors__cache.cend();
+      return get<2>( last_block ) + get<1>( last_block ) * this->lattice.size() * sizeof(uint64_t);
+    }
 }
 
 size_t
@@ -189,7 +191,9 @@ ShortVectorFile::parse_python_lattice(
 void
 ShortVectorFile::read_lattice()
 {
-  unsigned int lattice_rank, lattice_rank_64;
+  unsigned int lattice_rank;
+  uint64_t lattice_rank_64;
+
   this->output_file.seekg( 0, ios_base::beg );
   *this >> lattice_rank_64;
   lattice_rank = (unsigned int)lattice_rank_64;
@@ -203,6 +207,7 @@ ShortVectorFile::read_lattice()
         {
 	  *this >> entry_64;
 	  row.push_back( (int)entry_64 );
+
 	}
     }
 }
@@ -213,7 +218,7 @@ ShortVectorFile::write_lattice()
   *this << (uint64_t)this->lattice.size();
   for ( auto row_it : this->lattice )
     for ( auto it : row_it )
-      *this << (uint64_t)it;
+      *this << (int64_t)it;
 }
 
 void

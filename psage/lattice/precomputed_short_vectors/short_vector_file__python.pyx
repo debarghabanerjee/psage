@@ -34,6 +34,11 @@ cdef class ShortVectorFile__python :
                     raise ValueError( "lattice must be even" )
 
         return [[int(e) for e in row] for row in lattice]
+
+    def flush( self ) :
+        sig_on()
+        self.this_ptr.flush()
+        sig_off()
     
     def stored_vectors( self ) :
         sig_on()

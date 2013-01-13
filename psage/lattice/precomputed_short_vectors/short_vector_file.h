@@ -17,6 +17,8 @@ public:
   ShortVectorFile( PyObject* );
   ~ShortVectorFile();
 
+  void flush() { this->output_file.flush(); };
+
   void init_with_lattice( const std::string&, const std::vector<std::vector<int>>&, const unsigned int );
   void init_with_file_name( const std::string& );
 
