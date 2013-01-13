@@ -37,7 +37,7 @@ cdef class ShortVectorFile__python :
     
     def stored_vectors( self ) :
         sig_on()
-        return_val = self.this_ptr.stored_vectors()
+        return_val = self.this_ptr.stored_vectors_py()
         sig_off()
         
         return return_val
@@ -47,7 +47,7 @@ cdef class ShortVectorFile__python :
             return []
         
         sig_on()
-        return_val = self.this_ptr.read_vectors( int(length) )
+        return_val = self.this_ptr.read_vectors_py( int(length) )
         sig_off()
 
         if return_val is None :
@@ -62,7 +62,7 @@ cdef class ShortVectorFile__python :
         vectors = [ tuple(map(int, v)) for v in vectors ]
         
         sig_on()
-        written = self.this_ptr.write_vectors( int(length), vectors )
+        written = self.this_ptr.write_vectors_py( int(length), vectors )
         sig_off()
 
         if not written :

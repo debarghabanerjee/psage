@@ -13,16 +13,14 @@
 #                  http://www.gnu.org/licenses/
 ################################################################################
 
-from libc.stdint cimport int64_t, uint64_t
-
 cdef extern from 'short_vector_file.h' :
      cppclass ShortVectorFile :
-          ShortVectorFile(object, object, unsigned int64)
+          ShortVectorFile(object, object, unsigned int)
           ShortVectorFile(object)
           
-          object stored_vectors()
-          object read_vectors( uint64_t )
-          object write_vectors( uint64_t, object )
+          object stored_vectors_py()
+          object read_vectors_py( unsigned int )
+          object write_vectors_py( unsigned int, object )
 
-          uint64_t maximal_vector_length()
-          void increase_maximal_vector_length( uint64_t )
+          unsigned int maximal_vector_length()
+          void increase_maximal_vector_length( unsigned int )
