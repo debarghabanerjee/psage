@@ -1,3 +1,5 @@
+// todo: move folder to precomputeD_short_vectors
+
 #ifndef SHORT_VECTOR_FILE_HPP
 #define SHORT_VECTOR_FILE_HPP
 
@@ -13,15 +15,20 @@ class ShortVectorFile
 public:
   ShortVectorFile( PyObject*, PyObject*, const uint64_t );
   ShortVectorFile( PyObject* );
-  // todo: implement a merge constructor
-  // ShortVectorFile( vector<fstream> );
+  // todo: add constructors and then convert cython
+  // ShortVectorFile( const vector<vector<int>>, const string, uint64_t );
+  // ShortVectorFile( const string );
   ~ShortVectorFile();
+
+  // todo: implement, mind the conversion of int64 to int
+  vector<vector<int>> lattice() const;
  
   uint64_t maximal_vector_length() const { return this->maximal_vector_length__cache; };
   void increase_maximal_vector_length( const uint64_t );
 
   PyObject* stored_vectors();
   PyObject* write_vectors( const uint64_t, PyObject* );
+  // todo: rename to read_vectors_py and provide vector<int*> implementation
   PyObject* read_vectors( const uint64_t );
 
   template <class T> friend inline ShortVectorFile& operator>>( ShortVectorFile&, T& );
