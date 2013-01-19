@@ -30,6 +30,9 @@ cdef class ShortVectorFile__python :
 
     def __cinit__( self, output_file_name, lattice = None, maximal_vector_length = None ) :
         if lattice is None :
+            f = file(output_file_name, 'r')
+            f.close()
+            
             sig_on()
             self.this_ptr = new ShortVectorFile(output_file_name)
             sig_off()
@@ -82,6 +85,8 @@ cdef class ShortVectorFile__python :
     def write_vectors( self, length, vectors ) :
         if length % 2 == 1 :
             raise ValueError( "Only vectors of even length can be stored" )
+        if length <= 0 :
+            raise ValueError( "Only vectors of positive length can be stored" )
         
         vectors = [ tuple(map(int, v)) for v in vectors ]
         

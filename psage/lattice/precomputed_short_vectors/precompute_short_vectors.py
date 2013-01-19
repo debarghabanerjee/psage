@@ -20,8 +20,12 @@
 import os
 from sage.interfaces.magma import magma
 from sage.rings.all import Integer
-from short_vector_file__python import ShortVectorFile__python
+from sage.quadratic_forms.all import QuadraticForm
+from psage.lattice.precomputed_short_vectors.short_vector_file__python import ShortVectorFile__python
 
+################################################################################
+### precompute_short_vectors__magma
+################################################################################
 
 def precompute_short_vectors__magma( lattice, lengths, output_file_name, maximal_length = None ) :
     r"""
@@ -50,3 +54,47 @@ def precompute_short_vectors__magma( lattice, lengths, output_file_name, maximal
         svs = [map(lambda e: Integer(e), sv) for sv in svs]
 
         lattice_file.write_vectors( m, svs )
+
+    lattice_file.flush()
+
+################################################################################
+### precompute_short_vectors__sage
+################################################################################
+
+def precompute_short_vectors__sage( lattice, lengths, output_file_name, maximal_length = None ) :
+    r"""
+    INPUT:
+
+    - ``lattice`` -- A matrix with integral entries.
+
+    EXAMPLE::
+
+        sage: from psage.lattice.precomputed_short_vectors import *
+        sage: file_name = tmp_filename()
+        sage: L = matrix(ZZ, [[2, 1], [1, 2]])
+        sage: precompute_short_vectors__sage( L, range(2, 11, 2), file_name, maximal_length = 100 )
+        sage: svf = ShortVectorFile__python( file_name )
+        sage: svf.stored_vectors()
+        [(2, 3), (4, 0), (6, 3), (8, 3), (10, 0)]
+        sage: svf.read_vectors(8)
+        [(0, 2), (-2, 2), (2, 0)]
+    """
+    if maximal_length is None :
+        maximal_length = max(lengths)
+
+    lattice_list =  map(list, lattice.rows())
+
+    if output_file_name in os.listdir('.') :
+        lattice_file = ShortVectorFile__python( output_file_name )
+        if lattice_file.maximal_vector_length() < maximal_length :
+            lattice_file.increase_maximal_vector_length( maximal_length )
+    else :
+        lattice_file = ShortVectorFile__python( output_file_name, lattice_list, maximal_length ) 
+
+    qf = QuadraticForm(lattice)
+    
+    for (m, svs) in enumerate( qf.short_vector_list_up_to_length( max(lengths) / 2 + 1, True ) ) :
+        if 2 * m in lengths :
+            lattice_file.write_vectors( 2 * m, svs )
+    
+    lattice_file.flush()
