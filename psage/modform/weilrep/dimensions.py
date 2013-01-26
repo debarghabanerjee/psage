@@ -18,8 +18,15 @@ AUTHORS:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from psage.modules import *
-from sage.all import SageObject
+from psage.modules.finite_quadratic_module import FiniteQuadraticModule
+from psage.modules.weil_module import WeilModule
+
+from sage.rings.all import ZZ, CC, RR
+from sage.structure.all import SageObject
+
+from sage.functions.other import real, sqrt, exp
+from sage.symbolic.all import pi, i
+
 import sys
 
 class VectorValuedModularForms(SageObject):
