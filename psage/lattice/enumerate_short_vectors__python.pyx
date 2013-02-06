@@ -19,7 +19,7 @@
 #
 #===============================================================================
 
-from sage.rings.all import ZZ
+from cython.operator cimport dereference as deref
 
 include "interrupt.pxi"
 
@@ -67,13 +67,3 @@ cpdef object enumerate_short_vectors__python( object lattice, lower_bound, upper
         it += 1
     
     return svs
-
-
-
-cdef check_lattice_dimensions( object latttice ) :
-    dim = len(lattice)
-    for row in lattice :
-        if len(lattice) != dim :
-            return False
-
-    return True
