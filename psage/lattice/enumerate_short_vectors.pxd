@@ -17,9 +17,12 @@
 #
 #===============================================================================
 
+from libcpp.pair cimport pair
+from libcpp.vector cimport vector
+
 cdef extern from * :
+    ctypedef int uint "unsigned int"
     ctypedef vector[vector[int]] const_vector_vector_int "const std::vector<std::vector<int>>"
-    cytpedef vector[int] vector_pt_int "std::vector<int*>"
 
 cdef extern from 'enumeate_short_vectors.h' :
-   enumerate_short_vectors( const_vector_vector_int&, int, int, vector_pt_int& )
+   enumerate_short_vectors( const_vector_vector_int&, uint, uint, vector[pair[vector[int], uint]]& )

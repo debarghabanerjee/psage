@@ -33,7 +33,7 @@ enumerate_short_vectors
  const vector<vector<int>> &qfmatrix,
  unsigned int lower_bound,
  unsigned int upper_bound,
- vector<int*>& svs
+ vector<pair<vector<int>, unsigned int>> &result
  )
 {
   size_t m = check_dimensions( qf_matrix );
@@ -44,7 +44,6 @@ enumerate_short_vectors
   mpfr_prec_t current_precision = 53;
 
 
-  vector<tuple<vector<int>, unsigned int>> result;
   vector<int> res_x;
   int x1;
 

@@ -21,12 +21,13 @@
 #define __ENUMERATE_SHORT_VECTORS_H
 
 #include <vector>
+#include <util>
 
 #include "mpfr.h"
 
 std::vector<std::vector<mpfr_t>>
 cholesky_decomposition( const std::vector<std::vector<int>>& )
 void
-enumerate_short_vectors( const std::vector<std::vector<int>>&, unsigned int, unsigned int, vector<int*>& );
+enumerate_short_vectors( const std::vector<std::vector<int>>&, unsigned int, unsigned int, vector<pair<vector<int>, unsigned int>>& );
 
 #endif
