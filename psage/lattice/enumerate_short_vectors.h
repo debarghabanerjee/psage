@@ -21,13 +21,18 @@
 #define __ENUMERATE_SHORT_VECTORS_H
 
 #include <vector>
-#include <util>
+#include <utility>
+#include <tuple>
 
 #include "mpfr.h"
 
-std::vector<std::vector<mpfr_t>>
-cholesky_decomposition( const std::vector<std::vector<int>>& )
+std::tuple< std::vector<std::vector<mpfr_ptr>>, std::vector<mpfr_ptr> >
+cholesky_decomposition( const std::vector<std::vector<int>>&, mpfr_prec_t );
+
 void
-enumerate_short_vectors( const std::vector<std::vector<int>>&, unsigned int, unsigned int, vector<pair<vector<int>, unsigned int>>& );
+enumerate_short_vectors( const std::vector<std::vector<int>>&, unsigned int, unsigned int, std::vector<std::pair<std::vector<int>, unsigned int>>& );
+
+inline void
+init_Z_UB_x( size_t, mpfr_ptr, mpfr_ptr, std::vector<mpfr_ptr>&, std::vector<mpfr_ptr>&, std::vector<mpfr_ptr>&, std::vector<mpfr_ptr>&, std::vector<mpfr_ptr>&, mpfr_ptr );
 
 #endif

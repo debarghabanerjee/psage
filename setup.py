@@ -85,10 +85,11 @@ ext_modules = [
               ["psage/function_fields/function_field_element.pyx"]),
 
     Extension("psage.lattice.enumerate_short_vectors__python",
-              ["psage/lattice/precomputed_short_vectors/enumerate_short_vectors__python.pyx",
-"psage/lattice/precomputed_short_vectors/enumerate_short_vectors.cpp"],
+              ["psage/lattice/enumerate_short_vectors__python.pyx",
+"psage/lattice/enumerate_short_vectors.cpp"],
               language = 'c++',
-              extra_compile_args = ['-std=c++11']),
+              extra_compile_args = ['-std=c++11'],
+              libraries = ['mpfr']),
 
     Extension("psage.lattice.precomputed_short_vectors.short_vector_file__python",
               ["psage/lattice/precomputed_short_vectors/short_vector_file__python.pyx",

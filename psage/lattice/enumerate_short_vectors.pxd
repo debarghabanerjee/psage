@@ -24,5 +24,5 @@ cdef extern from * :
     ctypedef int uint "unsigned int"
     ctypedef vector[vector[int]] const_vector_vector_int "const std::vector<std::vector<int>>"
 
-cdef extern from 'enumeate_short_vectors.h' :
-   enumerate_short_vectors( const_vector_vector_int&, uint, uint, vector[pair[vector[int], uint]]& )
+cdef extern from 'enumerate_short_vectors.h' :
+    void enumerate_short_vectors( const_vector_vector_int&, uint, uint, vector[pair[vector[int], uint]]& )

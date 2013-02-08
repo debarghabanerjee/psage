@@ -44,26 +44,23 @@ cpdef object enumerate_short_vectors__python( object lattice, lower_bound, upper
 
     cdef vector[pair[vector[int], uint]] result
 
-    enumerate_short_vectors( lattice_cpp, lower_bound, upper_bound, result )
+    print "enumerate"
+    sig_on()
+    enumerate_short_vectors( lattice__cpp, lower_bound, upper_bound, result )
+    sig_off()
+    print "done"
 
-    object svs
-    object res_v
-    cdef vector[int]::iterator v_it
-    cdef vector[int]::const_iterator v_it_end
+    cdef object svs = dict()
+    cdef object res_v
+    cdef size_t ind, v_ind
 
-    cdef result::iterator it = result.begin()
-    cdef result::const_iterator it_end = result.cend()
-    while it != it_end :
+    for ind in range(result.size()) :
         res_v = list()
 
-        v_it = it.first().begin()
-        v_it_end = it.first().cend()
-        while v_it != v_it_end :
-            res_v.append( deref(v_it) )
-            v_it += 1
+        for v_ind in range( dim ) :
+            res_v.append( result[ind].first[v_ind] )
         
-        svs[ it.second() ].append(tuple(res_v))
+        svs[ result[ind].second ].append(tuple(res_v))
 
-        it += 1
     
     return svs
