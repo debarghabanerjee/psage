@@ -26,6 +26,22 @@ include "interrupt.pxi"
 include "enumerate_short_vectors.pxd"
 
 cpdef object enumerate_short_vectors__python( object lattice, lower_bound, upper_bound ) :
+    r"""
+    Enumerate up to sign vectors of minimal norm ``lower_bound`` and maximal norm ``upper_bound``.
+
+    INPUT:
+    
+    - ``lattice`` - a list of list of integers which corresponds to the Gram matrix of a binary quadratic form.
+
+    - ``lower_bound`` - a positive integer.
+
+    - ``upper_bound`` - a positive integer.
+
+    OUPUT:
+
+    - A dictionary mapping integers to a list of tuples.  Each tuple corresponds to a vector.
+
+    """
     dim = len(lattice)
     for row in lattice :
         if len(lattice) != dim :
@@ -44,15 +60,16 @@ cpdef object enumerate_short_vectors__python( object lattice, lower_bound, upper
 
     cdef vector[pair[vector[int], uint]] result
 
-    print "enumerate"
     sig_on()
     enumerate_short_vectors( lattice__cpp, lower_bound, upper_bound, result )
     sig_off()
-    print "done"
 
     cdef object svs = dict()
     cdef object res_v
     cdef size_t ind, v_ind
+
+    for ind in range(lower_bound, upper_bound + 1, 2) :
+        svs[ind] = list()
 
     for ind in range(result.size()) :
         res_v = list()

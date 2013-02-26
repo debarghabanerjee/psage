@@ -89,7 +89,7 @@ ext_modules = [
 "psage/lattice/enumerate_short_vectors.cpp"],
               language = 'c++',
               extra_compile_args = ['-std=c++11'],
-              libraries = ['mpfr']),
+              libraries = ['mpfr', 'mpfi']),
 
     Extension("psage.lattice.precomputed_short_vectors.short_vector_file__python",
               ["psage/lattice/precomputed_short_vectors/short_vector_file__python.pyx",
