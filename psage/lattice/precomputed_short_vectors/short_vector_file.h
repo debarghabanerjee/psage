@@ -20,8 +20,6 @@
 #ifndef __SHORT_VECTOR_FILE_HPP
 #define __SHORT_VECTOR_FILE_HPP
 
-#include "Python.h"
-
 #include <fstream>
 #include <string>
 #include <tuple>
@@ -30,22 +28,17 @@
 class ShortVectorFile 
 {
 public:
+  ShortVectorFile();
   ShortVectorFile( const std::string&, const std::vector<std::vector<int>>&, const unsigned int );
   ShortVectorFile( const std::string& );
-  ShortVectorFile( PyObject*, PyObject*, const unsigned int );
-  ShortVectorFile( PyObject* );
   ~ShortVectorFile();
 
-  void flush() { this->output_file.flush(); };
-
-  void init_with_lattice( const std::string&, const std::vector<std::vector<int>>&, const unsigned int );
-  void init_with_file_name( const std::string& );
+  void flush() { this->output_file->flush(); };
 
   const std::vector<std::vector<int>>& get_lattice() const
   {
     return this->lattice;
   };
-  PyObject* get_lattice_py() const;
  
   unsigned int maximal_vector_length() const
   {
@@ -53,26 +46,29 @@ public:
   };
   void increase_maximal_vector_length( const unsigned int );
 
-  PyObject* stored_vectors_py();
-  PyObject* write_vectors_py( const unsigned int, PyObject* );
+  bool write_vectors( const unsigned int, std::vector<std::vector<int>>& );
   std::vector<std::vector<int>> read_vectors( const unsigned int );
-  PyObject* read_vectors_py( const unsigned int );
 
   template <class T> friend inline ShortVectorFile& operator>>( ShortVectorFile&, T& );
   template <class T> friend inline ShortVectorFile& operator<<( ShortVectorFile&, const T& );
 
-private:
-  std::fstream output_file;
+  friend class ShortVectorFilePy;
+
+protected:
+  void init_with_lattice( const std::string&, const std::vector<std::vector<int>>&, const unsigned int );
+  void init_with_file_name( const std::string& );
+
+  std::fstream *output_file = nullptr;
   std::vector<std::vector<int>> lattice;
   // The maximal length that can be stored. The maximum may be attained!
   unsigned int maximal_vector_length__cache;
   std::vector<std::tuple<unsigned int, size_t, size_t>> stored_vectors__cache;
   size_t next_free_position;
 
+private:
   size_t read_header();
   size_t write_header();
 
-  std::vector<std::vector<int>> parse_python_lattice( PyObject* );
   void read_lattice();
   void write_lattice();
 

@@ -23,10 +23,10 @@ from sage.rings.all import ZZ
 
 include "interrupt.pxi"
 
-include "short_vector_file.pxd"
+include "short_vector_file_py.pxd"
 
 cdef class ShortVectorFile__python :
-    cdef ShortVectorFile *this_ptr
+    cdef ShortVectorFilePy *this_ptr
 
     def __cinit__( self, output_file_name, lattice = None, maximal_vector_length = None ) :
         if lattice is None :
@@ -34,7 +34,7 @@ cdef class ShortVectorFile__python :
             f.close()
             
             sig_on()
-            self.this_ptr = new ShortVectorFile(output_file_name)
+            self.this_ptr = new ShortVectorFilePy(output_file_name)
             sig_off()
         else :
             lattice = self._check_lattice( lattice )
@@ -43,7 +43,7 @@ cdef class ShortVectorFile__python :
             f.close()
             
             sig_on()
-            self.this_ptr = new ShortVectorFile(output_file_name, lattice, maximal_vector_length)
+            self.this_ptr = new ShortVectorFilePy(output_file_name, lattice, maximal_vector_length)
             sig_off()
             
     def __dealloc__( self ) :

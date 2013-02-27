@@ -92,8 +92,9 @@ ext_modules = [
               libraries = ['mpfr', 'mpfi']),
 
     Extension("psage.lattice.precomputed_short_vectors.short_vector_file__python",
-              ["psage/lattice/precomputed_short_vectors/short_vector_file__python.pyx",
-               "psage/lattice/precomputed_short_vectors/short_vector_file.cpp"],
+              ["psage/lattice/precomputed_short_vectors/short_vector_file.cpp",
+               "psage/lattice/precomputed_short_vectors/short_vector_file_py.cpp",
+               "psage/lattice/precomputed_short_vectors/short_vector_file__python.pyx"],
               language = 'c++',
               extra_compile_args = ['-std=c++11']),
 

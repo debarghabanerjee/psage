@@ -17,10 +17,10 @@
 #
 #===============================================================================
 
-cdef extern from 'short_vector_file.h' :
-     cppclass ShortVectorFile :
-          ShortVectorFile(object, object, unsigned int)
-          ShortVectorFile(object)
+cdef extern from 'short_vector_file_py.h' :
+     cppclass ShortVectorFilePy :
+          ShortVectorFilePy(object, object, unsigned int)
+          ShortVectorFilePy(object)
           
           void flush()
 
