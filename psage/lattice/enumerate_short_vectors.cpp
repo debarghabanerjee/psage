@@ -21,11 +21,8 @@
  * Implement Fincke-Pohst algorithm with multi precision floating points.
  */
 
-#include "limits.h"
-#include <utility>
+#include <map>
 #include <vector>
-
-#include <iostream>
 
 #include "enumerate_short_vectors.h"
 #include "enumerate_short_vectors_internal.h"
@@ -81,7 +78,7 @@ enumerate_short_vectors
  const vector<vector<int>> &qfmatrix,
  unsigned int lower_bound,
  unsigned int upper_bound,
- vector<pair<vector<int>, unsigned int>> &result
+ map<unsigned int, vector<vector<int>>> &result
  )
 {
   // check dimensions of the quadratic form matrix
@@ -95,6 +92,9 @@ enumerate_short_vectors
 
   // standard precision
   mp_prec_t precision = 53;
+
+  for ( size_t ind = lower_bound; ind <= upper_bound; ind += 2 )
+    result[ind] = vector<vector<int>>();
 
 
   // create varibles
@@ -183,7 +183,7 @@ enumerate_short_vectors
 		  continue;
 		}
 	      
-	      result.push_back( pair<vector<int>, unsigned int>( vec_x, upper_bound - int_tmp ) );
+	      result[upper_bound - int_tmp].push_back( vec_x );
             }
           else // step 5
             {

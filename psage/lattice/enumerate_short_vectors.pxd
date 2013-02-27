@@ -17,7 +17,7 @@
 #
 #===============================================================================
 
-from libcpp.pair cimport pair
+from libcpp.map cimport map
 from libcpp.vector cimport vector
 
 cdef extern from * :
@@ -25,4 +25,4 @@ cdef extern from * :
     ctypedef vector[vector[int]] const_vector_vector_int "const std::vector<std::vector<int>>"
 
 cdef extern from 'enumerate_short_vectors.h' :
-    void enumerate_short_vectors( const_vector_vector_int&, uint, uint, vector[pair[vector[int], uint]]& )
+    void enumerate_short_vectors( const_vector_vector_int&, uint, uint, map[uint, vector[vector[int]]]& )

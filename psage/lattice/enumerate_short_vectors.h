@@ -20,10 +20,10 @@
 #ifndef __ENUMERATE_SHORT_VECTORS_H
 #define __ENUMERATE_SHORT_VECTORS_H
 
+#include <map>
 #include <vector>
-#include <utility>
 
 void
-enumerate_short_vectors( const std::vector<std::vector<int>>&, unsigned int, unsigned int, std::vector<std::pair<std::vector<int>, unsigned int>>& );
+enumerate_short_vectors( const std::vector<std::vector<int>>&, unsigned int, unsigned int, std::map<unsigned int, std::vector<std::vector<int>>>& );
 
 #endif

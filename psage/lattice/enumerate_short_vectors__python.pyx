@@ -19,7 +19,8 @@
 #
 #===============================================================================
 
-from cython.operator cimport dereference as deref
+from cython.operator cimport dereference as deref, preincrement as inc
+
 
 include "interrupt.pxi"
 
@@ -58,7 +59,7 @@ cpdef object enumerate_short_vectors__python( object lattice, lower_bound, upper
         lattice__cpp.push_back( row__cpp )
 
 
-    cdef vector[pair[vector[int], uint]] result
+    cdef map[uint, vector[vector[int]]] result
 
     sig_on()
     enumerate_short_vectors( lattice__cpp, lower_bound, upper_bound, result )
@@ -71,13 +72,35 @@ cpdef object enumerate_short_vectors__python( object lattice, lower_bound, upper
     for ind in range(lower_bound, upper_bound + 1, 2) :
         svs[ind] = list()
 
-    for ind in range(result.size()) :
-        res_v = list()
+    cdef map[uint, vector[vector[int]]].iterator result_it, result_itend
+    cdef vector[vector[int]] vecs
+    cdef vector[vector[int]].iterator vecs_it, vecs_itend
+    cdef vector[int] vec
+    cdef vector[int].iterator vec_it, vec_itend
+    cdef object vecs_py
+    cdef object vec_py
 
-        for v_ind in range( dim ) :
-            res_v.append( result[ind].first[v_ind] )
-        
-        svs[ result[ind].second ].append(tuple(res_v))
+    result_it = result.begin()
+    result_itend = result.end()
+    while ( result_it != result_itend ) :
+        vecs_py = list()
+        vecs = deref(result_it).second
 
+        vecs_it = vecs.begin()
+        vecs_itend = vecs.end()
+        while ( vecs_it != vecs_itend ) :
+            vec = deref( vecs_it )
+            vec_py = list()
+            vec_it = vec.begin()
+            vec_itend = vec.end()
+            while ( vec_it != vec_itend ) :
+                vec_py.append( deref(vec_it) )
+                inc(vec_it)
+
+            vecs_py.append( tuple(vec_py) )
+            inc(vecs_it)
+
+        svs[ deref(result_it).first ] = vecs_py
+        inc(result_it)
     
     return svs
