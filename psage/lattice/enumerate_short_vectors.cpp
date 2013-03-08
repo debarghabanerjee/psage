@@ -242,6 +242,10 @@ enumerate_short_vectors
 		  continue;
 		}
 	      else
+		// We don't have to recompute vec_Uij, because
+		// it was set to the right value in step_2(...),
+		// which predicts that vec_x[i] is later set to
+		// vec_LB[i] - 1.
 		vec_x[i] = vec_LB[i] - 1;
             }
         }
@@ -363,9 +367,6 @@ recompute
       // step 1
       mpfi_set_ui( vec_Ti[m - 1], upper_bound );
       mpfi_set_ui( vec_Ui[m - 1], 0 );
-      for ( size_t j = 0; j < m; ++j )
-	mpfi_set_ui( vec_Uij[j][m - 1], 0 );
-
 
       // step 2
       if( !step_2( m - 1, vec_x, lower_bound, upper_bound,
@@ -378,8 +379,15 @@ recompute
 	  vec_x[m - 1] = vec_LB[m - 1] - 1;
 	  i_current = m - 1;
 
+	  // recompute vec_Uij
+	  for ( size_t j = 0; j < m - 1; ++j )
+	    mpfi_mul_si( vec_Uij[j][m - 1], rmatrix[j][m - 1], vec_x[m - 1] );
+
 	  return;
 	}
+      // recompute vec_Uij
+      for ( size_t j = 0; j < m - 1; ++j )
+	mpfi_mul_si( vec_Uij[j][m - 1], rmatrix[j][m - 1], vec_x[m - 1] );
 
       // we make use of overflow in the for loop
       size_t i;
@@ -407,17 +415,22 @@ recompute
 	      i = m - 1;
 	      break;
 	    }
-
 	  // This can happen after correcting wrong sqrt, div, floor, or ceil
 	  // operations
-	  if ( vec_x[i] < vec_LB[i] )
+	  else if ( vec_x[i] < vec_LB[i] )
 	    {
 	      vec_x[i] = vec_LB[i] - 1;
 	      i_current = i;
 
+	      // recompute vec_Uij
+	      for ( size_t j = 0; j < i; ++j )
+		mpfi_mul_si( vec_Uij[j][i], rmatrix[j][i], vec_x[i] );
+
 	      return;
 	    }
-
+	  // recompute vec_Uij, which was set wrongly in step_2(...)
+	  for ( size_t j = 0; j < i; ++j )
+	    mpfi_mul_si( vec_Uij[j][i], rmatrix[j][i], vec_x[i] );
 	}
       if ( i == m - 1 )
 	continue;
@@ -479,8 +492,11 @@ step_2
     return false;
 
   // U_ij = q_ij x_j
+  // We compute the new values as if vec_x was set to vec_LB[i] - 1
+  // In case we step_2(...) is called during a recomputation (which happens
+  // rarely), then vec_Uij need to be computed a second time.
   for ( size_t j = 0; j < i; ++j )
-    mpfi_mul_si( vec_Uij[j][i], rmatrix[j][i], vec_x[i] );
+    mpfi_mul_si( vec_Uij[j][i], rmatrix[j][i], vec_LB[i] - 1);
 
   // compute intermediate bounds corresponding to lower_bound
   if ( i == 0 )
