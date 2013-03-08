@@ -31,7 +31,7 @@ using namespace std;
 
 static const size_t precision_increment = 3;
 
-void
+bool
 cholesky_decomposition
 (
  const vector<vector<int>>& qfmatrix,
@@ -52,8 +52,8 @@ cholesky_decomposition
   for ( size_t i = 0; i < m; ++i )
     for ( size_t j = i + 1; j < m; ++j )
       {
-  	mpfi_set( rmatrix[j][i], rmatrix[i][j] );
-  	mpfi_div( rmatrix[i][j], rmatrix[i][j], rmatrix[i][i] );
+	mpfi_set( rmatrix[j][i], rmatrix[i][j] );
+	mpfi_div( rmatrix[i][j], rmatrix[i][j], rmatrix[i][i] );
       }
 
   // step 2 in Fincke-Pohst
@@ -62,14 +62,21 @@ cholesky_decomposition
   for ( size_t i = 0; i < m; ++i )
     for ( size_t k = i + 1; k < m; ++k )
       for ( size_t l = k; l < m; ++l )
-  	{
-  	  mpfi_mul( mpfi_tmp, rmatrix[k][i], rmatrix[i][l] );
-  	  mpfi_sub( rmatrix[k][l], rmatrix[k][l], mpfi_tmp );
-  	}
+	{
+	  mpfi_mul( mpfi_tmp, rmatrix[k][i], rmatrix[i][l] );
+	  mpfi_sub( rmatrix[k][l], rmatrix[k][l], mpfi_tmp );
+	}
 
   // we later need \sqrt{q_ii}, which we precompute here.
   for ( size_t i = 0; i < m; ++i )
-    mpfi_sqrt( rdiag_sqrt[i], rmatrix[i][i] );
+    {
+      if ( mpfr_cmp_si( &rmatrix[i][i]->left, 0 ) < 0 )
+	return false;
+
+      mpfi_sqrt( rdiag_sqrt[i], rmatrix[i][i] );
+    }
+
+  return true;
 }
 
 void
@@ -112,8 +119,8 @@ enumerate_short_vectors
   mpfi_ptr C = new __mpfi_struct;
   mpfi_ptr Z = new __mpfi_struct;
 
-  int LB;
   auto vec_UB = vector<int>(m, 0);
+  auto vec_LB = vector<int>(m, 0);
   int IB_lower, IB_upper;
 
   vector<int> vec_x = vector<int>(m, 0);
@@ -125,11 +132,16 @@ enumerate_short_vectors
 
   init( m, vec_Ti, vec_Ui, vec_Uij, C, Z, rmatrix, rdiag_sqrt, mpfr_tmp, mpfi_tmp, mpfi_tmp2 );
 
-  recompute( m - 1, m, upper_bound, vec_x, LB, vec_UB, vec_Ti, vec_Ui, vec_Uij, C, Z,
-	     qfmatrix, rmatrix, rdiag_sqrt, mpfi_tmp, mpfr_tmp, precision );
-  vec_x[m - 1] = LB;
-  for ( size_t j = 0; j < m - 1; ++j )
-    mpfi_mul_si( vec_Uij[j][m - 1], rmatrix[j][m - 1], LB );
+  recompute( i, m, vec_x, lower_bound, upper_bound,
+	     vec_LB, vec_UB, IB_lower, IB_upper,
+	     vec_Ti, vec_Ui, vec_Uij,
+	     C, Z,
+	     qfmatrix, rmatrix, rdiag_sqrt,
+	     mpfi_tmp, mpfi_tmp2, mpfr_tmp,
+	     precision );
+  vec_x[i] = vec_LB[i] - 1;
+  for ( size_t j = 0; j < i; ++j )
+    mpfi_mul_si( vec_Uij[j][i], rmatrix[j][i], vec_x[i] );
 
   while ( true )
     {
@@ -171,19 +183,31 @@ enumerate_short_vectors
               mpfi_mul( mpfi_tmp, rmatrix[0][0], mpfi_tmp );
               mpfi_sub( mpfi_tmp, vec_Ti[0], mpfi_tmp );
 
-	      if ( !mpfi_get_unique_si( int_tmp, mpfi_tmp, mpfr_tmp ) )
+	      // The second and third condition can only occur, if 
+	      // any of the adaption steps for sqrt's, div's, floor's
+	      // or ceil's was not correct. In this case, increasing
+	      // the precision will eventually eliminate the wrong bounds.
+	      if ( !mpfi_get_unique_si( int_tmp, mpfi_tmp, mpfr_tmp )
+		   || int_tmp < 0 || lower_bound > ( int_tmp = upper_bound - int_tmp ) )
 		{
-		  if ( vec_x[0] == IB_upper )
+		  bool IB_jump = ( vec_x[0] == IB_upper );
+		  recompute( i, m, vec_x, lower_bound, upper_bound,
+			     vec_LB, vec_UB, IB_lower, IB_upper,
+			     vec_Ti, vec_Ui, vec_Uij,
+			     C, Z,
+			     qfmatrix, rmatrix, rdiag_sqrt,
+			     mpfi_tmp, mpfi_tmp2, mpfr_tmp,
+			     precision );
+
+		  if ( IB_jump )
 		    vec_x[0] = IB_lower - 1;
 		  else
 		    --vec_x[0];
 
-		  recompute( 0, m, upper_bound, vec_x, LB, vec_UB, vec_Ti, vec_Ui, vec_Uij, C, Z,
-			     qfmatrix, rmatrix, rdiag_sqrt, mpfi_tmp, mpfr_tmp, precision );
 		  continue;
 		}
-	      
-	      result[upper_bound - int_tmp].push_back( vec_x );
+
+	      result[int_tmp].push_back( vec_x );
             }
           else // step 5
             {
@@ -201,79 +225,24 @@ enumerate_short_vectors
               mpfi_sub( vec_Ti[i], vec_Ti[i + 1], mpfi_tmp );
 
 	      // step 2
-	      if ( !step_2( i, vec_x, LB, vec_UB, Z, vec_Ti, vec_Ui, vec_Uij, rmatrix, rdiag_sqrt, mpfi_tmp, mpfr_tmp, true ) )
+	      if ( !step_2( i, vec_x, lower_bound, upper_bound,
+			    vec_LB, vec_UB, IB_lower, IB_upper, Z,
+			    vec_Ti, vec_Ui, vec_Uij, rmatrix, rdiag_sqrt,
+			    mpfi_tmp, mpfi_tmp2, mpfr_tmp ) )
 		{
 		  ++i;
 		  --vec_x[i];
-		  recompute( i, m, upper_bound, vec_x, LB, vec_UB, vec_Ti, vec_Ui, vec_Uij, C, Z,
-			     qfmatrix, rmatrix, rdiag_sqrt, mpfi_tmp, mpfr_tmp, precision );
+		  recompute( i, m, vec_x, lower_bound, upper_bound,
+			     vec_LB, vec_UB, IB_lower, IB_upper,
+			     vec_Ti, vec_Ui, vec_Uij,
+			     C, Z,
+			     qfmatrix, rmatrix, rdiag_sqrt,
+			     mpfi_tmp, mpfi_tmp2, mpfr_tmp,
+			     precision );
 		  continue;
 		}
 	      else
-		vec_x[i] = LB;
-
-	      // compute intermediate bounds corresponding to lower_bound
-	      if ( i == 0 )
-		{
-		  mpfi_sub_ui( mpfi_tmp, vec_Ti[0], upper_bound - lower_bound );
-
-		  if ( mpfr_cmp_si( &mpfi_tmp->right, 0 ) < 0 )
-		    {
-		      // independent of vec_x[0], the lower bound will never be attained.
-		      IB_lower = vec_x[i];
-		      continue;
-		    }
-		  else if ( mpfr_cmp_si( &mpfi_tmp->left, 0 ) < 0 )
-		    // adjust the bound, so that we can compute the square root
-		    mpfr_set_si( &mpfi_tmp->left, 0, MPFR_RNDZ );
-
-		  mpfi_sqrt( mpfi_tmp, mpfi_tmp );
-		  mpfi_div( mpfi_tmp, mpfi_tmp, rdiag_sqrt[0] );
-
-		  mpfi_get_unique_floor_si( IB_lower, mpfi_tmp, mpfr_tmp );
-
-		  mpfi_set( mpfi_tmp2, mpfi_tmp );
-		  
-		  mpfi_add( mpfi_tmp, mpfi_tmp, vec_Ui[0] );
-		  mpfi_get_unique_floor_si( IB_lower, mpfi_tmp, mpfr_tmp );
-
-		  mpfi_neg( mpfi_tmp, mpfi_tmp );
-		  mpfi_add_si( mpfi_tmp, mpfi_tmp, 1 );
-		  mpfi_get_unique_floor_si( IB_lower, mpfi_tmp, mpfr_tmp );
-
-		  if ( !mpfi_get_unique_floor_si( IB_lower, mpfi_tmp, mpfr_tmp ) )
-		    {
-		      ++i;
-		      --vec_x[i];
-		      recompute( i, m, upper_bound, vec_x, LB, vec_UB, vec_Ti, vec_Ui, vec_Uij, C, Z,
-				 qfmatrix, rmatrix, rdiag_sqrt, mpfi_tmp, mpfr_tmp, precision );
-		      continue;
-		    }
-
-		  mpfi_sub( mpfi_tmp, mpfi_tmp2, vec_Ui[0] );
-		  if ( !mpfi_get_unique_ceil_si( IB_upper, mpfi_tmp, mpfr_tmp ) )
-		    {
-		      ++i;
-		      --vec_x[i];
-		      recompute( i, m, upper_bound, vec_x, LB, vec_UB, vec_Ti, vec_Ui, vec_Uij, C, Z,
-				 qfmatrix, rmatrix, rdiag_sqrt, mpfi_tmp, mpfr_tmp, precision );
-		      continue;
-		    }
-
-		  // We must not prevent the algorithm from terminating.  If
-		  // all but the first entry vanish, we therefore set
-		  // IB_upper to 0.
-		  x_is_zero = true;
-		  for ( auto it = vec_x.begin() + 1, it_end = vec_x.end();
-			it != it_end; ++it )
-		    if ( *it != 0 )
-		      {
-			x_is_zero = false;
-			break;
-		      }
-		  if ( x_is_zero )
-		    IB_upper = 0;
-		}
+		vec_x[i] = vec_LB[i] - 1;
             }
         }
     }
@@ -346,12 +315,15 @@ clear
 inline void
 recompute
 (
- size_t i_current,
+ size_t &i_current,
  size_t m,
- unsigned int upper_bound,
  vector<int> &vec_x,
- int &LB,
+ unsigned int lower_bound,
+ unsigned int upper_bound,
+ vector<int> &vec_LB,
  vector<int> &vec_UB,
+ int &IB_lower,
+ int &IB_upper,
  vector<mpfi_ptr> &vec_Ti,
  vector<mpfi_ptr> &vec_Ui,
  vector<vector<mpfi_ptr>> &vec_Uij,
@@ -361,6 +333,7 @@ recompute
  vector<vector<mpfi_ptr>> &rmatrix,
  vector<mpfi_ptr> &rdiag_sqrt,
  mpfi_ptr &mpfi_tmp,
+ mpfi_ptr &mpfi_tmp2,
  mpfr_ptr &mpfr_tmp,
  mp_prec_t precision
  )
@@ -384,7 +357,8 @@ recompute
       mpfi_set_prec( Z, precision );
 
 
-      cholesky_decomposition( qfmatrix, rmatrix, rdiag_sqrt, mpfi_tmp );
+      if ( !cholesky_decomposition( qfmatrix, rmatrix, rdiag_sqrt, mpfi_tmp ) )
+	continue;
 
       // step 1
       mpfi_set_ui( vec_Ti[m - 1], upper_bound );
@@ -394,8 +368,18 @@ recompute
 
 
       // step 2
-      if( !step_2( m - 1, vec_x, LB, vec_UB, Z, vec_Ti, vec_Ui, vec_Uij, rmatrix, rdiag_sqrt, mpfi_tmp, mpfr_tmp, false ) )
+      if( !step_2( m - 1, vec_x, lower_bound, upper_bound,
+		   vec_LB, vec_UB, IB_lower, IB_upper, Z,
+		   vec_Ti, vec_Ui, vec_Uij, rmatrix, rdiag_sqrt,
+		   mpfi_tmp, mpfi_tmp2, mpfr_tmp ) )
 	continue;
+      else if ( vec_x[m - 1] < vec_LB[m - 1] )
+	{
+	  vec_x[m - 1] = vec_LB[m - 1] - 1;
+	  i_current = m - 1;
+
+	  return;
+	}
 
       // we make use of overflow in the for loop
       size_t i;
@@ -415,11 +399,25 @@ recompute
 	  mpfi_sub( vec_Ti[i], vec_Ti[i + 1], mpfi_tmp );
 
 	  // step 2
-	  if( !step_2( i, vec_x, LB, vec_UB, Z, vec_Ti, vec_Ui, vec_Uij, rmatrix, rdiag_sqrt, mpfi_tmp, mpfr_tmp, false ) )
+	  if( !step_2( i, vec_x, lower_bound, upper_bound,
+		       vec_LB, vec_UB, IB_lower, IB_upper, Z,
+		       vec_Ti, vec_Ui, vec_Uij, rmatrix, rdiag_sqrt,
+		       mpfi_tmp, mpfi_tmp2, mpfr_tmp ) )
 	    {
 	      i = m - 1;
 	      break;
 	    }
+
+	  // This can happen after correcting wrong sqrt, div, floor, or ceil
+	  // operations
+	  if ( vec_x[i] < vec_LB[i] )
+	    {
+	      vec_x[i] = vec_LB[i] - 1;
+	      i_current = i;
+
+	      return;
+	    }
+
 	}
       if ( i == m - 1 )
 	continue;
@@ -434,8 +432,12 @@ step_2
 (
  size_t i,
  vector<int> &vec_x,
- int &LB,
+ int lower_bound,
+ int upper_bound,
+ vector<int> &vec_LB,
  vector<int> &vec_UB,
+ int &IB_lower,
+ int &IB_upper,
  mpfi_ptr &Z,
  vector<mpfi_ptr> &vec_Ti,
  vector<mpfi_ptr> &vec_Ui,
@@ -443,17 +445,27 @@ step_2
  vector<vector<mpfi_ptr>> &rmatrix,
  vector<mpfi_ptr> &rdiag_sqrt,
  mpfi_ptr &mpfi_tmp,
- mpfr_ptr &mpfr_tmp,
- bool set_xi
+ mpfi_ptr &mpfi_tmp2,
+ mpfr_ptr &mpfr_tmp
  )
 {
   // Z = (T_i / q_ii)^(1/2)
+
+  // By the following we potentially increase the number of vectors
+  // that are computed.
+  if ( mpfr_cmp_si( &vec_Ti[i]->left, 0 ) < 0 )
+    {
+      if ( mpfr_cmp_si( &vec_Ti[i]->right, 0 ) < 0 )
+	return false;
+
+      mpfr_set_si( &vec_Ti[i]->left, 0, MPFR_RNDZ );
+    }
   mpfi_sqrt( mpfi_tmp, vec_Ti[i] );
   mpfi_div( Z, mpfi_tmp, rdiag_sqrt[i] );
 
   // UB_i = floor( Z - U_i )
   mpfi_sub( mpfi_tmp, Z, vec_Ui[i] );
-  if ( !mpfi_get_unique_floor_si( vec_UB[i], mpfi_tmp, mpfr_tmp ) )
+  if ( !mpfi_get_unique_floor_si( vec_UB[i], mpfi_tmp, mpfr_tmp, false ) )
     return false;
 
   // set_xi is only false if constants are recomuted, which happens rarely
@@ -463,15 +475,61 @@ step_2
   // x_i = ceil( - Z - U_i ) - 1
   mpfi_add( mpfi_tmp, Z, vec_Ui[i] );
   mpfi_neg( mpfi_tmp, mpfi_tmp );
-  mpfi_sub_si( mpfi_tmp, mpfi_tmp, 1 );
-  if ( !mpfi_get_unique_ceil_si( LB, mpfi_tmp, mpfr_tmp ) )
+  if ( !mpfi_get_unique_ceil_si( vec_LB[i], mpfi_tmp, mpfr_tmp, false ) )
     return false;
-  if ( set_xi )
-    vec_x[i] = LB;
 
   // U_ij = q_ij x_j
   for ( size_t j = 0; j < i; ++j )
     mpfi_mul_si( vec_Uij[j][i], rmatrix[j][i], vec_x[i] );
+
+  // compute intermediate bounds corresponding to lower_bound
+  if ( i == 0 )
+    {
+      mpfi_sub_ui( mpfi_tmp, vec_Ti[0], upper_bound - lower_bound );
+
+      if ( mpfr_cmp_si( &mpfi_tmp->left, 0 ) < 0 )
+	{
+	  if ( mpfr_cmp_si( &mpfi_tmp->right, 0 ) < 0 )
+	    {
+	      // independently of vec_x[0], the lower bound will never be attained.
+	      IB_lower = vec_LB[i] - 1;
+	      return true;
+	    }
+
+	  // adjust the bound, so that we can compute the square root
+	  // by this we only enlarge the number of vector enumerated
+	  mpfr_set_si( &mpfi_tmp->left, 0, MPFR_RNDZ );
+	}
+
+      mpfi_sqrt( mpfi_tmp, mpfi_tmp );
+      mpfi_div( mpfi_tmp, mpfi_tmp, rdiag_sqrt[0] );
+      mpfi_set( mpfi_tmp2, mpfi_tmp );
+		  
+      mpfi_add( mpfi_tmp, mpfi_tmp, vec_Ui[0] );
+      mpfi_neg( mpfi_tmp, mpfi_tmp );
+      mpfi_add_si( mpfi_tmp, mpfi_tmp, 1 );
+
+      if ( !mpfi_get_unique_floor_si( IB_lower, mpfi_tmp, mpfr_tmp, false ) )
+	return false;
+
+      mpfi_sub( mpfi_tmp, mpfi_tmp2, vec_Ui[0] );
+      if ( !mpfi_get_unique_ceil_si( IB_upper, mpfi_tmp, mpfr_tmp, false ) )
+	return false;
+
+      // We must not prevent the algorithm from terminating.  If
+      // all but the first entry vanish, we therefore set
+      // IB_upper to 0.
+      bool x_is_zero = true;
+      for ( auto it = vec_x.begin() + 1, it_end = vec_x.end();
+	    it != it_end; ++it )
+	if ( *it != 0 )
+	  {
+	    x_is_zero = false;
+	    break;
+	  }
+      if ( x_is_zero )
+	IB_upper = 0;
+    }
 
   return true;
 }
@@ -497,25 +555,48 @@ mpfi_get_unique_si
   return true;
 }
 
+
+/*
+ * This is almost the floor of the lower and the upper bound.
+ * However consider the following case: The exact result is an
+ * integer. The numerical calculations, no matter how exact, will
+ * produce a small interval around the exact value, so that the
+ * floor of the left and right boundary are never the same.
+ */
+
 inline
 bool
 mpfi_get_unique_floor_si
 (
  int &si,
  mpfi_ptr srcptr,
- mpfr_ptr mpfr_tmp
+ mpfr_ptr mpfr_tmp,
+ bool round_down
  )
 {
   mpfi_get_left( mpfr_tmp, srcptr );
   mpfr_floor( mpfr_tmp, mpfr_tmp );
-  si = mpfr_get_si( mpfr_tmp, MPFR_RNDD );
+  int si_lower = mpfr_get_si( mpfr_tmp, MPFR_RNDD );
 
   mpfi_get_right( mpfr_tmp, srcptr );
   mpfr_floor( mpfr_tmp, mpfr_tmp );
-  if ( si != mpfr_get_si( mpfr_tmp, MPFR_RNDU ) )
+  int si_upper = mpfr_get_si( mpfr_tmp, MPFR_RNDU );
+  if ( si_lower == si_upper )
+    {
+      si = si_lower;
+      return true;
+    }
+  else if ( si_lower + 1 == si_upper )
+    {
+      mpfi_diam_abs( mpfr_tmp, srcptr );
+      if ( mpfr_get_exp( mpfr_tmp ) < -10 ) // standard precision is 53
+	{
+	  si = round_down ? si_lower : si_upper;
+	  return true;
+	}
+    }
+  else
     return false;
-
-  return true;
 }
 
 inline
@@ -524,19 +605,33 @@ mpfi_get_unique_ceil_si
 (
  int &si,
  mpfi_ptr srcptr,
- mpfr_ptr mpfr_tmp
+ mpfr_ptr mpfr_tmp,
+ bool round_up
  )
 {
   mpfi_get_left( mpfr_tmp, srcptr );
   mpfr_ceil( mpfr_tmp, mpfr_tmp );
-  si = mpfr_get_si( mpfr_tmp, MPFR_RNDD );
+  int si_lower = mpfr_get_si( mpfr_tmp, MPFR_RNDD );
 
   mpfi_get_right( mpfr_tmp, srcptr );
   mpfr_ceil( mpfr_tmp, mpfr_tmp );
-  if ( si != mpfr_get_si( mpfr_tmp, MPFR_RNDU ) )
+  int si_upper = mpfr_get_si( mpfr_tmp, MPFR_RNDU );
+  if ( si_lower == si_upper )
+    {
+      si = si_lower;
+      return true;
+    }
+  else if ( si_lower + 1 == si_upper )
+    {
+      mpfi_diam_abs( mpfr_tmp, srcptr );
+      if ( mpfr_get_exp( mpfr_tmp ) < -10 ) // standard precision is 53
+	{
+	  si = round_up ? si_upper : si_lower;
+	  return true;
+	}
+    }
+  else
     return false;
-
-  return true;
 }
 
 inline
