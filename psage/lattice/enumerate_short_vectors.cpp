@@ -43,29 +43,37 @@ cholesky_decomposition
   size_t m = qfmatrix.size();
 
   for ( size_t i = 0; i < m; ++i )
-    for ( size_t j = 0; j < m; ++j )
-      mpfi_set_si( rmatrix[i][j], qfmatrix[i][j] );
+    {
+      for ( size_t j = 0; j < m; ++j )
+	mpfi_set_si( rmatrix[i][j], qfmatrix[i][j] );
 
-  // step 1 in Fincke-Pohst
-  // q_ji <- q_ij, q_ij <- q_ij / q_ii
+      // If the input is too large, then the intervals associated
+      // to the diagonal entries could contain zero.
+      if ( mpfr_cmp_si( &rmatrix[i][i]->left, 0 ) <= 0 )
+	return false;
+    }
     
   for ( size_t i = 0; i < m; ++i )
-    for ( size_t j = i + 1; j < m; ++j )
-      {
-	mpfi_set( rmatrix[j][i], rmatrix[i][j] );
-	mpfi_div( rmatrix[i][j], rmatrix[i][j], rmatrix[i][i] );
-      }
+    {
+      // step 1 in Fincke-Pohst
+      // q_ji <- q_ij, q_ij <- q_ij / q_ii
 
-  // step 2 in Fincke-Pohst
-  // q_kl <- q_kl - q_ki q_il
-
-  for ( size_t i = 0; i < m; ++i )
-    for ( size_t k = i + 1; k < m; ++k )
-      for ( size_t l = k; l < m; ++l )
+      for ( size_t j = i + 1; j < m; ++j )
 	{
-	  mpfi_mul( mpfi_tmp, rmatrix[k][i], rmatrix[i][l] );
-	  mpfi_sub( rmatrix[k][l], rmatrix[k][l], mpfi_tmp );
+	  mpfi_set( rmatrix[j][i], rmatrix[i][j] );
+	  mpfi_div( rmatrix[i][j], rmatrix[i][j], rmatrix[i][i] );
 	}
+
+      // step 2 in Fincke-Pohst
+      // q_kl <- q_kl - q_ki q_il
+
+      for ( size_t k = i + 1; k < m; ++k )
+	for ( size_t l = k; l < m; ++l )
+	  {
+	    mpfi_mul( mpfi_tmp, rmatrix[k][i], rmatrix[i][l] );
+	    mpfi_sub( rmatrix[k][l], rmatrix[k][l], mpfi_tmp );
+	  }
+    }
 
   // we later need \sqrt{q_ii}, which we precompute here.
   for ( size_t i = 0; i < m; ++i )
@@ -182,13 +190,7 @@ enumerate_short_vectors
               mpfi_sqr( mpfi_tmp, mpfi_tmp );
               mpfi_mul( mpfi_tmp, rmatrix[0][0], mpfi_tmp );
               mpfi_sub( mpfi_tmp, vec_Ti[0], mpfi_tmp );
-
-	      // The second and third condition can only occur, if 
-	      // any of the adaption steps for sqrt's, div's, floor's
-	      // or ceil's was not correct. In this case, increasing
-	      // the precision will eventually eliminate the wrong bounds.
-	      if ( !mpfi_get_unique_si( int_tmp, mpfi_tmp, mpfr_tmp )
-		   || int_tmp < 0 || lower_bound > ( int_tmp = upper_bound - int_tmp ) )
+	      if ( !mpfi_get_unique_si( int_tmp, mpfi_tmp, mpfr_tmp ) )
 		{
 		  bool IB_jump = ( vec_x[0] == IB_upper );
 		  recompute( i, m, vec_x, lower_bound, upper_bound,
@@ -206,6 +208,14 @@ enumerate_short_vectors
 
 		  continue;
 		}
+
+	      // These conditions can only occur, if 
+	      // any of the adaption steps for sqrt's, div's, floor's
+	      // or ceil's was not correct. In this case, increasing
+	      // the precision would not necessarily lead to
+	      // correct bounds.
+	      if ( int_tmp < 0 || lower_bound > ( int_tmp = upper_bound - int_tmp ) )
+		continue;
 
 	      result[int_tmp].push_back( vec_x );
             }
@@ -531,6 +541,11 @@ step_2
       mpfi_sub( mpfi_tmp, mpfi_tmp2, vec_Ui[0] );
       if ( !mpfi_get_unique_ceil_si( IB_upper, mpfi_tmp, mpfr_tmp, false ) )
 	return false;
+      
+      // This can happen because of intervals representing integers that
+      // give wrong answers when being rounded.
+      if ( IB_upper < IB_lower )
+	IB_upper = IB_lower;
 
       // We must not prevent the algorithm from terminating.  If
       // all but the first entry vanish, we therefore set
