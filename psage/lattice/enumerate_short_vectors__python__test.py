@@ -41,18 +41,42 @@ class TestEnumerateShortVectors( unittest.TestCase ) :
 
     def test__enumerate_short_vectors__python__ternary( self ) :
         self._test_quadratic_form( matrix(3, [2, 1, 1,  1, 2, 1,  1, 1, 2]), 20, 40 )
-        # segmentation fault:
-        # self._test_quadratic_form( matrix(3, [2, 1, 1,  1, 2, 1,  1, 1, 2]), 2, 4 )
-        # infinite loop:
-        # self._test_quadratic_form( matrix(3, [2, 1, 1,  1, 2, 1,  1, 1, 2]), 2, 6 )
+        self._test_quadratic_form( matrix(3, [2, 1, 1,  1, 2, 1,  1, 1, 2]), 2, 4 )
+        self._test_quadratic_form( matrix(3, [2, 1, 1,  1, 2, 1,  1, 1, 2]), 2, 6 )
 
     def test__enumerate_short_vectors__python__quartary( self ) :
         self._test_quadratic_form( matrix(2, [10, 1, 1, 4]).
                                     block_sum( matrix(2, [2, 1, 1, 10]) ),
                                    20, 40 )
-        ## the test fails for length 34
-        ## the vector (0, -2, -3, 0) is not included
-        
+        self._test_quadratic_form( matrix(4, [4, 1, -1, 1,  1, 8, 3, -2,  -1, 3, 10, 1,  1, -2, 1, 12]),
+                                   40, 80 )
+
+    def test__enumerate_short_vectors__python__E_lattices( self ) :
+        E6 = matrix( 6, [ 2, 1, 0, 0, 0, 0,
+                          1, 2, 1, 0, 0, 0,
+                          0, 1, 2, 1, 0, 1,
+                          0, 0, 1, 2, 1, 0,
+                          0, 0, 0, 1, 2, 0,
+                          0, 0, 1, 0, 0, 2 ] )
+        E7 = matrix( 7, [ 2, 1, 0, 0, 0, 0, 0,
+                          1, 2, 1, 0, 0, 0, 0,
+                          0, 1, 2, 1, 0, 0, 1,
+                          0, 0, 1, 2, 1, 0, 0,
+                          0, 0, 0, 1, 2, 1, 0,
+                          0, 0, 0, 0, 1, 2, 0,
+                          0, 0, 1, 0, 0, 0, 2 ] )
+        E8 = matrix( 8, [ 2, 1, 0, 0, 0, 0, 0, 0,
+                          1, 2, 1, 0, 0, 0, 0, 0,
+                          0, 1, 2, 1, 0, 0, 0, 1,
+                          0, 0, 1, 2, 1, 0, 0, 0,
+                          0, 0, 0, 1, 2, 1, 0, 0,
+                          0, 0, 0, 0, 1, 2, 1, 0,
+                          0, 0, 0, 0, 0, 1, 2, 0,
+                          0, 0, 1, 0, 0, 0, 0, 2 ] )
+
+        self._test_quadratic_form( E6, 2, 6 )
+        self._test_quadratic_form( E7, 2, 6 )
+        self._test_quadratic_form( E8, 2, 6 )
 
     def _test_quadratic_form( self, qf_mat, lower_bound, upper_bound ) :
         qf = QuadraticForm( qf_mat )
