@@ -59,6 +59,7 @@ ShortVectorFile::~ShortVectorFile()
     {
       this->output_file->close();
       delete this->output_file;
+      this->output_file = nullptr;
     }
 }
 

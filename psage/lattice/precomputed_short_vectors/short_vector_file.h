@@ -31,7 +31,7 @@ public:
   ShortVectorFile();
   ShortVectorFile( const std::string&, const std::vector<std::vector<int>>&, const unsigned int );
   ShortVectorFile( const std::string& );
-  ~ShortVectorFile();
+  virtual ~ShortVectorFile();
 
   void flush() { this->output_file->flush(); };
 

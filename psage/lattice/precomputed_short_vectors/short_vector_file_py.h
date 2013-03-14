@@ -35,7 +35,7 @@ class ShortVectorFilePy : public ShortVectorFile
 public:
   ShortVectorFilePy( PyObject*, PyObject*, const unsigned int );
   ShortVectorFilePy( PyObject* );
-  ~ShortVectorFilePy();
+  virtual ~ShortVectorFilePy();
 
   PyObject* get_lattice_py() const;
 
