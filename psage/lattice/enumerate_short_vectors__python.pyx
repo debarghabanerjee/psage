@@ -20,15 +20,17 @@
 #===============================================================================
 
 from cython.operator cimport dereference as deref, preincrement as inc
+from operator import neg
+from __builtin__ import map as py_map
 
 
 include "interrupt.pxi"
 
 include "enumerate_short_vectors.pxd"
 
-cpdef object enumerate_short_vectors__python( object lattice, lower_bound, upper_bound ) :
+cpdef object enumerate_short_vectors__python( object lattice, lower_bound, upper_bound, up_to_sign = False ) :
     r"""
-    Enumerate up to sign vectors of minimal norm ``lower_bound`` and maximal norm ``upper_bound``.
+    Enumerate vectors of minimal norm ``lower_bound`` and maximal norm ``upper_bound``, either up to sign or not.
 
     INPUT:
     
@@ -37,6 +39,8 @@ cpdef object enumerate_short_vectors__python( object lattice, lower_bound, upper
     - ``lower_bound`` - a positive integer.
 
     - ``upper_bound`` - a positive integer.
+
+    - ``up_to_sign`` - a boolean (default: ``False``).
 
     OUPUT:
 
@@ -114,6 +118,10 @@ cpdef object enumerate_short_vectors__python( object lattice, lower_bound, upper
 
         svs[ deref(result_it).first ] = vecs_py
         inc(result_it)
+
+    if not up_to_sign :
+        for length in svs.keys() :
+            svs[length] = svs[length] + [ tuple(py_map(neg, sv)) for sv in svs[length] ]
     
     if add_zero_vector :
         svs[0] = [ tuple( [0]*dim ) ]

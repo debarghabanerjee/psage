@@ -30,6 +30,11 @@ class TestEnumerateShortVectors( unittest.TestCase ) :
     def setUp( self ) :
         pass
 
+    def test__enumerate_short_vectors__python__bounds( self ) :
+        self._test_quadratic_form( matrix(2, [2, 1, 1, 2]), 10, 20, False )
+        self._test_quadratic_form( matrix(2, [2, 1, 1, 2]), -2, 20, True )
+        self._test_quadratic_form( matrix(2, [2, 1, 1, 2]), 60, 30, True )
+
     def test__enumerate_short_vectors__python__binary( self ) :
         self._test_quadratic_form( matrix(2, [2, 1, 1, 2]), 10, 20 )
         self._test_quadratic_form( matrix(2, [2, 1, 1, 2]), 1000, 1954 )
@@ -78,18 +83,34 @@ class TestEnumerateShortVectors( unittest.TestCase ) :
         self._test_quadratic_form( E7, 2, 6 )
         self._test_quadratic_form( E8, 2, 6 )
 
-    def _test_quadratic_form( self, qf_mat, lower_bound, upper_bound ) :
+    def _test_quadratic_form( self, qf_mat, lower_bound, upper_bound, up_to_sign = True ) :
         qf = QuadraticForm( qf_mat )
         qf_svss = qf.short_vector_list_up_to_length( upper_bound // 2 + 1 )
 
-        svss = enumerate_short_vectors__python( map(list, qf_mat.rows()), lower_bound, upper_bound )
+        svss = enumerate_short_vectors__python( map(list, qf_mat.rows()), lower_bound, upper_bound, up_to_sign )
+
+        lower_bound = max(0, lower_bound)
         self.assertEqual( list(sorted(svss.keys())),
                           range(lower_bound, upper_bound + 1, 2) )
-
+        
         for (length, svs) in svss.iteritems() :
             qf_svs = qf_svss[length // 2]
-            self.assertEqual( len(qf_svs),
-                              2 * len(svs) )
+            if up_to_sign :
+                if length == 0 :
+                    self.assertEqual( 1,
+                                      len(svs) )
+                    if len(qf_svs) != 2 * len(svs) - 1 :
+                        print qf_svs
+                        print svs
+                    self.assertEqual( len(qf_svs),
+                                      2 * len(svs) - 1 )
+                else :
+                    self.assertEqual( len(qf_svs),
+                                      2 * len(svs) )
+            else :
+                self.assertEqual( len(qf_svs),
+                                  len(svs) )
+
             for v in svs :
                 self.assertIn( vector(v),
                                qf_svs )
