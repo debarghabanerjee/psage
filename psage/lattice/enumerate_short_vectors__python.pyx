@@ -58,6 +58,19 @@ cpdef object enumerate_short_vectors__python( object lattice, lower_bound, upper
             row__cpp.push_back( e )
         lattice__cpp.push_back( row__cpp )
 
+    cdef object svs = dict()
+
+    if upper_bound < lower_bound :
+        return dict()
+    if upper_bound == 0 :
+        svs[0] = [ tuple( [0]*dim ) ]
+        return svs
+
+    if lower_bound <= 0 :
+        lower_bound = 2
+        add_zero_vector = True
+    else :
+        add_zero_vector = False
 
     cdef map[uint, vector[vector[int]]] result
 
@@ -65,7 +78,6 @@ cpdef object enumerate_short_vectors__python( object lattice, lower_bound, upper
     enumerate_short_vectors( lattice__cpp, lower_bound, upper_bound, result )
     sig_off()
 
-    cdef object svs = dict()
     cdef object res_v
     cdef size_t ind, v_ind
 
@@ -103,4 +115,7 @@ cpdef object enumerate_short_vectors__python( object lattice, lower_bound, upper
         svs[ deref(result_it).first ] = vecs_py
         inc(result_it)
     
+    if add_zero_vector :
+        svs[0] = [ tuple( [0]*dim ) ]
+
     return svs
