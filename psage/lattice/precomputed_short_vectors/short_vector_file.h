@@ -49,6 +49,8 @@ public:
   bool write_vectors( const unsigned int, std::vector<std::vector<int>>& );
   std::vector<std::vector<int>> read_vectors( const unsigned int );
 
+  bool direct_sum( ShortVectorFile&, ShortVectorFile& );
+
   template <class T> friend inline ShortVectorFile& operator>>( ShortVectorFile&, T& );
   template <class T> friend inline ShortVectorFile& operator<<( ShortVectorFile&, const T& );
 

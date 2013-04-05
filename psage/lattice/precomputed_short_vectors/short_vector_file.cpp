@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <fstream>
-#include <iostream>
+#include <map>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -99,8 +99,8 @@ ShortVectorFile::init_with_file_name
  const string& output_file_name
  )
 {
-    this->output_file = new fstream( output_file_name,
-                                     fstream::in | fstream::out | fstream::app | fstream::binary );
+  this->output_file = new fstream( output_file_name,
+				   fstream::in | fstream::out | fstream::app | fstream::binary );
 	  
   this->next_free_position = this->read_header();
 }
@@ -156,13 +156,12 @@ ShortVectorFile::read_lattice()
   for ( size_t it_row = 0; it_row < lattice_rank; ++it_row )
     {
       vector<int> row;
-      this->lattice.push_back( row );
       for ( size_t it_col = 0; it_col < lattice_rank; ++it_col )
         {
 	  *this >> entry_64;
 	  row.push_back( (int)entry_64 );
-
 	}
+      this->lattice.push_back( row );
     }
 }
 
@@ -354,6 +353,115 @@ ShortVectorFile::move_data_block(
     for ( auto it : data )
       *this << it;
 }
+
+bool
+ShortVectorFile::direct_sum
+(
+ ShortVectorFile &src1,
+ ShortVectorFile &src2
+ )
+{
+  size_t dim1 = src1.get_lattice().size();
+  size_t dim2 = src2.get_lattice().size();
+
+  if ( dim1 + dim2 != this->lattice.size() )
+    return false;
+
+  const vector<vector<int>> &src1_lattice = src1.get_lattice();
+  const vector<vector<int>> &src2_lattice = src2.get_lattice();
+  for ( size_t row = 0; row < dim1; ++row )
+    {
+      for ( size_t ind = 0; ind < dim1; ++ind )
+	if ( this->lattice[row][ind] != src1_lattice[row][ind] )
+	  return false;
+
+      for ( size_t ind = dim1; ind < this->lattice.size(); ++ind )
+	if ( this->lattice[row][ind] != 0 )
+	  return false;
+    }
+  for ( size_t row = dim1; row < this->lattice.size(); ++row )
+      for ( size_t ind = dim1; ind < this->lattice.size(); ++ind )
+	if ( this->lattice[row][ind] != src2_lattice[row - dim1][ind - dim1] )
+	  return false;
+
+  map<unsigned int, vector<vector<int>>> src1_vectors;
+  map<unsigned int, vector<vector<int>>> src2_vectors;
+  
+  vector<vector<int>> vectors;
+  auto vec = vector<int>( dim1 + dim2, 0 );
+  auto nvec = vector<int>( dim1 + dim2, 0 );
+
+  unsigned int maximal_length = min( src1.maximal_vector_length(),
+				     src2.maximal_vector_length() );
+  if ( maximal_length > this->maximal_vector_length__cache )
+    maximal_length = this->maximal_vector_length__cache;
+
+
+  src1_vectors[0] = vector<vector<int>>();
+  src1_vectors[0].emplace_back( vector<int>( this->lattice.size(), 0 ) );
+  src2_vectors[0] = vector<vector<int>>();
+  src2_vectors[0].emplace_back( vector<int>( this->lattice.size(), 0 ) );
+  for ( unsigned int length = 2; length <= maximal_length; length += 2 )
+    {
+      src1_vectors[length] = src1.read_vectors( length );
+      src2_vectors[length] = src2.read_vectors( length );
+    }
+
+  for ( unsigned int length = 2; length <= maximal_length; length += 2 )
+    {
+      vectors = vector<vector<int>>();
+
+
+      for ( size_t ind = dim1; ind < dim1 + dim2; ++ind )
+	vec[ind] = 0;
+
+      for ( auto &vec1 : src1_vectors[length] )
+	{
+	  for ( size_t ind = 0; ind < dim1; ++ind )
+	    vec[ind] = vec1[ind];
+	  vectors.push_back( vec );
+	}
+
+
+      for ( size_t ind = 0; ind < dim1; ++ind )
+	vec[ind] = 0;
+
+      for ( auto &vec2 : src2_vectors[length] )
+	{
+	  for ( size_t ind = 0; ind < dim2; ++ind )
+	    vec[dim1 + ind] = vec2[ind];
+	  vectors.push_back( vec );
+	}
+
+
+      for ( unsigned int sublength = 2; sublength <= length - 2; sublength += 2 )
+	{
+	  for ( auto &vec1 : src1_vectors[sublength] )
+	    {
+	      for ( size_t ind = 0; ind < dim1; ++ind )
+		{
+		  vec[ind] = vec1[ind];
+		  nvec[ind] = -vec1[ind];
+		}
+
+	      for ( auto &vec2 : src2_vectors[length - sublength] )
+		{
+		  for ( size_t ind = 0; ind < dim2; ++ind )
+		    {
+		      vec[dim1 + ind] = vec2[ind];
+		      nvec[dim1 + ind] = vec2[ind];
+		    }
+		  vectors.push_back( vec );
+		  vectors.push_back( nvec );
+		}
+	    }
+	}
+      this->write_vectors( length, vectors );
+    }
+
+  return true;
+}
+	   
 
 template <class T>
 inline

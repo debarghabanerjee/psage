@@ -17,11 +17,18 @@
 #
 #===============================================================================
 
+
+cdef extern from 'short_vector_file.h' :
+     cppclass ShortVectorFile :
+          pass
+
 cdef extern from 'short_vector_file_py.h' :
      cppclass ShortVectorFilePy :
           ShortVectorFilePy(object, object, unsigned int)
           ShortVectorFilePy(object)
           
+          object get_lattice_py()
+
           void flush()
 
           object stored_vectors_py()
@@ -30,3 +37,5 @@ cdef extern from 'short_vector_file_py.h' :
 
           unsigned int maximal_vector_length()
           void increase_maximal_vector_length( unsigned int )
+          
+          int direct_sum( ShortVectorFile&, ShortVectorFile& )

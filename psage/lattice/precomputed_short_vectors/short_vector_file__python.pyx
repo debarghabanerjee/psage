@@ -20,6 +20,7 @@
 #===============================================================================
 
 from sage.rings.all import ZZ
+from cython.operator cimport dereference as deref
 
 include "interrupt.pxi"
 
@@ -30,8 +31,11 @@ cdef class ShortVectorFile__python :
 
     def __cinit__( self, output_file_name, lattice = None, maximal_vector_length = None ) :
         if lattice is None :
-            f = file(output_file_name, 'r')
-            f.close()
+            try :
+                f = file(output_file_name, 'r')
+                f.close()
+            except IOError :
+                raise IOError( "File {0} must exist".format( output_file_name ) )
             
             sig_on()
             self.this_ptr = new ShortVectorFilePy(output_file_name)
@@ -56,6 +60,13 @@ cdef class ShortVectorFile__python :
                     raise ValueError( "lattice must be even" )
 
         return [[int(e) for e in row] for row in lattice]
+
+    def get_lattice( self ) :
+        sig_on()
+        return_val = self.this_ptr.get_lattice_py()
+        sig_off()
+
+        return return_val
 
     def flush( self ) :
         sig_on()
@@ -111,3 +122,17 @@ cdef class ShortVectorFile__python :
         sig_on()
         self.this_ptr.increase_maximal_vector_length( int(maximal_vector_length) )
         sig_off()
+
+    def direct_sum( self, input_file_name1, input_file_name2 ) :
+        cdef ShortVectorFilePy *src1
+        cdef ShortVectorFilePy *src2
+
+        sig_on()
+        src1 = new ShortVectorFilePy( input_file_name1 )
+        src2 = new ShortVectorFilePy( input_file_name2 )
+
+        return_val = self.this_ptr.direct_sum( <ShortVectorFile&>(deref(src1)), <ShortVectorFile&>(deref(src2)) )
+        sig_off()
+
+        if not return_val :
+            raise ValueError( "Incompatible input files." )

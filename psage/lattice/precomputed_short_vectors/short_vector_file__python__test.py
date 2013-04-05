@@ -35,6 +35,16 @@ class TestShortVectorFile(unittest.TestCase) :
 
         svf = ShortVectorFile__python( file_name )
 
+    def test_get_lattice( self ) :
+        file_name = tmp_filename()
+        svf = ShortVectorFile__python( file_name, [[2, 1], [1, 2]], 20 )
+        del svf
+        
+        svf = ShortVectorFile__python( file_name )
+
+        self.assertEqual( svf.get_lattice(),
+                          [[2, 1], [1, 2]] )
+
     def test_write_vectors( self ) :
         file_name = tmp_filename()
         svf = ShortVectorFile__python( file_name, [[2, 1], [1, 2]], 20 )
@@ -118,6 +128,32 @@ class TestShortVectorFile(unittest.TestCase) :
                           20 * [(12, -13)] )
 
         del svf
+    
+    def test_direct_sum( self ) :
+        file_name1 = tmp_filename()
+        file_name2 = tmp_filename()
+        file_name3 = tmp_filename()
+
+        svf = ShortVectorFile__python( file_name1, [[2, 1], [1, 2]], 10 )
+        svf.write_vectors( 2, [(2, 1), (1, 2)] )
+        del svf
+
+        svf = ShortVectorFile__python( file_name2, [[2]], 10 )
+        svf.write_vectors( 2, [(2,), (3,)] )
+        del svf
+
+        svf = ShortVectorFile__python( file_name3, [[2, 1, 0], [1, 2, 0], [0, 0, 2]], 10 )
+        svf.direct_sum( file_name1, file_name2 )
         
+        self.assertEqual( svf.read_vectors( 2 ),
+                          [ (2, 1, 0), (1, 2, 0), (0, 0, 2), (0, 0, 3) ] )
+        self.assertEqual( svf.read_vectors( 4 ),
+                          [ (2, 1, 2), (-2, -1, 2), (2, 1, 3), (-2, -1, 3),
+                            (1, 2, 2), (-1, -2, 2), (1, 2, 3), (-1, -2, 3) ] )
+        self.assertEqual( svf.read_vectors( 6 ),
+                          [] )
+
+
+
 if __name__ == '__main__':
     unittest.main(verbosity = 2)
