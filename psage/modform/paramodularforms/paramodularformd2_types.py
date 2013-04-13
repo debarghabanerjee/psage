@@ -28,7 +28,7 @@ from psage.modform.fourier_expansion_framework.gradedexpansions.expansion_module
 from psage.modform.fourier_expansion_framework.gradedexpansions.gradedexpansion_grading import TrivialGrading
 from psage.modform.fourier_expansion_framework.modularforms.modularform_ambient import ModularFormsModule_generic
 from psage.modform.fourier_expansion_framework.modularforms.modularform_types import ModularFormType_abstract
-from psage.modform.jacobiforms.jacobiformd1nn_types import JacobiFormD1NN_Gamma
+from psage.modform.jacobiforms.jacobiformd1nn_types import JacobiFormD1NNGamma
 from operator import xor
 from psage.modform.paramodularforms.paramodularformd2_element import ParamodularFormD2_classical
 from psage.modform.paramodularforms.paramodularformd2_fegenerators import gritsenko_products
@@ -161,7 +161,7 @@ class ParamodularFormD2_Gamma ( ModularFormType_abstract ) :
             if N < 277 :
                 ## Poor, Yuen - Paramodular cusp forms tells us that all forms are
                 ## Gritsenko lifts
-                return JacobiFormD1NN_Gamma(self.__level, 2)._rank(QQ)
+                return JacobiFormD1NNGamma(self.__level, 2)._rank(QQ)
 
             raise NotImplementedError
         elif self.__weight == 4 :

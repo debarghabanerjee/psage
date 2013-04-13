@@ -28,7 +28,7 @@ AUTHORS:
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_basicmonoids import TrivialCharacterMonoid, \
                                            TrivialRepresentation
 from psage.modform.fourier_expansion_framework.monoidpowerseries.monoidpowerseries_ring import EquivariantMonoidPowerSeriesRing
-from psage.modform.jacobiforms.jacobiformd1nn_types import JacobiFormD1NN_Gamma, JacobiFormsD1NN
+from psage.modform.jacobiforms.jacobiformd1nn_types import JacobiFormsD1NN
 from operator import xor
 from psage.modform.paramodularforms.paramodularformd2_fourierexpansion_cython import apply_GL_to_form, reduce_GL#, \
 from sage.functions.other import ceil, floor

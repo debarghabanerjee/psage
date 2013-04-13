@@ -28,7 +28,7 @@ AUTHORS:
 
 from psage.modform.jacobiforms.jacobiformd1nn_fegenerators import JacobiFormD1NNFactory
 from psage.modform.jacobiforms.jacobiformd1nn_types import JacobiFormsD1NN,\
-    JacobiFormD1NN_Gamma
+    JacobiFormD1NNGamma
 from psage.modform.paramodularforms.paramodularformd2_fourierexpansion import ParamodularFormD2Filter_discriminant
 from psage.modform.paramodularforms.paramodularformd2_fourierexpansion import ParamodularFormD2FourierExpansionRing
 from psage.modform.paramodularforms.paramodularformd2_fourierexpansion_cython import apply_GL_to_form
@@ -168,7 +168,7 @@ def gritsenko_lift_subspace(N, weight, precision) :
     NOTE:
         The lifts returned have to have integral Fourier coefficients.
     """
-    jf = JacobiFormsD1NN( QQ, JacobiFormD1NN_Gamma(N, weight),
+    jf = JacobiFormsD1NN( QQ, JacobiFormD1NNGamma(N, weight),
                           (4 * N**2 + precision._enveloping_discriminant_bound() - 1)//(4 * N) + 1)
 
     return Sequence( [ gritsenko_lift_fourier_expansion( g if i != 0 else (bernoulli(weight) / (2 * weight)).denominator() * g,
