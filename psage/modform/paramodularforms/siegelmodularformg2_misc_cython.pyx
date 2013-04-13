@@ -111,6 +111,8 @@ cpdef negative_fundamental_discriminants(int precision) :
     for k from 2 <= k < precision :
         if markers[k] :
             fund_discs.append(-k)
+
+    free(markers)
     _sig_off
     
     mpz_clear(mpz_tmp)
