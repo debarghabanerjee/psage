@@ -86,7 +86,7 @@ ShortVectorFile::init_with_lattice
   this->output_file = new fstream( output_file_name,
                                    fstream::in | fstream::out | fstream::binary );
   if (! this->output_file->is_open() )
-    throw( string( "output file must exist already" ) );
+    throw( string( "Unable to open output file" ) );
   
   this->maximal_vector_length__cache = maximal_vector_length;
 
